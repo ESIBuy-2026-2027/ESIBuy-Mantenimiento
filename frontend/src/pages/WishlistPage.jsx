@@ -1,39 +1,99 @@
-import PropTypes from 'prop-types'
 import { useCallback, useState } from 'react'
+import PropTypes from 'prop-types'
 import {
   Badge,
   Button,
   Card,
+  Dialog,
+  DialogActions,
+  DialogBody,
+  DialogContent,
+  DialogSurface,
+  DialogTitle,
+  Field,
+  Input,
   MessageBar,
   MessageBarActions,
   MessageBarBody,
   Spinner,
   Text,
   Title1,
+  Title2,
   makeStyles,
   mergeClasses,
   tokens,
 } from '@fluentui/react-components'
-import { Delete20Regular, Heart24Regular } from '@fluentui/react-icons'
+import {
+  Add20Regular,
+  Bookmark24Regular,
+  ChevronDown20Regular,
+  ChevronRight20Regular,
+  Delete20Regular,
+  Edit20Regular,
+} from '@fluentui/react-icons'
 import { Link } from 'react-router-dom'
-import { getWishlist, removeWishlistItem } from '../api/wishlist'
+import {
+  createWishlist,
+  deleteWishlist,
+  getWishlists,
+  removeItemFromWishlist,
+  updateWishlistItemQuantity,
+} from '../api/wishlist'
 import EmptyState from '../components/EmptyState'
-import LinkButton from '../components/LinkButton'
 import { usePageStyles } from '../components/pageStyles'
+import AddToCartButton from '../features/cart/AddToCartButton'
+import EditWishlistDialog from '../features/wishlist/EditWishlistDialog'
 import { useApiQuery } from '../hooks/useApiQuery'
-import { PATHS, getProductDetailPath } from '../routes/paths'
+import { getProductDetailPath } from '../routes/paths'
 import { formatDate, formatPrice } from '../utils/format'
 
 const useStyles = makeStyles({
-  list: {
-    listStyle: 'none',
-    margin: 0,
-    padding: 0,
+  listsContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: tokens.spacingVerticalXL,
+  },
+  listCard: {
     display: 'flex',
     flexDirection: 'column',
     gap: tokens.spacingVerticalM,
   },
-  // En pantallas estrechas el precio baja a una segunda línea
+  listHeader: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: tokens.spacingHorizontalM,
+  },
+  listTitle: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: tokens.spacingHorizontalS,
+  },
+  listName: {
+    margin: 0,
+    overflowWrap: 'anywhere',
+  },
+  listActions: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: tokens.spacingHorizontalS,
+  },
+  // Dos columnas si caben; un solo producto ocupa todo el ancho
+  list: {
+    listStyle: 'none',
+    margin: 0,
+    padding: 0,
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 400px), 1fr))',
+    gap: tokens.spacingVerticalM,
+  },
+  // Las tarjetas de una misma fila, de la misma altura
+  entry: {
+    display: 'flex',
+    minWidth: 0,
+    '& > *': { flexGrow: 1, minWidth: 0 },
+  },
   item: {
     display: 'flex',
     flexDirection: 'row',
@@ -41,7 +101,6 @@ const useStyles = makeStyles({
     alignItems: 'center',
     gap: tokens.spacingHorizontalL,
   },
-  // Un producto que ya no está disponible se ve atenuado: sigue en la lista, pero no se puede comprar
   unavailable: {
     opacity: 0.6,
   },
@@ -94,17 +153,35 @@ const useStyles = makeStyles({
     gap: tokens.spacingHorizontalM,
     marginLeft: 'auto',
   },
+  qtyInput: {
+    width: '72px',
+  },
 })
 
-// Cómo se puede comprar ahora un favorito: un producto desactivado sigue en la lista, pero ya no se abre su detalle.
 function availabilityBadge(item) {
   if (!item.disponible) return <Badge appearance="tint" color="informative">No disponible</Badge>
   if (item.stock <= 0) return <Badge appearance="tint" color="warning">Agotado</Badge>
   return null
 }
 
-function WishlistItem({ item, removing, onRemove }) {
+function WishlistItem({ item, removing, updatingQty, onQuantityChange, onRemove }) {
   const styles = useStyles()
+  const sinStock = !item.disponible || item.stock <= 0
+  const cantidad = item.cantidad ?? 1
+  const [draftCantidad, setDraftCantidad] = useState(null)
+
+  const manejarCantidad = (_e, data) => {
+    if (sinStock) return
+    if (data.value === '') {
+      setDraftCantidad('')
+      return
+    }
+    const numero = Number.parseInt(data.value, 10)
+    if (Number.isNaN(numero)) return
+    const acotado = Math.max(1, Math.min(item.stock, numero))
+    setDraftCantidad(null)
+    if (acotado !== cantidad) onQuantityChange(item, acotado)
+  }
 
   return (
     <Card className={mergeClasses(styles.item, !item.disponible && styles.unavailable)}>
@@ -135,12 +212,24 @@ function WishlistItem({ item, removing, onRemove }) {
         {availabilityBadge(item)}
       </div>
       <div className={styles.summary}>
-        <Text weight="semibold">{formatPrice(item.precioFinal)}</Text>
+        <Input
+          type="number"
+          min={1}
+          max={Math.max(1, item.stock)}
+          aria-label={`Cantidad de ${item.nombre}`}
+          className={styles.qtyInput}
+          value={draftCantidad ?? String(cantidad)}
+          disabled={sinStock || updatingQty}
+          onChange={manejarCantidad}
+          onBlur={() => setDraftCantidad(null)}
+        />
+        <Text weight="semibold">{formatPrice(item.precioFinal * cantidad)}</Text>
+        <AddToCartButton product={{ ...item, id: item.productoId }} quantity={cantidad} size="small" />
         <Button
           appearance="subtle"
           icon={<Delete20Regular />}
-          aria-label={`Quitar ${item.nombre} de favoritos`}
-          title="Quitar de favoritos"
+          aria-label={`Quitar ${item.nombre} de la lista`}
+          title="Quitar de la lista"
           disabled={removing}
           onClick={() => onRemove(item)}
         />
@@ -158,34 +247,101 @@ WishlistItem.propTypes = {
     stock: PropTypes.number.isRequired,
     disponible: PropTypes.bool.isRequired,
     addedAt: PropTypes.string.isRequired,
+    cantidad: PropTypes.number,
   }).isRequired,
   removing: PropTypes.bool.isRequired,
+  updatingQty: PropTypes.bool.isRequired,
+  onQuantityChange: PropTypes.func.isRequired,
   onRemove: PropTypes.func.isRequired,
 }
 
-// «Mis favoritos» del cliente (HU14): su lista de deseos, en el orden en que añadió cada producto y con los datos
-// actuales de cada uno (precio, si está agotado o si el vendedor lo ha desactivado). Cada uno se puede quitar sin
-// confirmación, porque se puede volver a añadir desde el catálogo; el backend responde con la lista actualizada.
+// Listas de deseos del cliente (HU14, PBI 534), aparte de sus favoritos (AB#528): puede crear una o varias, consultarlas,
+// editarlas (nombre y productos) y eliminarlas. Cada una se puede plegar: al entrar solo está desplegada la primera.
 export default function WishlistPage() {
   const pageStyles = usePageStyles()
   const styles = useStyles()
-  const fetcher = useCallback(() => getWishlist(), [])
-  const { data: cargada, failed, retry } = useApiQuery(fetcher)
-  const [actualizada, setActualizada] = useState(null)
+  const fetcher = useCallback(() => getWishlists(), [])
+  const { data: cargadas, failed, retry } = useApiQuery(fetcher)
+  const [actualizadas, setActualizadas] = useState(null)
   const [quitando, setQuitando] = useState(null)
+  const [actualizandoCantidad, setActualizandoCantidad] = useState(null)
   const [aviso, setAviso] = useState(null)
-  const lista = actualizada ?? cargada
+  const [creando, setCreando] = useState(false)
+  const [nuevoNombre, setNuevoNombre] = useState('')
+  const [enviandoNueva, setEnviandoNueva] = useState(false)
+  const [errorNueva, setErrorNueva] = useState(null)
+  const [editandoId, setEditandoId] = useState(null)
+  const [eliminando, setEliminando] = useState(null)
+  const [borrando, setBorrando] = useState(false)
+  // Las que el cliente ha plegado o desplegado: identificador de la lista → si está desplegada
+  const [desplegadas, setDesplegadas] = useState({})
 
-  const quitar = async (item) => {
+  const listas = actualizadas ?? cargadas
+  const listaEditando = listas?.find((l) => l.id === editandoId) ?? null
+  const estaDesplegada = (lista) => desplegadas[lista.id] ?? lista.id === listas[0].id
+
+  const quitar = async (listaId, item) => {
     setAviso(null)
-    setQuitando(item.productoId)
+    setQuitando(`${listaId}:${item.productoId}`)
     try {
-      setActualizada(await removeWishlistItem(item.productoId))
-      setAviso({ intent: 'success', texto: `${item.nombre} se ha quitado de tus favoritos.` })
+      const actualizada = await removeItemFromWishlist(listaId, item.productoId)
+      setActualizadas((prev) => (prev ?? cargadas).map((l) => (l.id === listaId ? actualizada : l)))
+      setAviso({ intent: 'success', texto: `${item.nombre} se ha quitado de la lista.` })
     } catch {
-      setAviso({ intent: 'error', texto: `No se ha podido quitar ${item.nombre} de tus favoritos. Inténtalo de nuevo.` })
+      setAviso({ intent: 'error', texto: `No se ha podido quitar ${item.nombre}. Inténtalo de nuevo.` })
     } finally {
       setQuitando(null)
+    }
+  }
+
+  const crear = async (event) => {
+    event.preventDefault()
+    const nombre = nuevoNombre.trim()
+    if (!nombre) {
+      setErrorNueva('El nombre de la lista es obligatorio.')
+      return
+    }
+    setErrorNueva(null)
+    setEnviandoNueva(true)
+    try {
+      const creada = await createWishlist(nombre)
+      setActualizadas((prev) => [...(prev ?? cargadas ?? []), creada])
+      setCreando(false)
+      setNuevoNombre('')
+      setAviso({ intent: 'success', texto: `Lista «${creada.nombre}» creada.` })
+    } catch {
+      setErrorNueva('No se ha podido crear la lista. Inténtalo de nuevo.')
+    } finally {
+      setEnviandoNueva(false)
+    }
+  }
+
+  const cambiarCantidad = async (listaId, item, cantidad) => {
+    setAviso(null)
+    setActualizandoCantidad(`${listaId}:${item.productoId}`)
+    try {
+      const actualizada = await updateWishlistItemQuantity(listaId, item.productoId, cantidad)
+      setActualizadas((prev) => (prev ?? cargadas).map((l) => (l.id === listaId ? actualizada : l)))
+    } catch {
+      setAviso({ intent: 'error', texto: `No se ha podido actualizar la cantidad de ${item.nombre}.` })
+    } finally {
+      setActualizandoCantidad(null)
+    }
+  }
+
+  const confirmarEliminar = async () => {
+    if (!eliminando || borrando) return
+    setBorrando(true)
+    try {
+      await deleteWishlist(eliminando.id)
+      setActualizadas(await getWishlists())
+      setAviso({ intent: 'success', texto: `Lista «${eliminando.nombre}» eliminada.` })
+      setEliminando(null)
+    } catch {
+      setAviso({ intent: 'error', texto: 'No se ha podido eliminar la lista. Inténtalo de nuevo.' })
+      setEliminando(null)
+    } finally {
+      setBorrando(false)
     }
   }
 
@@ -194,11 +350,15 @@ export default function WishlistPage() {
       <div className={pageStyles.heading}>
         <div className={pageStyles.titleBlock}>
           <Title1 as="h1" className={pageStyles.title}>
-            Mis favoritos
+            Mis listas de deseos
           </Title1>
-          <Text className={pageStyles.subtitle}>Los productos que has guardado para más adelante.</Text>
+          <Text className={pageStyles.subtitle}>Organiza los productos que te interesan en tus listas.</Text>
         </div>
+        <Button appearance="primary" icon={<Add20Regular />} onClick={() => setCreando(true)}>
+          Nueva lista
+        </Button>
       </div>
+
       {aviso && (
         <MessageBar intent={aviso.intent}>
           <MessageBarBody>{aviso.texto}</MessageBarBody>
@@ -206,32 +366,150 @@ export default function WishlistPage() {
       )}
       {failed && (
         <MessageBar intent="error">
-          <MessageBarBody>No se han podido cargar tus favoritos. Inténtalo de nuevo.</MessageBarBody>
+          <MessageBarBody>No se han podido cargar tus listas de deseos. Inténtalo de nuevo.</MessageBarBody>
           <MessageBarActions>
             <Button onClick={retry}>Reintentar</Button>
           </MessageBarActions>
         </MessageBar>
       )}
-      {!lista && !failed && <Spinner label="Cargando tus favoritos…" className={pageStyles.loading} />}
-      {lista?.items.length === 0 && (
+      {!listas && !failed && <Spinner label="Cargando tus listas de deseos…" className={pageStyles.loading} />}
+
+      {listas?.length === 0 && (
         <EmptyState
-          icon={<Heart24Regular />}
-          title="Aún no tienes favoritos"
-          description="Pulsa el corazón de un producto del catálogo para guardarlo aquí."
+          icon={<Bookmark24Regular />}
+          title="Aún no tienes listas de deseos"
+          description="Crea tu primera lista de deseos o pulsa «Guardar en una lista» en un producto."
         >
-          <LinkButton to={PATHS.PRODUCTS} appearance="primary">
-            Ver los productos
-          </LinkButton>
+          <Button appearance="primary" icon={<Add20Regular />} onClick={() => setCreando(true)}>
+            Nueva lista
+          </Button>
         </EmptyState>
       )}
-      {lista?.items.length > 0 && (
-        <ul aria-label="Tus favoritos" className={styles.list}>
-          {lista.items.map((item) => (
-            <li key={item.productoId}>
-              <WishlistItem item={item} removing={quitando === item.productoId} onRemove={quitar} />
-            </li>
+
+      {listas && listas.length > 0 && (
+        <div className={styles.listsContainer}>
+          {listas.map((lista) => (
+            <Card key={lista.id} className={styles.listCard}>
+              <div className={styles.listHeader}>
+                <div className={styles.listTitle}>
+                  {lista.items.length > 0 && (
+                    <Button
+                      appearance="subtle"
+                      icon={estaDesplegada(lista) ? <ChevronDown20Regular /> : <ChevronRight20Regular />}
+                      aria-expanded={estaDesplegada(lista)}
+                      aria-label={`${estaDesplegada(lista) ? 'Ocultar' : 'Mostrar'} los productos de ${lista.nombre}`}
+                      title={estaDesplegada(lista) ? 'Ocultar los productos' : 'Mostrar los productos'}
+                      onClick={() => setDesplegadas((prev) => ({ ...prev, [lista.id]: !estaDesplegada(lista) }))}
+                    />
+                  )}
+                  <Title2 as="h2" className={styles.listName}>{lista.nombre}</Title2>
+                  <Badge appearance="tint">{lista.items.length}</Badge>
+                </div>
+                <div className={styles.listActions}>
+                  <Button
+                    icon={<Edit20Regular />}
+                    aria-label={`Editar «${lista.nombre}»`}
+                    onClick={() => setEditandoId(lista.id)}
+                  >
+                    Editar
+                  </Button>
+                  <Button
+                    icon={<Delete20Regular />}
+                    aria-label={`Eliminar «${lista.nombre}»`}
+                    onClick={() => setEliminando(lista)}
+                  >
+                    Eliminar
+                  </Button>
+                </div>
+              </div>
+              {lista.items.length === 0 && (
+                <Text size={200} className={styles.muted}>
+                  Esta lista aún no tiene productos.
+                </Text>
+              )}
+              {lista.items.length > 0 && estaDesplegada(lista) && (
+                <ul aria-label={`Productos de ${lista.nombre}`} className={styles.list}>
+                  {lista.items.map((item) => (
+                    <li key={item.productoId} className={styles.entry}>
+                      <WishlistItem
+                        item={item}
+                        removing={quitando === `${lista.id}:${item.productoId}`}
+                        updatingQty={actualizandoCantidad === `${lista.id}:${item.productoId}`}
+                        onQuantityChange={(it, cantidad) => cambiarCantidad(lista.id, it, cantidad)}
+                        onRemove={(it) => quitar(lista.id, it)}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Card>
           ))}
-        </ul>
+        </div>
+      )}
+
+      <Dialog open={creando} onOpenChange={(_e, data) => !data.open && !enviandoNueva && setCreando(false)}>
+        <DialogSurface>
+          <form onSubmit={crear} noValidate>
+            <DialogBody>
+              <DialogTitle>Nueva lista de deseos</DialogTitle>
+              <DialogContent>
+                {errorNueva && (
+                  <MessageBar intent="error">
+                    <MessageBarBody>{errorNueva}</MessageBarBody>
+                  </MessageBar>
+                )}
+                <Field label="Nombre de la lista" required>
+                  <Input
+                    value={nuevoNombre}
+                    placeholder="Ej. Regalos de cumpleaños"
+                    maxLength={80}
+                    disabled={enviandoNueva}
+                    onChange={(_e, data) => setNuevoNombre(data.value)}
+                  />
+                </Field>
+              </DialogContent>
+              <DialogActions>
+                <Button appearance="secondary" onClick={() => setCreando(false)} disabled={enviandoNueva}>
+                  Cancelar
+                </Button>
+                <Button type="submit" appearance="primary" disabled={enviandoNueva}>
+                  Crear lista
+                </Button>
+              </DialogActions>
+            </DialogBody>
+          </form>
+        </DialogSurface>
+      </Dialog>
+
+      {listaEditando && (
+        <EditWishlistDialog
+          wishlist={listaEditando}
+          onClose={() => setEditandoId(null)}
+          onUpdated={(actualizada) =>
+            setActualizadas((prev) => (prev ?? cargadas).map((l) => (l.id === actualizada.id ? actualizada : l)))
+          }
+        />
+      )}
+
+      {eliminando && (
+        <Dialog open modalType="alert" onOpenChange={(_e, data) => !data.open && !borrando && setEliminando(null)}>
+          <DialogSurface>
+            <DialogBody>
+              <DialogTitle>Eliminar lista</DialogTitle>
+              <DialogContent>
+                <Text>¿Seguro que quieres eliminar la lista «{eliminando.nombre}»?</Text>
+              </DialogContent>
+              <DialogActions>
+                <Button appearance="secondary" onClick={() => setEliminando(null)} disabled={borrando}>
+                  Cancelar
+                </Button>
+                <Button appearance="primary" onClick={confirmarEliminar} disabled={borrando}>
+                  Sí, eliminar
+                </Button>
+              </DialogActions>
+            </DialogBody>
+          </DialogSurface>
+        </Dialog>
       )}
     </main>
   )

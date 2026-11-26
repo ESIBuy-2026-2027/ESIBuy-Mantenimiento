@@ -32,8 +32,8 @@ const useStyles = makeStyles({
   },
 })
 
-// Códigos con los que el backend dice que otro administrador ya ha cambiado la incidencia (HU50)
-const CAMBIADA_POR_OTRO = new Set(['INCIDENT_ALREADY_OPEN', 'INCIDENT_NOT_FOUND'])
+// Códigos con los que el backend dice que otro administrador ya ha cambiado la incidencia (HU50 y HU192)
+const CAMBIADA_POR_OTRO = new Set(['INCIDENT_ALREADY_OPEN', 'INCIDENT_ALREADY_RESOLVED', 'INCIDENT_NOT_FOUND'])
 
 // Diálogo para abrir una incidencia pendiente con la respuesta del administrador (HU50), que es lo que verá su autor.
 // Como IncidentForm, «obligatoria» sale al intentar enviar y pasarse del máximo, en cuanto ocurre. Si sale bien

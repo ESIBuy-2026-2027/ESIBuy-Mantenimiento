@@ -10,6 +10,10 @@ import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import es.uclm.esibuy.backend.deseos.domain.exception.ListaDeseosInvalidaException;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 class ListaDeseosTest {
 
     private static final String CLIENTE = "cliente-1";
@@ -91,5 +95,37 @@ class ListaDeseosTest {
 
         assertFalse(cambiada);
         assertEquals(List.of(new ItemDeseo("p-1", AYER)), lista.getItems());
+    }
+
+    @Test
+    @DisplayName("PBI534-CP01: crear y renombrar una lista normaliza el nombre y rechaza nombres vacíos o largos")
+    void crearYRenombrarListaValidaNombre() {
+        ListaDeseos lista = ListaDeseos.nueva(CLIENTE, "  Regalos Navidad  ");
+        assertEquals("Regalos Navidad", lista.getNombre());
+
+        lista.renombrar("  Cumpleaños ");
+        assertEquals("Cumpleaños", lista.getNombre());
+
+        assertThrows(ListaDeseosInvalidaException.class, () -> ListaDeseos.nueva(CLIENTE, "  "));
+        assertThrows(ListaDeseosInvalidaException.class,
+                () -> ListaDeseos.nueva(CLIENTE, "a".repeat(ListaDeseos.NOMBRE_MAXIMO + 1)));
+        assertThrows(ListaDeseosInvalidaException.class, () -> lista.renombrar(null));
+    }
+
+    @Test
+    @DisplayName("HU528-CP30: los favoritos del cliente son una lista fija: se llaman Favoritos y no se pueden renombrar")
+    void losFavoritosNoSeRenombran() {
+        ListaDeseos favoritos = ListaDeseos.vacia(CLIENTE);
+
+        assertTrue(favoritos.esFavoritos());
+        assertEquals("Favoritos", favoritos.getNombre());
+        assertThrows(ListaDeseosInvalidaException.class, () -> favoritos.renombrar("Otra"));
+        assertEquals("Favoritos", favoritos.getNombre());
+    }
+
+    @Test
+    @DisplayName("HU528-CP30: una lista que crea el cliente no son los favoritos, aunque se llame igual")
+    void unaListaNuevaNoSonLosFavoritos() {
+        assertFalse(ListaDeseos.nueva(CLIENTE, "Favoritos").esFavoritos());
     }
 }

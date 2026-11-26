@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Button,
   Menu,
@@ -13,16 +13,22 @@ import {
 } from '@fluentui/react-components'
 import {
   ArrowExit20Regular,
+  Bookmark20Regular,
   BoxMultiple20Regular,
   ChartMultiple20Regular,
   ChatWarning20Regular,
+  Crown20Regular,
   Grid20Regular,
   Heart20Regular,
   Person20Regular,
   PersonAdd20Regular,
   Receipt20Regular,
 } from '@fluentui/react-icons'
-import { Link, useNavigate } from 'react-router-dom'
+import CartWidget from '../features/cart/CartWidget'
+import { getProfile } from '../api/profile'
+import { useApiQuery } from '../hooks/useApiQuery'
+import { PREMIUM_STATUS_CHANGED } from '../features/premium/premiumEvents'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { ROLES, getHomePath } from '../auth/roles'
 import { useAuth } from '../auth/useAuth'
 import { PATHS } from '../routes/paths'
@@ -48,8 +54,14 @@ const visuallyHidden = {
 
 const useStyles = makeStyles({
   header: {
+    position: 'sticky',
+    top: 0,
+    zIndex: 1100,
     width: '100%',
-    maxWidth: '1280px',
+    maxWidth: 'none',
+    backgroundColor: '#FFF8F1',
+    borderBottom: '1px solid #F3D2BA',
+    boxShadow: '0 2px 8px rgba(124, 45, 18, 0.08)',
     margin: '0 auto',
     boxSizing: 'border-box',
     display: 'flex',
@@ -110,8 +122,111 @@ const useStyles = makeStyles({
   compactItem: {
     [MEDIO]: { minWidth: 'auto', paddingLeft: tokens.spacingHorizontalS, paddingRight: tokens.spacingHorizontalS },
   },
+  navAction: {
+    minHeight: '40px',
+    paddingLeft: tokens.spacingHorizontalM,
+    paddingRight: tokens.spacingHorizontalM,
+    borderRadius: tokens.borderRadiusCircular,
+    color: '#713512',
+    backgroundColor: 'transparent',
+    border: '1px solid transparent',
+    transitionProperty: 'background-color, color, border-color',
+    transitionDuration: tokens.durationFaster,
+    ':hover': {
+      color: '#B54708',
+      backgroundColor: '#FCE8D5',
+    },
+    ':active': {
+      color: '#963B08',
+      backgroundColor: '#F8D7B8',
+    },
+  },
+  navActionActive: {
+    color: '#A83F08',
+    backgroundColor: '#FFF1E3',
+    borderColor: '#F4D1B3',
+    ':hover': {
+      color: '#963B08',
+      backgroundColor: '#FCE4CC',
+      borderColor: '#EFAE79',
+    },
+  },
+  profileTrigger: {
+    minHeight: '40px',
+    paddingLeft: tokens.spacingHorizontalM,
+    paddingRight: tokens.spacingHorizontalM,
+    borderRadius: tokens.borderRadiusCircular,
+    color: '#713512',
+    backgroundColor: 'transparent',
+    border: '1px solid transparent',
+    ':hover': {
+      color: '#A83F08',
+      backgroundColor: '#FCE4CC',
+    },
+  },
+  profileTriggerActive: {
+    color: '#A83F08',
+    backgroundColor: '#FFF1E3',
+    borderColor: '#F4D1B3',
+    ':hover': {
+      backgroundColor: '#FCE4CC',
+      borderColor: '#EFAE79',
+    },
+  },
+  premiumPersonIcon: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  premiumCrown: {
+    width: '20px',
+    height: '20px',
+    color: '#B54708',
+    strokeWidth: '1.5px',
+  },
   accountMenu: {
-    minWidth: '220px',
+    minWidth: '230px',
+    padding: tokens.spacingVerticalXS,
+    backgroundColor: '#FFFCF8',
+    border: '1px solid #F1D5BF',
+    borderRadius: tokens.borderRadiusXLarge,
+    boxShadow: '0 10px 28px rgba(124, 45, 18, 0.16)',
+  },
+  accountMenuList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '3px',
+  },
+  accountMenuItem: {
+    minHeight: '40px',
+    paddingLeft: tokens.spacingHorizontalM,
+    paddingRight: tokens.spacingHorizontalM,
+    borderRadius: tokens.borderRadiusMedium,
+    color: '#65432F',
+    ':hover': {
+      color: '#9A4514',
+      backgroundColor: '#FCEBDD',
+    },
+    ':focus': {
+      backgroundColor: '#FCEBDD',
+    },
+  },
+  signOutMenuItem: {
+    marginTop: tokens.spacingVerticalXS,
+    borderTop: '1px solid #F1D5BF',
+    borderRadius: tokens.borderRadiusMedium,
+    color: '#B42318',
+    ':hover': {
+      color: '#912018',
+      backgroundColor: '#FEE4E2',
+    },
+    ':focus': {
+      color: '#912018',
+      backgroundColor: '#FEE4E2',
+    },
+    '& svg': {
+      color: '#B42318',
+    },
   },
 })
 
@@ -119,13 +234,16 @@ const useStyles = makeStyles({
 // ser su tooltip; el nombre accesible no cambia.
 function NavLink({ to, icon, compact = false, children }) {
   const styles = useStyles()
+  const { pathname } = useLocation()
+  const active = pathname === to
   return (
     <LinkButton
       to={to}
       appearance="subtle"
       icon={icon}
       title={compact ? children : undefined}
-      className={mergeClasses(styles.item, compact && styles.compactItem)}
+      className={mergeClasses(styles.item, styles.navAction, active && styles.navActionActive, compact && styles.compactItem)}
+      aria-current={active ? 'page' : undefined}
     >
       <span className={compact ? styles.compactLabel : undefined}>{children}</span>
     </LinkButton>
@@ -152,9 +270,32 @@ function GuestActions() {
   )
 }
 
-function ClientMenu({ compact }) {
+function PremiumAwarePersonIcon() {
+  const { data: profile, retry } = useApiQuery(getProfile)
+  const styles = useStyles()
+
+  useEffect(() => {
+    const actualizarPerfil = () => retry()
+    window.addEventListener(PREMIUM_STATUS_CHANGED, actualizarPerfil)
+    return () => window.removeEventListener(PREMIUM_STATUS_CHANGED, actualizarPerfil)
+  }, [retry])
+
+  return (
+    <span className={styles.premiumPersonIcon}>
+      {profile?.tipoCliente === 'PREMIUM' ? (
+        <Crown20Regular className={styles.premiumCrown} aria-hidden="true" data-testid="premium-crown" />
+      ) : (
+        <Person20Regular aria-hidden="true" data-testid="standard-person-icon" />
+      )}
+    </span>
+  )
+}
+
+function ClientMenu({ compact, onSignOut, disabled }) {
   const styles = useStyles()
   const navigate = useNavigate()
+  const { pathname } = useLocation()
+  const profileSectionActive = [PATHS.PROFILE, PATHS.ORDERS, PATHS.INCIDENTS].includes(pathname)
   const enlaces = [
     [PATHS.ORDERS, <Receipt20Regular />, 'Mis pedidos'],
     [PATHS.INCIDENTS, <ChatWarning20Regular />, 'Incidencias'],
@@ -166,20 +307,24 @@ function ClientMenu({ compact }) {
       <MenuTrigger>
         <Button
           appearance="subtle"
-          icon={<Person20Regular />}
+          icon={<PremiumAwarePersonIcon />}
           title={compact ? 'Mi perfil' : undefined}
-          className={mergeClasses(styles.item, compact && styles.compactItem)}
+          className={mergeClasses(styles.item, styles.profileTrigger, profileSectionActive && styles.profileTriggerActive, compact && styles.compactItem)}
+          aria-current={profileSectionActive ? 'page' : undefined}
         >
           <span className={compact ? styles.compactLabel : undefined}>Mi perfil</span>
         </Button>
       </MenuTrigger>
       <MenuPopover className={styles.accountMenu}>
-        <MenuList>
+        <MenuList className={styles.accountMenuList}>
           {enlaces.map(([to, icon, label]) => (
-            <MenuItem key={to} icon={icon} onClick={() => navigate(to)}>
+            <MenuItem key={to} className={styles.accountMenuItem} icon={icon} onClick={() => navigate(to)}>
               {label}
             </MenuItem>
           ))}
+          <MenuItem className={mergeClasses(styles.accountMenuItem, styles.signOutMenuItem)} icon={<ArrowExit20Regular />} disabled={disabled} onClick={onSignOut}>
+            Cerrar sesión
+          </MenuItem>
         </MenuList>
       </MenuPopover>
     </Menu>
@@ -188,12 +333,13 @@ function ClientMenu({ compact }) {
 
 ClientMenu.propTypes = {
   compact: PropTypes.bool.isRequired,
+  onSignOut: PropTypes.func.isRequired,
+  disabled: PropTypes.bool.isRequired,
 }
 
 function UserActions({ rol, onSignOut, disabled }) {
-  const styles = useStyles()
   const esCliente = rol === ROLES.CLIENTE
-  // El cliente conserva Favoritos, Mi perfil y Cerrar sesión en la cabecera.
+  // El cliente conserva Favoritos, Listas de deseos, Carrito y Mi perfil en la cabecera.
   const compact = esCliente
 
   return (
@@ -217,11 +363,16 @@ function UserActions({ rol, onSignOut, disabled }) {
           </NavLink>
         </>
       )}
-      {/* La lista de deseos (HU14) permanece visible en la cabecera */}
+      {/* Los favoritos (HU14) y las listas de deseos (PBI 534) permanecen visibles en la cabecera, por separado */}
       {esCliente && (
-        <NavLink to={PATHS.WISHLIST} icon={<Heart20Regular />} compact={compact}>
-          Favoritos
-        </NavLink>
+        <>
+          <NavLink to={PATHS.FAVORITES} icon={<Heart20Regular />} compact={compact}>
+            Favoritos
+          </NavLink>
+          <NavLink to={PATHS.WISHLIST} icon={<Bookmark20Regular />} compact={compact}>
+            Listas de deseos
+          </NavLink>
+        </>
       )}
       {/* Las incidencias (HU44) son del cliente y del vendedor */}
       {rol === ROLES.VENDEDOR && (
@@ -235,17 +386,13 @@ function UserActions({ rol, onSignOut, disabled }) {
           Mi perfil
         </NavLink>
       )}
-      {esCliente && <ClientMenu compact={compact} />}
-      <Button
-        appearance="primary"
-        icon={<ArrowExit20Regular />}
-        onClick={onSignOut}
-        disabled={disabled}
-        title={compact ? 'Cerrar sesión' : undefined}
-        className={mergeClasses(styles.item, compact && styles.compactItem)}
-      >
-        <span className={compact ? styles.compactLabel : undefined}>Cerrar sesión</span>
-      </Button>
+      {esCliente && <CartWidget />}
+      {esCliente && <ClientMenu compact={compact} onSignOut={onSignOut} disabled={disabled} />}
+      {!esCliente && (
+        <Button appearance="primary" icon={<ArrowExit20Regular />} onClick={onSignOut} disabled={disabled}>
+          Cerrar sesión
+        </Button>
+      )}
     </>
   )
 }

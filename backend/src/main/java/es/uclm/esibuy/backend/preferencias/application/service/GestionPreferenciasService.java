@@ -9,13 +9,13 @@ import es.uclm.esibuy.backend.preferencias.application.port.in.GestionPreferenci
 import es.uclm.esibuy.backend.preferencias.application.port.out.CategoriasPort;
 import es.uclm.esibuy.backend.preferencias.application.port.out.ClienteEnSesionPort;
 import es.uclm.esibuy.backend.preferencias.application.port.out.PreferenciasRepositoryPort;
-import es.uclm.esibuy.backend.preferencias.domain.exception.PreferenciasInvalidasException;
+import es.uclm.esibuy.backend.preferencias.domain.exception.CategoriaNoDisponibleException;
 import es.uclm.esibuy.backend.preferencias.domain.model.Preferencias;
 import es.uclm.esibuy.backend.shared.seguridad.Permisos;
 
 /**
- * Implementa la gestión de las preferencias del cliente (HU46), hablando con el exterior solo por los puertos de
- * salida.
+ * Implementa la gestión de las preferencias del cliente (HU46), que son sus categorías favoritas (AB#528), hablando con
+ * el exterior solo por los puertos de salida.
  */
 public class GestionPreferenciasService implements GestionPreferenciasUseCase {
 
@@ -35,31 +35,46 @@ public class GestionPreferenciasService implements GestionPreferenciasUseCase {
     @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)
     @Override
     public List<String> consultar(String emailCliente) {
-        Set<String> activas = categorias.activas();
-        return preferenciasRepository.buscarPorCliente(clienteEnSesion.idPorCorreo(emailCliente))
-                .map(preferencias -> preferencias.getCategorias().stream().filter(activas::contains).toList())
-                .orElse(List.of());
+        return soloActivas(preferenciasDe(emailCliente), categorias.activas());
     }
 
     @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)
     @Override
-    public List<String> guardar(String emailCliente, List<String> elegidas) {
-        if (elegidas == null) {
-            throw new PreferenciasInvalidasException("Las categorías son obligatorias");
+    public List<String> marcar(String emailCliente, String categoriaId) {
+        Set<String> activas = categorias.activas();
+        if (!activas.contains(categoriaId)) {
+            throw new CategoriaNoDisponibleException("La categoría no está disponible");
         }
-        if (!categorias.activas().containsAll(elegidas)) {
-            throw new PreferenciasInvalidasException("Alguna categoría no existe o no está activa");
+        Preferencias preferencias = preferenciasDe(emailCliente);
+        if (preferencias.marcar(categoriaId)) {
+            preferenciasRepository.guardar(preferencias);
         }
-        String clienteId = clienteEnSesion.idPorCorreo(emailCliente);
-        Preferencias preferencias = preferenciasRepository.buscarPorCliente(clienteId)
-                .orElseGet(() -> Preferencias.ninguna(clienteId));
-        preferencias.elegirCategorias(elegidas);
-        return preferenciasRepository.guardar(preferencias).getCategorias();
+        return soloActivas(preferencias, activas);
+    }
+
+    @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)
+    @Override
+    public List<String> desmarcar(String emailCliente, String categoriaId) {
+        Preferencias preferencias = preferenciasDe(emailCliente);
+        if (preferencias.desmarcar(categoriaId)) {
+            preferenciasRepository.guardar(preferencias);
+        }
+        return soloActivas(preferencias, categorias.activas());
     }
 
     @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)
     @Override
     public void eliminar(String emailCliente) {
         preferenciasRepository.eliminarPorCliente(clienteEnSesion.idPorCorreo(emailCliente));
+    }
+
+    // Las preferencias del cliente en sesión, o unas vacías sin guardar si todavía no tiene
+    private Preferencias preferenciasDe(String emailCliente) {
+        String clienteId = clienteEnSesion.idPorCorreo(emailCliente);
+        return preferenciasRepository.buscarPorCliente(clienteId).orElseGet(() -> Preferencias.ninguna(clienteId));
+    }
+
+    private static List<String> soloActivas(Preferencias preferencias, Set<String> activas) {
+        return preferencias.getCategorias().stream().filter(activas::contains).toList();
     }
 }

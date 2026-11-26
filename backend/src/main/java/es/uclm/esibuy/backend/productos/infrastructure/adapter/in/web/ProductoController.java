@@ -30,8 +30,10 @@ import es.uclm.esibuy.backend.productos.application.port.in.CriterioOrdenProduct
 import es.uclm.esibuy.backend.productos.application.port.in.DireccionOrden;
 
 /**
- * Adaptador de entrada web del módulo de productos. Recibe la petición, la traduce a una consulta o a un
- * comando y delega en el puerto de entrada. /api/seller/** solo lo usa un VENDEDOR (SecurityConfig, T57).
+ * Adaptador de entrada web del módulo de productos. Recibe la petición, la
+ * traduce a una consulta o a un
+ * comando y delega en el puerto de entrada. /api/seller/** solo lo usa un
+ * VENDEDOR (SecurityConfig, T57).
  */
 @RestController
 @RequestMapping("/api")
@@ -57,7 +59,8 @@ public class ProductoController {
         return new ProductoImagenResponse(referencia);
     }
 
-    // Las imágenes se sirven únicamente a usuarios autenticados por la configuración global de seguridad.
+    // Las imágenes se sirven únicamente a usuarios autenticados por la
+    // configuración global de seguridad.
     @GetMapping("/product-images/{id}")
     public ResponseEntity<byte[]> obtenerImagen(@PathVariable String id) {
         return gestionImagenes.obtener(id)
@@ -69,8 +72,11 @@ public class ProductoController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // Listado de los productos propios (HU32): el vendedor sale de la sesión, nunca de un parámetro.
-    // Una página o un tamaño menor que 1 los rechaza Spring con 400 (validación de @Min).
+    // Listado de los productos propios (HU32): el vendedor sale de la sesión, nunca
+    // de un parámetro.
+    // Una página o un tamaño menor que 1 los rechaza Spring con 400 (validación de
+    // @Min).
+
     @GetMapping("/seller/products")
     public ProductoListadoPageResponse listarMisProductos(
             @RequestParam(defaultValue = "1") @Min(1) int page,
@@ -82,35 +88,54 @@ public class ProductoController {
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
             Authentication autenticado) {
-        Boolean disponible = "visible".equalsIgnoreCase(status) ? Boolean.TRUE
-                : "hidden".equalsIgnoreCase(status) ? Boolean.FALSE : null;
-        CriterioOrdenProductos criterioOrden = switch (sort == null ? "" : sort.toLowerCase()) {
+
+        Boolean disponible = null;
+        if ("visible".equalsIgnoreCase(status)) {
+            disponible = Boolean.TRUE;
+        } else if ("hidden".equalsIgnoreCase(status)) {
+            disponible = Boolean.FALSE;
+        }
+
+        String orden = sort == null ? "" : sort.toLowerCase(java.util.Locale.ROOT);
+
+        CriterioOrdenProductos criterioOrden = switch (orden) {
             case "price-asc", "price-desc" -> CriterioOrdenProductos.PRECIO;
             case "stock-asc", "stock-desc" -> CriterioOrdenProductos.STOCK;
             default -> null;
         };
-        DireccionOrden direccionOrden = criterioOrden == null ? null
-                : sort.toLowerCase().endsWith("-desc") ? DireccionOrden.DESC : DireccionOrden.ASC;
+
+        DireccionOrden direccionOrden = null;
+        if (criterioOrden != null) {
+            if (orden.endsWith("-desc")) {
+                direccionOrden = DireccionOrden.DESC;
+            } else {
+                direccionOrden = DireccionOrden.ASC;
+            }
+        }
+
         return ProductoListadoPageResponse.desde(listadoProductos.listarMisProductos(
                 autenticado.getName(), new ListarProductosQuery(
                         search, category, disponible, criterioOrden, direccionOrden,
                         minPrice, maxPrice, page - 1, size)));
     }
 
-    // Detalle de un producto propio (HU33): el vendedor sale de la sesión; uno ajeno o inexistente da 404.
+    // Detalle de un producto propio (HU33): el vendedor sale de la sesión; uno
+    // ajeno o inexistente da 404.
     @GetMapping("/seller/products/{id}")
     public ProductoResponse consultarMiProducto(@PathVariable String id, Authentication autenticado) {
         return ProductoResponse.desde(gestionProductos.consultarMiProducto(autenticado.getName(), id));
     }
 
-    // Alta de producto (HU31): el vendedor sale de la sesión; un vendedorId en el cuerpo se ignora.
+    // Alta de producto (HU31): el vendedor sale de la sesión; un vendedorId en el
+    // cuerpo se ignora.
     @PostMapping("/seller/products")
     @ResponseStatus(HttpStatus.CREATED)
     public ProductoResponse crearProducto(@Valid @RequestBody ProductoRequest request, Authentication autenticado) {
         return ProductoResponse.desde(gestionProductos.crear(request.aComando(autenticado.getName())));
     }
 
-    // Modificación de un producto propio (HU34): el vendedor sale de la sesión; uno ajeno o inexistente da 404.
+    // Modificación de un producto propio (HU34): el vendedor sale de la sesión; uno
+    // ajeno o inexistente da 404.
     @PutMapping("/seller/products/{id}")
     public ProductoResponse modificarMiProducto(@PathVariable String id, @Valid @RequestBody ProductoRequest request,
             Authentication autenticado) {
@@ -118,15 +143,18 @@ public class ProductoController {
                 gestionProductos.modificarMiProducto(request.aComandoModificacion(autenticado.getName(), id)));
     }
 
-    // Eliminación de un producto propio (HU35): el vendedor sale de la sesión; uno ajeno o inexistente da 404.
+    // Eliminación de un producto propio (HU35): el vendedor sale de la sesión; uno
+    // ajeno o inexistente da 404.
     @DeleteMapping("/seller/products/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void eliminarMiProducto(@PathVariable String id, Authentication autenticado) {
         gestionProductos.eliminarMiProducto(autenticado.getName(), id);
     }
 
-    // Activación y desactivación de un producto propio (HU16): el vendedor sale de la sesión; uno ajeno o
-    // inexistente da 404. Contrato de frontend/docs/hu16-activar-desactivar-productos.md.
+    // Activación y desactivación de un producto propio (HU16): el vendedor sale de
+    // la sesión; uno ajeno o
+    // inexistente da 404. Contrato de
+    // frontend/docs/hu16-activar-desactivar-productos.md.
     @PatchMapping("/seller/products/{id}/availability")
     public ProductoResponse cambiarDisponibilidadMiProducto(@PathVariable String id,
             @Valid @RequestBody DisponibilidadRequest request, Authentication autenticado) {

@@ -8,11 +8,18 @@ describe('incidentStatus', () => {
   })
 
   it('HU44-CP25: un estado que el frontend no conoce se muestra tal cual', () => {
-    expect(etiquetaDeEstado('RESUELTA')).toBe('RESUELTA')
+    expect(etiquetaDeEstado('ARCHIVADA')).toBe('ARCHIVADA')
   })
 
   it('HU44-CP25: cada estado tiene su color: pendiente en aviso y abierta en la marca', () => {
     expect(colorDeEstado('PENDIENTE')).toBe('warning')
     expect(colorDeEstado('ABIERTA')).toBe('brand')
+  })
+})
+
+describe('incidentStatus (HU192)', () => {
+  it('HU192-CP33: RESUELTA se muestra como Resuelta, con un color propio', () => {
+    expect(etiquetaDeEstado('RESUELTA')).toBe('Resuelta')
+    expect(colorDeEstado('RESUELTA')).toBe('success')
   })
 })

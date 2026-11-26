@@ -38,11 +38,12 @@ async function abrirPanel() {
   return screen.findByRole('region', { name: /tu carrito/i })
 }
 
-describe('CartWidget (HU9): botón flotante', () => {
+describe('CartWidget (HU9): acceso en la cabecera', () => {
   it('HU9-CP05: indica cuántos productos hay en el carrito', () => {
     pintar()
 
     expect(botonDelCarrito()).toHaveAccessibleName('Carrito, 4 productos')
+    expect(botonDelCarrito()).toHaveTextContent('Mi carrito')
   })
 
   it('HU9-CP05: con un solo producto lo dice en singular', () => {

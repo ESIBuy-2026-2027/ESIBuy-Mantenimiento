@@ -9,8 +9,10 @@ import es.uclm.esibuy.backend.pedidos.application.port.out.CompraProveedor;
 import es.uclm.esibuy.backend.pedidos.domain.model.LineaPedido;
 
 /**
- * Adaptador de salida que pregunta al carrito (HU9) por su puerto de entrada. El carrito ya viene limpio y con los
- * precios del cliente calculados por el servidor: el pedido nunca se fía de precios enviados por el navegador.
+ * Adaptador de salida que pregunta al carrito (HU9) por su puerto de entrada.
+ * El carrito ya viene limpio y con los
+ * precios del cliente calculados por el servidor: el pedido nunca se fía de
+ * precios enviados por el navegador.
  */
 public class CarritoAdapter implements CarritoPort {
 
@@ -25,10 +27,18 @@ public class CarritoAdapter implements CarritoPort {
         return gestionCarrito.consultar(emailCliente).grupos().stream()
                 .filter(grupo -> grupo.vendedorId().equals(vendedorId))
                 .findFirst()
-                .map(grupo -> new CompraProveedor(grupo.vendedorId(), grupo.nombreComercial(), grupo.lineas().stream()
-                        .map(linea -> new LineaPedido(linea.productoId(), linea.nombre(), linea.cantidad(),
-                                linea.precioUnitario(), linea.imagen()))
-                        .toList()));
+                .map(grupo -> new CompraProveedor(
+                        grupo.vendedorId(),
+                        grupo.nombreComercial(),
+                        grupo.lineas().stream()
+                                .map(linea -> new LineaPedido(
+                                        linea.productoId(),
+                                        grupo.vendedorId(),
+                                        linea.nombre(),
+                                        linea.cantidad(),
+                                        linea.precioUnitario(),
+                                        linea.imagen()))
+                                .toList()));
     }
 
     @Override

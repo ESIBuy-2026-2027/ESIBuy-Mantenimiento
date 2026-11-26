@@ -7,6 +7,7 @@ import es.uclm.esibuy.backend.metodospago.application.port.out.CifradoDatosPagoP
 import es.uclm.esibuy.backend.metodospago.application.port.out.ClienteEnSesionPort;
 import es.uclm.esibuy.backend.metodospago.application.port.out.MetodoPagoRepositoryPort;
 import es.uclm.esibuy.backend.metodospago.domain.exception.MetodoPagoInvalidoException;
+import es.uclm.esibuy.backend.metodospago.domain.exception.MetodoPagoNoEncontradoException;
 import es.uclm.esibuy.backend.metodospago.domain.model.CaducidadTarjeta;
 import es.uclm.esibuy.backend.metodospago.domain.model.MetodoPago;
 import es.uclm.esibuy.backend.metodospago.domain.model.MetodosPagoCliente;
@@ -69,6 +70,30 @@ public class GestionMetodosPagoService implements GestionMetodosPagoUseCase {
         // Las reglas del conjunto (límite y predeterminado) viven en el dominio
         new MetodosPagoCliente(metodoPagoRepository.buscarPorCliente(clienteId)).anadir(metodo);
         return metodoPagoRepository.guardar(metodo);
+    }
+
+    @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)
+    @Override
+    public MetodoPago actualizar(String emailCliente, String metodoId, AnadirMetodoPagoCommand comando) {
+        if (comando.tipo() == null) {
+            throw new MetodoPagoInvalidoException("El tipo de método de pago es obligatorio");
+        }
+        String clienteId = clienteEnSesion.idPorCorreo(emailCliente);
+        MetodoPago existente = metodoPagoRepository.buscarPorCliente(clienteId).stream()
+                .filter(metodo -> metodo.getId().equals(metodoId))
+                .findFirst()
+                .orElseThrow(() -> new MetodoPagoNoEncontradoException(
+                        "El método de pago no existe"));
+
+        DatosValidados datos = switch (comando.tipo()) {
+            case TARJETA -> validarTarjeta(comando);
+            case PAYPAL -> validarPayPal(comando);
+            case BIZUM -> validarBizum(comando);
+        };
+        String datosCifrados = cifradoDatosPago.cifrar(datos.enClaro());
+        MetodoPago actualizado = new MetodoPago(existente.getId(), clienteId, comando.tipo(), datos.mascara(),
+                datosCifrados, existente.isPredeterminado());
+        return metodoPagoRepository.guardar(actualizado);
     }
 
     @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)

@@ -369,6 +369,84 @@ class ProductoMongoAdapterTest {
     }
 
     @Test
+    @DisplayName("HU7: los filtros de stock y ofertas se combinan en la consulta paginada")
+    void buscarEnCatalogoFiltraPorStockYOfertas() {
+        adapter.guardar(crearProducto(null, "v-1", "Sin stock con oferta", "",
+                new BigDecimal("10"), 0, "cat-1", "", true,
+                new Descuento(true, new BigDecimal("10")), Descuento.sinDescuento()));
+        adapter.guardar(crearProducto(null, "v-2", "Con stock sin oferta", "",
+                new BigDecimal("10"), 5, "cat-1", "", true,
+                Descuento.sinDescuento(), Descuento.sinDescuento()));
+        adapter.guardar(crearProducto(null, "v-3", "Con stock y oferta", "",
+                new BigDecimal("10"), 3, "cat-1", "", true,
+                new Descuento(true, new BigDecimal("15")), Descuento.sinDescuento()));
+
+        ProductoPage soloStock = adapter.buscarEnCatalogo(
+                new BuscarCatalogoQuery(null, null, null, true, false, false, null, null, CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
+        adapter.guardar(crearProducto(null, "v-4", "Solo oferta Premium", "",
+                new BigDecimal("10"), 2, "cat-1", "", true,
+                Descuento.sinDescuento(), new Descuento(true, new BigDecimal("20"))));
+
+        ProductoPage soloOfertas = adapter.buscarEnCatalogo(
+                new BuscarCatalogoQuery(null, null, null, false, true, false, null, null, CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
+        ProductoPage ofertasPremium = adapter.buscarEnCatalogo(
+                new BuscarCatalogoQuery(null, null, null, false, true, true, null, null, CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
+        ProductoPage stockYOfertas = adapter.buscarEnCatalogo(
+                new BuscarCatalogoQuery(null, null, null, true, true, false, null, null, CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
+
+        assertEquals(List.of("Con stock sin oferta", "Con stock y oferta"), nombres(soloStock));
+        assertEquals(List.of("Con stock y oferta", "Sin stock con oferta"), nombres(soloOfertas));
+        assertEquals(List.of("Con stock y oferta", "Sin stock con oferta", "Solo oferta Premium"), nombres(ofertasPremium));
+        assertEquals(List.of("Con stock y oferta"), nombres(stockYOfertas));
+    }
+
+    @Test
+    @DisplayName("HU7: el rango de precio filtra los productos de forma inclusiva")
+    void buscarEnCatalogoFiltraPorRangoDePrecio() {
+        adapter.guardar(crearProducto(null, "v-1", "Producto barato", "",
+                new BigDecimal("24.99"), 5, "cat-1", "", true,
+                Descuento.sinDescuento(), Descuento.sinDescuento()));
+        adapter.guardar(crearProducto(null, "v-2", "Producto dentro", "",
+                new BigDecimal("75.00"), 5, "cat-1", "", true,
+                Descuento.sinDescuento(), Descuento.sinDescuento()));
+        adapter.guardar(crearProducto(null, "v-3", "Producto caro", "",
+                new BigDecimal("150.01"), 5, "cat-1", "", true,
+                Descuento.sinDescuento(), Descuento.sinDescuento()));
+
+        ProductoPage resultado = adapter.buscarEnCatalogo(
+                new BuscarCatalogoQuery(null, null, null, false, false, false, new BigDecimal("24.99"), new BigDecimal("75.00"),
+                        CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
+
+        assertEquals(List.of("Producto barato", "Producto dentro"), nombres(resultado));
+    }
+
+    @Test
+    @DisplayName("HU7: el máximo disponible respeta los filtros activos e ignora el límite superior del precio")
+    void precioMaximoEnCatalogoRespetaFiltrosYOmiteElMaximoSeleccionado() {
+        adapter.guardar(crearProducto(null, "v-1", "Producto barato", "", new BigDecimal("24.99"), 5,
+                "cat-1", "", true, Descuento.sinDescuento(), Descuento.sinDescuento()));
+        adapter.guardar(crearProducto(null, "v-2", "Producto dentro", "", new BigDecimal("75.00"), 5,
+                "cat-1", "", true, Descuento.sinDescuento(), Descuento.sinDescuento()));
+        adapter.guardar(crearProducto(null, "v-3", "Producto caro", "", new BigDecimal("150.01"), 5,
+                "cat-1", "", true, Descuento.sinDescuento(), Descuento.sinDescuento()));
+        adapter.guardar(crearProducto(null, "v-4", "Producto de otra categoría", "", new BigDecimal("999.00"), 5,
+                "cat-2", "", true, Descuento.sinDescuento(), Descuento.sinDescuento()));
+        adapter.guardar(crearProducto(null, "v-5", "Producto no disponible", "", new BigDecimal("500.00"), 5,
+                "cat-1", "", false, Descuento.sinDescuento(), Descuento.sinDescuento()));
+
+        BuscarCatalogoQuery filtrosDePrecio = new BuscarCatalogoQuery(null, "cat-1", null, false, false, false,
+                new BigDecimal("24.99"), new BigDecimal("75.00"), CriterioOrdenCatalogo.NOMBRE, false, 0, 10);
+        BuscarCatalogoQuery minimoSuperiorAlCatalogo = new BuscarCatalogoQuery(null, "cat-1", null, false, false, false,
+                new BigDecimal("200.00"), new BigDecimal("75.00"), CriterioOrdenCatalogo.NOMBRE, false, 0, 10);
+
+        assertEquals(new BigDecimal("150.01"), adapter.precioMaximoEnCatalogo(filtrosDePrecio));
+        assertEquals(List.of("Producto barato", "Producto dentro"), nombres(adapter.buscarEnCatalogo(filtrosDePrecio)));
+        // El dominio del deslizador no debe colapsar a cero al seleccionar un mínimo superior a todos los precios.
+        assertEquals(new BigDecimal("150.01"), adapter.precioMaximoEnCatalogo(minimoSuperiorAlCatalogo));
+        assertTrue(adapter.buscarEnCatalogo(minimoSuperiorAlCatalogo).productos().isEmpty());
+    }
+
+    @Test
     @DisplayName("HU7-CP12: la búsqueda por nombre no distingue mayúsculas ni tildes")
     void buscarEnCatalogoBuscaSinDistinguirMayusculasNiTildes() {
         adapter.guardar(productoNuevo("v-1", "Lámpara de escritorio"));
@@ -402,7 +480,7 @@ class ProductoMongoAdapterTest {
         guardarProducto("v-2", "Ratón", "cat-2", "2026-10-03T10:00:00Z");
 
         ProductoPage pagina = adapter.buscarEnCatalogo(
-                new BuscarCatalogoQuery("teclado", "cat-2", null, CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
+                new BuscarCatalogoQuery("teclado", "cat-2", null, false, false, false, null, null, CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
 
         assertEquals(1, pagina.totalElementos());
         assertEquals("Teclado", pagina.productos().getFirst().getNombre());
@@ -419,13 +497,37 @@ class ProductoMongoAdapterTest {
         adapter.guardar(productoNuevo("v-2", "Banco"));
 
         ProductoPage ascendente = adapter.buscarEnCatalogo(
-                new BuscarCatalogoQuery(null, null, null, CriterioOrdenCatalogo.NOMBRE, false, 0, 2));
+                new BuscarCatalogoQuery(null, null, null, false, false, false, null, null, CriterioOrdenCatalogo.NOMBRE, false, 0, 2));
         ProductoPage descendente = adapter.buscarEnCatalogo(
-                new BuscarCatalogoQuery(null, null, null, CriterioOrdenCatalogo.NOMBRE, true, 0, 2));
+                new BuscarCatalogoQuery(null, null, null, false, false, false, null, null, CriterioOrdenCatalogo.NOMBRE, true, 0, 2));
 
         assertEquals(List.of("Atril", "Banco"), nombres(ascendente));
         assertEquals(3, ascendente.totalElementos());
         assertEquals(List.of("Cesta", "Banco"), nombres(descendente));
+    }
+
+    @Test
+    @DisplayName("HU7: ordena el catálogo por precio ascendente y descendente")
+    void buscarEnCatalogoOrdenaPorPrecio() {
+        adapter.guardar(crearProducto(null, "v-1", "Precio medio", "",
+                new BigDecimal("50.00"), 5, "cat-1", "", true,
+                Descuento.sinDescuento(), Descuento.sinDescuento()));
+        adapter.guardar(crearProducto(null, "v-1", "Precio bajo", "",
+                new BigDecimal("10.00"), 5, "cat-1", "", true,
+                Descuento.sinDescuento(), Descuento.sinDescuento()));
+        adapter.guardar(crearProducto(null, "v-2", "Precio alto", "",
+                new BigDecimal("100.00"), 5, "cat-1", "", true,
+                Descuento.sinDescuento(), Descuento.sinDescuento()));
+
+        ProductoPage ascendente = adapter.buscarEnCatalogo(
+                new BuscarCatalogoQuery(null, null, null, false, false, false, null, null,
+                        CriterioOrdenCatalogo.PRECIO, false, 0, 10));
+        ProductoPage descendente = adapter.buscarEnCatalogo(
+                new BuscarCatalogoQuery(null, null, null, false, false, false, null, null,
+                        CriterioOrdenCatalogo.PRECIO, true, 0, 10));
+
+        assertEquals(List.of("Precio bajo", "Precio medio", "Precio alto"), nombres(ascendente));
+        assertEquals(List.of("Precio alto", "Precio medio", "Precio bajo"), nombres(descendente));
     }
 
     // Valoración mínima y orden por valoración (HU7) con la media de las
@@ -440,9 +542,9 @@ class ProductoMongoAdapterTest {
         adapter.guardar(productoNuevo("v-1", "Cesta"));
 
         ProductoPage desdeCuatro = adapter.buscarEnCatalogo(
-                new BuscarCatalogoQuery(null, null, 4, CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
+                new BuscarCatalogoQuery(null, null, 4, false, false, false, null, null, CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
         ProductoPage desdeTres = adapter.buscarEnCatalogo(
-                new BuscarCatalogoQuery(null, null, 3, CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
+                new BuscarCatalogoQuery(null, null, 3, false, false, false, null, null, CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
 
         assertEquals(List.of("Atril"), nombres(desdeCuatro));
         assertEquals(1, desdeCuatro.totalElementos());
@@ -458,9 +560,9 @@ class ProductoMongoAdapterTest {
         guardarValorado("Dado", 2.0);
 
         ProductoPage descendente = adapter.buscarEnCatalogo(
-                new BuscarCatalogoQuery(null, null, null, CriterioOrdenCatalogo.VALORACION, true, 0, 10));
+                new BuscarCatalogoQuery(null, null, null, false, false, false, null, null, CriterioOrdenCatalogo.VALORACION, true, 0, 10));
         ProductoPage ascendente = adapter.buscarEnCatalogo(
-                new BuscarCatalogoQuery(null, null, null, CriterioOrdenCatalogo.VALORACION, false, 0, 10));
+                new BuscarCatalogoQuery(null, null, null, false, false, false, null, null, CriterioOrdenCatalogo.VALORACION, false, 0, 10));
 
         // Banco y Cesta empatan a 4,0: el empate se resuelve de la A a la Z en los dos
         // sentidos
@@ -476,12 +578,12 @@ class ProductoMongoAdapterTest {
     // Catálogo sin búsqueda, categoría ni valoración mínima, por nombre de la A a
     // la Z, primera página de 10.
     private static BuscarCatalogoQuery sinFiltros() {
-        return new BuscarCatalogoQuery(null, null, null, CriterioOrdenCatalogo.NOMBRE, false, 0, 10);
+        return new BuscarCatalogoQuery(null, null, null, false, false, false, null, null, CriterioOrdenCatalogo.NOMBRE, false, 0, 10);
     }
 
     // Como sinFiltros, pero buscando ese texto en el nombre.
     private static BuscarCatalogoQuery buscando(String texto) {
-        return new BuscarCatalogoQuery(texto, null, null, CriterioOrdenCatalogo.NOMBRE, false, 0, 10);
+        return new BuscarCatalogoQuery(texto, null, null, false, false, false, null, null, CriterioOrdenCatalogo.NOMBRE, false, 0, 10);
     }
 
     private static Producto productoNuevo(String vendedorId, String nombre) {

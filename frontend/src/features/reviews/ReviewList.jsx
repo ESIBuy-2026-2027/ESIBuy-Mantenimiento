@@ -27,6 +27,14 @@ const useStyles = makeStyles({
     border: `1px solid ${tokens.colorNeutralStroke2}`,
     borderRadius: tokens.borderRadiusXLarge,
   },
+  // Quién y cuándo, en los extremos de la misma línea
+  head: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    columnGap: tokens.spacingHorizontalM,
+  },
   author: {
     color: tokens.colorNeutralForeground2,
     fontWeight: tokens.fontWeightSemibold,
@@ -73,9 +81,11 @@ export default function ReviewList({ reviews, failed, onRetry, myReviewId = null
           id={`valoracion-${review.id}`}
           className={myReviewId === review.id ? `${styles.item} ${styles.ownItem}` : styles.item}
         >
+          <div className={styles.head}>
+            <Text className={styles.author}>{review.nombreCliente}</Text>
+            <Text size={200} className={styles.muted}>{formatearFecha(review.fechaCreacion)}</Text>
+          </div>
           <RatingStars value={review.puntuacion} size={18} />
-          <Text className={styles.author}>{review.nombreCliente}</Text>
-          <Text size={200} className={styles.muted}>{formatearFecha(review.fechaCreacion)}</Text>
           {review.comentario && <Text className={styles.comment}>{review.comentario}</Text>}
         </li>
       ))}

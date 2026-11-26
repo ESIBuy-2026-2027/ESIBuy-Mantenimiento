@@ -35,83 +35,88 @@ import es.uclm.esibuy.backend.shared.config.SecurityConfig;
 @Import(SecurityConfig.class)
 class SellerPedidoControllerTest {
 
-    private static final String URL = "/api/seller/orders";
-    private static final String VENDEDOR = "vendedor@esibuy.test";
+        private static final String URL = "/api/seller/orders";
+        private static final String VENDEDOR = "vendedor@esibuy.test";
 
-    @Autowired
-    private MockMvc mockMvc;
+        @Autowired
+        private MockMvc mockMvc;
 
-    @MockitoBean
-    private GestionPedidosVendedorUseCase gestionPedidos;
+        @MockitoBean
+        private GestionPedidosVendedorUseCase gestionPedidos;
 
-    private static final Pedido PEDIDO = new Pedido(new DatosPedido(
-            "o-1",
-            new NumeroPedido("ESB-2026-000001"),
-            "c-1",
-            "u-2",
-            "TecnoVera",
-            EstadoPedido.PAGADO,
-            List.of(new LineaPedido("p-1", "Auriculares", 2, new BigDecimal("53.91"))),
-            new DireccionEnvioPedido("Carlos", "Calle Mayor 1", null, "13001", "Ciudad Real",
-                    "Ciudad Real", "611222333"),
-            "mp-1",
-            Instant.parse("2026-10-29T10:00:00Z")));
+        private static final Pedido PEDIDO = new Pedido(new DatosPedido(
+                        "o-1",
+                        new NumeroPedido("ESB-2026-000001"),
+                        "c-1",
+                        "u-2",
+                        "TecnoVera",
+                        EstadoPedido.PAGADO,
+                        List.of(new LineaPedido(
+                                        "p-1",
+                                        "u-2",
+                                        "Auriculares",
+                                        2,
+                                        new BigDecimal("53.91"))),
+                        new DireccionEnvioPedido("Carlos", "Calle Mayor 1", null, "13001", "Ciudad Real",
+                                        "Ciudad Real", "611222333"),
+                        "mp-1",
+                        Instant.parse("2026-10-29T10:00:00Z")));
 
-    @Test
-    @DisplayName("gestion-pedidos-vendedor: GET listado devuelve los pedidos reales del vendedor")
-    void elListadoDevuelvePedidos() throws Exception {
-        when(gestionPedidos.listarPedidos(VENDEDOR)).thenReturn(List.of(PEDIDO));
+        @Test
+        @DisplayName("gestion-pedidos-vendedor: GET listado devuelve los pedidos reales del vendedor")
+        void elListadoDevuelvePedidos() throws Exception {
+                when(gestionPedidos.listarPedidos(VENDEDOR)).thenReturn(List.of(PEDIDO));
 
-        mockMvc.perform(get(URL).with(user(VENDEDOR).roles("VENDEDOR")))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].id").value("o-1"))
-                .andExpect(jsonPath("$[0].estado").value("PAGADO"));
+                mockMvc.perform(get(URL).with(user(VENDEDOR).roles("VENDEDOR")))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.length()").value(1))
+                                .andExpect(jsonPath("$[0].id").value("o-1"))
+                                .andExpect(jsonPath("$[0].estado").value("PAGADO"));
 
-        verify(gestionPedidos).listarPedidos(VENDEDOR);
-    }
+                verify(gestionPedidos).listarPedidos(VENDEDOR);
+        }
 
-    @Test
-    @DisplayName("gestion-pedidos-vendedor: GET detalle devuelve el pedido real")
-    void elDetalleDevuelvePedido() throws Exception {
-        when(gestionPedidos.consultarPedido(VENDEDOR, "o-1")).thenReturn(PEDIDO);
+        @Test
+        @DisplayName("gestion-pedidos-vendedor: GET detalle devuelve el pedido real")
+        void elDetalleDevuelvePedido() throws Exception {
+                when(gestionPedidos.consultarPedido(VENDEDOR, "o-1")).thenReturn(PEDIDO);
 
-        mockMvc.perform(get(URL + "/o-1").with(user(VENDEDOR).roles("VENDEDOR")))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value("o-1"))
-                .andExpect(jsonPath("$.lineas[0].nombre").value("Auriculares"))
-                .andExpect(jsonPath("$.direccionEnvio.calle").value("Calle Mayor 1"));
-    }
+                mockMvc.perform(get(URL + "/o-1").with(user(VENDEDOR).roles("VENDEDOR")))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.id").value("o-1"))
+                                .andExpect(jsonPath("$.lineas[0].nombre").value("Auriculares"))
+                                .andExpect(jsonPath("$.direccionEnvio.calle").value("Calle Mayor 1"));
+        }
 
-    @Test
-    @DisplayName("gestion-pedidos-vendedor: POST avance cambia y devuelve el estado")
-    void elAvanceDevuelvePedido() throws Exception {
-        Pedido preparado = new Pedido(new DatosPedido(
-                "o-1",
-                new NumeroPedido("ESB-2026-000001"),
-                "c-1",
-                "u-2",
-                "TecnoVera",
-                EstadoPedido.PREPARANDO,
-                PEDIDO.getLineas(),
-                PEDIDO.getDireccionEnvio(),
-                "mp-1",
-                PEDIDO.getCreatedAt()));
-        when(gestionPedidos.avanzarEstado(VENDEDOR, "o-1")).thenReturn(preparado);
+        @Test
+        @DisplayName("gestion-pedidos-vendedor: POST avance cambia y devuelve el estado")
+        void elAvanceDevuelvePedido() throws Exception {
+                Pedido preparado = new Pedido(new DatosPedido(
+                                "o-1",
+                                new NumeroPedido("ESB-2026-000001"),
+                                "c-1",
+                                "u-2",
+                                "TecnoVera",
+                                EstadoPedido.PREPARANDO,
+                                PEDIDO.getLineas(),
+                                PEDIDO.getDireccionEnvio(),
+                                "mp-1",
+                                PEDIDO.getCreatedAt()));
+                when(gestionPedidos.avanzarEstado(VENDEDOR, "o-1")).thenReturn(preparado);
 
-        mockMvc.perform(post(URL + "/o-1/advance").with(user(VENDEDOR).roles("VENDEDOR")).with(csrf()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.estado").value("PREPARANDO"));
-    }
+                mockMvc.perform(post(URL + "/o-1/advance").with(user(VENDEDOR).roles("VENDEDOR")).with(csrf()))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.estado").value("PREPARANDO"));
+        }
 
-    @Test
-    @DisplayName("gestion-pedidos-vendedor: solo el vendedor accede y sin CSRF el avance se rechaza")
-    void soloElVendedorAccede() throws Exception {
-        mockMvc.perform(get(URL).with(user("cliente@esibuy.test").roles("CLIENTE")))
-                .andExpect(status().isForbidden());
-        mockMvc.perform(post(URL + "/o-1/advance").with(user(VENDEDOR).roles("VENDEDOR")))
-                .andExpect(status().isForbidden());
+        @Test
+        @DisplayName("gestion-pedidos-vendedor: solo el vendedor accede y sin CSRF el avance se rechaza")
+        void soloElVendedorAccede() throws Exception {
+                mockMvc.perform(get(URL).with(user("cliente@esibuy.test").roles("CLIENTE")))
+                                .andExpect(status().isForbidden());
+                mockMvc.perform(post(URL + "/o-1/advance").with(user(VENDEDOR).roles("VENDEDOR")))
+                                .andExpect(status().isForbidden());
 
-        verifyNoInteractions(gestionPedidos);
-    }
+                verifyNoInteractions(gestionPedidos);
+        }
 }

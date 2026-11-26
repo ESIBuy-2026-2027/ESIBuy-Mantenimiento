@@ -21,9 +21,12 @@ import es.uclm.esibuy.backend.pedidos.application.port.in.RealizacionPedidoUseCa
 import es.uclm.esibuy.backend.pedidos.application.port.in.SeguimientoEnvioUseCase;
 
 /**
- * Adaptador de entrada web de los pedidos. Recibe la petición y delega en el puerto de entrada: crea el pedido
- * (HU10), sirve el historial de pedidos del cliente y el detalle de cada uno (HU11) y cancela un pedido que aún no
- * se ha enviado (HU12). También el seguimiento del envío: su estado e histórico y la confirmación de recepción
+ * Adaptador de entrada web de los pedidos. Recibe la petición y delega en el
+ * puerto de entrada: crea el pedido
+ * (HU10), sirve el historial de pedidos del cliente y el detalle de cada uno
+ * (HU11) y cancela un pedido que aún no
+ * se ha enviado (HU12). También el seguimiento del envío: su estado e histórico
+ * y la confirmación de recepción
  * por el cliente. El cliente sale siempre de la sesión, nunca de un parámetro.
  */
 @RestController
@@ -34,13 +37,16 @@ public class PedidoController {
     private final ConsultaComprasUseCase consultaCompras;
     private final CancelacionPedidoUseCase cancelacionPedido;
     private final ConfirmacionRecepcionPedidoUseCase confirmacionRecepcionPedido;
+    private final SeguimientoEnvioUseCase seguimientoEnvio;
 
     public PedidoController(RealizacionPedidoUseCase realizacionPedido, ConsultaComprasUseCase consultaCompras,
-            CancelacionPedidoUseCase cancelacionPedido, ConfirmacionRecepcionPedidoUseCase confirmacionRecepcionPedido) {
+            CancelacionPedidoUseCase cancelacionPedido,
+            ConfirmacionRecepcionPedidoUseCase confirmacionRecepcionPedido, SeguimientoEnvioUseCase seguimientoEnvio) {
         this.realizacionPedido = realizacionPedido;
         this.consultaCompras = consultaCompras;
         this.cancelacionPedido = cancelacionPedido;
         this.confirmacionRecepcionPedido = confirmacionRecepcionPedido;
+        this.seguimientoEnvio = seguimientoEnvio;
     }
 
     // Un pedido por proveedor: el frontend pide uno por cada proveedor del carrito
@@ -67,9 +73,32 @@ public class PedidoController {
     public PedidoResponse cancelar(@PathVariable String id, Authentication autenticado) {
         return PedidoResponse.desde(cancelacionPedido.cancelarPedido(autenticado.getName(), id));
     }
-    // Confirmación de recepción por el cliente: responde 200 con el pedido ya entregado
+
+    // Confirmación de recepción por el cliente: responde 200 con el pedido ya
+    // entregado
     @PostMapping("/{id}/deliver")
     public PedidoResponse confirmarRecepcion(@PathVariable String id, Authentication autenticado) {
         return PedidoResponse.desde(confirmacionRecepcionPedido.confirmarRecepcion(autenticado.getName(), id));
     }
+
+    // Seguimiento del envío (HU11): estado, fechas e histórico.
+    @GetMapping("/{id}/tracking")
+    public SeguimientoEnvioResponse consultarSeguimiento(
+            @PathVariable String id,
+            Authentication autenticado) {
+
+        return SeguimientoEnvioResponse.desde(
+                seguimientoEnvio.consultarSeguimiento(autenticado.getName(), id));
+    }
+
+    // Confirmación de recepción (HU11): el pedido pasa a ENTREGADO.
+    @PostMapping("/{id}/confirm-delivery")
+    public SeguimientoEnvioResponse confirmarEntrega(
+            @PathVariable String id,
+            Authentication autenticado) {
+
+        return SeguimientoEnvioResponse.desde(
+                seguimientoEnvio.confirmarEntrega(autenticado.getName(), id));
+    }
+
 }

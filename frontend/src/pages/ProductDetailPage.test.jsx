@@ -751,4 +751,222 @@ describe('ProductDetailPage (HU14): favoritos', () => {
     expect(await screen.findByText('No se ha podido quitar de favoritos. Inténtalo de nuevo.')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Quitar de favoritos' })).toBeEnabled()
   })
+
+  it('PBI534-CP11: el botón de listas abre el selector, permite crear una lista y marcarla o desmarcarla', async () => {
+    const user = userEvent.setup()
+    responderCon()
+    await abrirDetalle()
+
+    await user.click(await screen.findByRole('button', { name: 'Guardar en una lista' }))
+    const dialogo = screen.getByRole('dialog', { name: 'Guardar en lista de deseos' })
+    await user.type(await within(dialogo).findByLabelText('Nueva lista'), 'Setup')
+    await user.click(within(dialogo).getByRole('button', { name: 'Crear y guardar' }))
+    expect(await within(dialogo).findByRole('checkbox', { name: 'Setup (1)' })).toBeChecked()
+    await user.click(within(dialogo).getByRole('button', { name: 'Cerrar' }))
+
+    await user.click(await screen.findByRole('button', { name: 'Guardado en una lista' }))
+    const otraVez = screen.getByRole('dialog', { name: 'Guardar en lista de deseos' })
+    await user.click(within(otraVez).getByRole('checkbox', { name: 'Setup (1)' }))
+    expect(await within(otraVez).findByRole('checkbox', { name: 'Setup (0)' })).not.toBeChecked()
+    await user.click(within(otraVez).getByRole('button', { name: 'Cerrar' }))
+
+    expect(await screen.findByRole('button', { name: 'Guardar en una lista' })).toBeEnabled()
+  })
+
+  it('HU528-CP38: guardar en una lista no lo añade a favoritos, y añadirlo a favoritos no lo guarda en ninguna lista', async () => {
+    const user = userEvent.setup()
+    responderCon()
+    await abrirDetalle()
+
+    await user.click(await screen.findByRole('button', { name: 'Añadir a favoritos' }))
+
+    expect(await screen.findByRole('button', { name: 'Quitar de favoritos' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Guardar en una lista' })).toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+})
+
+// Categoría del producto en favoritas (AB#528): se añade y se quita desde el detalle, junto a su nombre. Del mock:
+// Tecnología (cat-1) y Hogar (cat-2), las dos activas.
+describe('ProductDetailPage (AB#528): categoría favorita', () => {
+  const ANADIR = 'Añadir a favoritas la categoría Tecnología'
+  const QUITAR = 'Quitar de favoritas la categoría Tecnología'
+  const conFavoritas = (...categorias) =>
+    server.use(http.get('/api/customer/preferences', () => HttpResponse.json({ categorias })))
+
+  it('HU528-CP22: el detalle tiene un botón para añadir a favoritas la categoría del producto', async () => {
+    responderCon()
+    await abrirDetalle()
+
+    expect(await screen.findByRole('button', { name: ANADIR })).toBeEnabled()
+    expect(screen.queryByRole('button', { name: QUITAR })).not.toBeInTheDocument()
+  })
+
+  it('HU528-CP22: si la categoría ya es favorita, el botón permite quitarla', async () => {
+    responderCon()
+    conFavoritas('cat-2', 'cat-1')
+    await abrirDetalle()
+
+    expect(await screen.findByRole('button', { name: QUITAR })).toBeEnabled()
+    expect(screen.queryByRole('button', { name: ANADIR })).not.toBeInTheDocument()
+  })
+
+  it('HU528-CP22: que el producto esté en favoritos no cambia la categoría, ni al revés', async () => {
+    responderCon()
+    conFavoritas('cat-1')
+    await abrirDetalle()
+
+    expect(await screen.findByRole('button', { name: QUITAR })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Añadir a favoritos' })).toBeInTheDocument()
+  })
+
+  it('HU528-CP22: si la categoría del producto no está activa, no se puede añadir', async () => {
+    responderCon({ categoriaId: 'cat-9' })
+    await abrirDetalle()
+
+    await screen.findByRole('button', { name: 'Añadir a favoritos' })
+    expect(screen.queryByRole('button', { name: /favoritas/ })).not.toBeInTheDocument()
+  })
+
+  it('HU528-CP22: si no se pueden leer las favoritas, se ofrece añadirla sin avisar de ningún error', async () => {
+    responderCon()
+    server.use(http.get('/api/customer/preferences', () => new HttpResponse(null, { status: 500 })))
+    await abrirDetalle()
+
+    expect(await screen.findByRole('button', { name: ANADIR })).toBeEnabled()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  it('HU528-CP23: al pulsar el botón se añade solo esa categoría y pasa a quitarla', async () => {
+    responderCon()
+    const user = userEvent.setup()
+    let cuerpo = null
+    server.use(
+      http.post('/api/customer/preferences/categories', async ({ request }) => {
+        cuerpo = await request.json()
+        return HttpResponse.json({ categorias: ['cat-1'] })
+      }),
+    )
+    await abrirDetalle()
+
+    await user.click(await screen.findByRole('button', { name: ANADIR }))
+
+    expect(await screen.findByRole('button', { name: QUITAR })).toBeEnabled()
+    expect(cuerpo).toEqual({ categoriaId: 'cat-1' })
+  })
+
+  it('HU528-CP23: al volver a pulsarlo se quita esa categoría y vuelve a ofrecer añadirla', async () => {
+    responderCon()
+    const user = userEvent.setup()
+    let quitada = null
+    conFavoritas('cat-1', 'cat-2')
+    server.use(
+      http.delete('/api/customer/preferences/categories/:categoriaId', ({ params }) => {
+        quitada = params.categoriaId
+        return HttpResponse.json({ categorias: ['cat-2'] })
+      }),
+    )
+    await abrirDetalle()
+
+    await user.click(await screen.findByRole('button', { name: QUITAR }))
+
+    expect(await screen.findByRole('button', { name: ANADIR })).toBeEnabled()
+    expect(quitada).toBe('cat-1')
+  })
+
+  it('HU528-CP23: mientras se guarda, el botón queda deshabilitado', async () => {
+    responderCon()
+    const user = userEvent.setup()
+    server.use(
+      http.post('/api/customer/preferences/categories', async () => {
+        await delay('infinite')
+      }),
+    )
+    await abrirDetalle()
+
+    await user.click(await screen.findByRole('button', { name: ANADIR }))
+
+    expect(screen.getByRole('button', { name: ANADIR })).toBeDisabled()
+  })
+
+  it('HU528-CP27: al añadir o quitar la categoría avisa con su nombre, y un aviso sustituye al anterior', async () => {
+    responderCon()
+    const user = userEvent.setup()
+    await abrirDetalle()
+
+    await user.click(await screen.findByRole('button', { name: ANADIR }))
+    const aviso = await screen.findByText('Tecnología se ha añadido a tus categorías favoritas.')
+    expect(aviso.closest('output')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: QUITAR }))
+
+    expect(await screen.findByText('Tecnología se ha quitado de tus categorías favoritas.')).toBeInTheDocument()
+    expect(screen.queryByText(/se ha añadido/)).not.toBeInTheDocument()
+  })
+
+  it.each([
+    ['ya no está disponible', 'CATEGORY_NOT_FOUND', 404, 'Tecnología ya no está disponible.'],
+    [
+      'falla por otro motivo',
+      null,
+      500,
+      'No se ha podido añadir Tecnología a tus categorías favoritas. Inténtalo de nuevo.',
+    ],
+  ])('HU528-CP27: si al añadirla %s, lo avisa sin detalles internos y no queda como favorita', async (_caso, code, status, texto) => {
+    responderCon()
+    const user = userEvent.setup()
+    server.use(
+      http.post('/api/customer/preferences/categories', () =>
+        HttpResponse.json({ code, mensaje: 'MongoTimeoutException' }, { status }),
+      ),
+    )
+    await abrirDetalle()
+
+    await user.click(await screen.findByRole('button', { name: ANADIR }))
+
+    expect(await screen.findByText(texto)).toBeInTheDocument()
+    expect(screen.queryByText(/mongotimeout/i)).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: ANADIR })).toBeEnabled()
+  })
+
+  it('HU528-CP27: si no se puede quitar, lo avisa y sigue como favorita', async () => {
+    responderCon()
+    const user = userEvent.setup()
+    conFavoritas('cat-1')
+    server.use(
+      http.delete('/api/customer/preferences/categories/:categoriaId', () => new HttpResponse(null, { status: 500 })),
+    )
+    await abrirDetalle()
+
+    await user.click(await screen.findByRole('button', { name: QUITAR }))
+
+    expect(
+      await screen.findByText('No se ha podido quitar Tecnología de tus categorías favoritas. Inténtalo de nuevo.'),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: QUITAR })).toBeEnabled()
+  })
+
+  it('HU528-CP42: la categoría es una pastilla que se marca al pulsarla, distinta del corazón del producto', async () => {
+    responderCon()
+    const user = userEvent.setup()
+    await abrirDetalle()
+
+    const pastilla = await screen.findByRole('button', { name: ANADIR })
+    expect(pastilla).toHaveTextContent(/^Tecnología$/)
+    expect(pastilla).toHaveAttribute('title', 'Añadir a tus categorías favoritas')
+    expect(pastilla).toHaveAttribute('data-marcada', 'false')
+    await user.click(pastilla)
+
+    const marcada = await screen.findByRole('button', { name: QUITAR })
+    expect(marcada).toHaveTextContent(/^Tecnología$/)
+    expect(marcada).toHaveAttribute('title', 'Quitar de tus categorías favoritas')
+    expect(marcada).toHaveAttribute('data-marcada', 'true')
+  })
+
+  it('HU528-CP42: si la categoría no está activa se ve como texto, sin pastilla', async () => {
+    responderCon({ categoriaId: 'cat-9' })
+    await abrirDetalle()
+
+    await screen.findByRole('button', { name: 'Añadir a favoritos' })
+    expect(screen.getAllByText('—').length).toBeGreaterThan(0)
+  })
 })

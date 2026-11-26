@@ -1,3 +1,4 @@
+
 import { useCallback, useState } from 'react'
 import PropTypes from 'prop-types'
 import {
@@ -21,7 +22,7 @@ import {
   tokens,
 } from '@fluentui/react-components'
 import { useParams } from 'react-router-dom'
-import { confirmOrderDelivery, getOrder } from '../api/orders'
+import { getOrder } from '../api/orders'
 import LinkButton from '../components/LinkButton'
 import { usePageStyles } from '../components/pageStyles'
 import { resumenDeDireccion } from '../features/addresses/direccionPropType'
@@ -55,54 +56,9 @@ const useStyles = makeStyles({
   },
 })
 
-// Cómo está cada paso del envío respecto al estado actual del pedido
-function estadoDelPaso(indice, indiceActual) {
-  if (indice < indiceActual) return 'completado'
-  if (indice === indiceActual) return 'estado actual'
-  return 'pendiente'
-}
-
-// Línea de estados del envío (HU11): los pasos ya hechos, el actual y los que faltan.
-function SeguimientoDelEnvio({ estado }) {
-  const styles = useStyles()
-  const indiceActual = PASOS_DEL_ENVIO.indexOf(estado)
-  const estilos = { completado: styles.done, 'estado actual': styles.current, pendiente: styles.pending }
-  const iconos = {
-    completado: <CheckmarkCircle20Filled />,
-    'estado actual': <RecordStop20Regular />,
-    pendiente: <Circle20Regular />,
-  }
-
-  return (
-    <ol aria-label="Estado del envío" className={styles.steps}>
-      {PASOS_DEL_ENVIO.map((paso, indice) => {
-        const situacion = estadoDelPaso(indice, indiceActual)
-        const situacionVisual = estado === 'ENTREGADO' && situacion === 'estado actual' ? 'completado' : situacion
-        const etiqueta = etiquetaDeEstado(paso)
-        return (
-          <li
-            key={paso}
-            aria-label={`${etiqueta}: ${situacion}`}
-            aria-current={situacion === 'estado actual' ? 'step' : undefined}
-            className={`${styles.step} ${estilos[situacionVisual]}`}
-          >
-            {iconos[situacionVisual]}
-            <Text>{etiqueta}</Text>
-          </li>
-        )
-      })}
-    </ol>
-  )
-}
-
-SeguimientoDelEnvio.propTypes = {
-  estado: PropTypes.string.isRequired,
-}
-
-function DetalleDelPedido({ pedido, onCancelar, onConfirmarRecepcion, confirmandoRecepcion }) {
+function DetalleDelPedido({ pedido, onCancelar, onEntregado, onDesactualizado }) {
   const pageStyles = usePageStyles()
   const styles = useStyles()
-  const puedeConfirmarRecepcion = pedido.estado === 'ENVIADO'
 
   return (
     <>
@@ -115,22 +71,14 @@ function DetalleDelPedido({ pedido, onCancelar, onConfirmarRecepcion, confirmand
             {formatDate(pedido.createdAt)} · {pedido.vendedor.nombreComercial}
           </Text>
         </div>
+
         <div className={styles.headingActions}>
           <Badge appearance="tint" size="large" color={colorDeEstado(pedido.estado)}>
             {etiquetaDeEstado(pedido.estado)}
           </Badge>
-          {puedeConfirmarRecepcion && (
-            <Button
-              appearance="primary"
-              onClick={onConfirmarRecepcion}
-              disabled={confirmandoRecepcion}
-            >
-              Confirmar recepción
-            </Button>
-          )}
-          {/* HU12: solo mientras el pedido aún no se ha enviado */}
+
           {esCancelable(pedido.estado) && (
-            <Button appearance="secondary" onClick={onCancelar} disabled={confirmandoRecepcion}>
+            <Button appearance="secondary" onClick={onCancelar}>
               Cancelar pedido
             </Button>
           )}
@@ -147,13 +95,18 @@ function DetalleDelPedido({ pedido, onCancelar, onConfirmarRecepcion, confirmand
           </MessageBar>
         </Card>
       ) : (
-        <ShipmentTrackingSection pedido={pedido} onDelivered={onEntregado} onStale={onDesactualizado} />
+        <ShipmentTrackingSection
+          pedido={pedido}
+          onDelivered={onEntregado}
+          onStale={onDesactualizado}
+        />
       )}
 
       <Card className={styles.section}>
         <Title3 as="h2" className={styles.sectionTitle}>
           Productos
         </Title3>
+
         <Table aria-label="Productos del pedido">
           <TableHeader>
             <TableRow>
@@ -163,6 +116,7 @@ function DetalleDelPedido({ pedido, onCancelar, onConfirmarRecepcion, confirmand
               <TableHeaderCell className={styles.number}>Subtotal</TableHeaderCell>
             </TableRow>
           </TableHeader>
+
           <TableBody>
             {pedido.lineas.map((linea) => (
               <TableRow key={linea.productoId}>
@@ -172,6 +126,7 @@ function DetalleDelPedido({ pedido, onCancelar, onConfirmarRecepcion, confirmand
                 <TableCell className={styles.number}>{formatPrice(linea.subtotal)}</TableCell>
               </TableRow>
             ))}
+
             <TableRow>
               <TableCell>
                 <Text weight="semibold">Total</Text>
@@ -202,13 +157,15 @@ function DetalleDelPedido({ pedido, onCancelar, onConfirmarRecepcion, confirmand
 
 DetalleDelPedido.propTypes = {
   onCancelar: PropTypes.func.isRequired,
-  onConfirmarRecepcion: PropTypes.func.isRequired,
-  confirmandoRecepcion: PropTypes.bool.isRequired,
+  onEntregado: PropTypes.func.isRequired,
+  onDesactualizado: PropTypes.func.isRequired,
   pedido: PropTypes.shape({
     id: PropTypes.string.isRequired,
     numeroPedido: PropTypes.string.isRequired,
     createdAt: PropTypes.string.isRequired,
-    vendedor: PropTypes.shape({ nombreComercial: PropTypes.string.isRequired }).isRequired,
+    vendedor: PropTypes.shape({
+      nombreComercial: PropTypes.string.isRequired,
+    }).isRequired,
     estado: PropTypes.string.isRequired,
     total: PropTypes.number.isRequired,
     lineas: PropTypes.arrayOf(
@@ -227,17 +184,18 @@ DetalleDelPedido.propTypes = {
   }).isRequired,
 }
 
-// Detalle de un pedido del cliente (HU11): productos con el desglose de precios, seguimiento del envío y dirección.
-// El backend responde 400 ORDER_NOT_FOUND si el pedido no existe o es de otro cliente: las dos cosas se ven igual.
+// Detalle de un pedido del cliente (HU11): productos, seguimiento del envío y dirección.
+// El backend responde 400 ORDER_NOT_FOUND si el pedido no existe o es de otro cliente.
 export default function OrderDetailPage() {
   const pageStyles = usePageStyles()
   const { id } = useParams()
   const fetcher = useCallback(() => getOrder(id), [id])
   const { data: cargado, error, failed, retry } = useApiQuery(fetcher)
+
   const [confirmando, setConfirmando] = useState(false)
-  const [confirmandoRecepcion, setConfirmandoRecepcion] = useState(false)
   const [pedidoActualizado, setPedidoActualizado] = useState(null)
   const [aviso, setAviso] = useState(null)
+
   const pedido = pedidoActualizado ?? cargado
 
   const alCancelar = (pedidoCancelado) => {
@@ -246,29 +204,23 @@ export default function OrderDetailPage() {
     setAviso({ intent: 'success', texto: 'Pedido cancelado.' })
   }
 
-  // 409: se acaba de enviar (o ya estaba cancelado). Se recarga para mostrar su estado real.
   const alNoPoderCancelar = () => {
     setConfirmando(false)
-    setAviso({ intent: 'warning', texto: 'Este pedido ya no se puede cancelar: ya se ha enviado.' })
+    setAviso({
+      intent: 'warning',
+      texto: 'Este pedido ya no se puede cancelar: ya se ha enviado.',
+    })
     retry()
   }
 
-  const confirmarRecepcion = async () => {
-    setConfirmandoRecepcion(true)
-    setAviso(null)
-    try {
-      const actualizado = await confirmOrderDelivery(id)
-      setPedidoActualizado(actualizado ?? { ...pedido, estado: 'ENTREGADO' })
-      setAviso({ intent: 'success', texto: 'Recepción confirmada. El pedido se ha marcado como entregado.' })
-    } catch {
-      setAviso({
-        intent: 'error',
-        texto: 'No se ha podido confirmar la recepción del pedido. Inténtalo de nuevo.',
-      })
-      retry()
-    } finally {
-      setConfirmandoRecepcion(false)
+  const alEntregar = () => {
+    if (pedido) {
+      setPedidoActualizado({ ...pedido, estado: 'ENTREGADO' })
     }
+  }
+
+  const alDesactualizar = () => {
+    retry()
   }
 
   const noEncontrado = error?.code === 'ORDER_NOT_FOUND'
@@ -280,28 +232,37 @@ export default function OrderDetailPage() {
           <MessageBarBody>{aviso.texto}</MessageBarBody>
         </MessageBar>
       )}
+
       {noEncontrado && (
         <MessageBar intent="warning">
           <MessageBarBody>Pedido no encontrado.</MessageBarBody>
         </MessageBar>
       )}
+
       {failed && !noEncontrado && (
         <MessageBar intent="error">
-          <MessageBarBody>No se ha podido cargar el pedido. Inténtalo de nuevo.</MessageBarBody>
+          <MessageBarBody>
+            No se ha podido cargar el pedido. Inténtalo de nuevo.
+          </MessageBarBody>
           <MessageBarActions>
             <Button onClick={retry}>Reintentar</Button>
           </MessageBarActions>
         </MessageBar>
       )}
-      {!pedido && !failed && <Spinner label="Cargando pedido…" className={pageStyles.loading} />}
+
+      {!pedido && !failed && (
+        <Spinner label="Cargando pedido…" className={pageStyles.loading} />
+      )}
+
       {pedido && (
         <DetalleDelPedido
           pedido={pedido}
           onCancelar={() => setConfirmando(true)}
-          onConfirmarRecepcion={confirmarRecepcion}
-          confirmandoRecepcion={confirmandoRecepcion}
+          onEntregado={alEntregar}
+          onDesactualizado={alDesactualizar}
         />
       )}
+
       {pedido && confirmando && (
         <CancelOrderDialog
           pedido={pedido}
@@ -310,6 +271,7 @@ export default function OrderDetailPage() {
           onNotCancellable={alNoPoderCancelar}
         />
       )}
+
       <div>
         <LinkButton to={PATHS.ORDERS} appearance="secondary">
           Volver a mis pedidos

@@ -6,10 +6,11 @@ import es.uclm.esibuy.backend.incidencias.domain.model.Incidencia;
 
 /** Lo que la API devuelve de una incidencia. No lleva el autor: no se expone su id interno. */
 public record IncidenciaResponse(String id, String asunto, String descripcion, String estado, String respuesta,
-        Instant fechaCreacion) {
+        Instant fechaCreacion, Instant fechaResolucion) {
 
     public static IncidenciaResponse desde(Incidencia incidencia) {
         return new IncidenciaResponse(incidencia.id(), incidencia.asunto(), incidencia.descripcion(),
-                incidencia.estado().name(), incidencia.respuesta(), incidencia.fechaCreacion());
+                incidencia.estado().name(), incidencia.respuesta(), incidencia.fechaCreacion(),
+                incidencia.fechaResolucion());
     }
 }

@@ -8,15 +8,19 @@ import es.uclm.esibuy.backend.carrito.domain.exception.CantidadInvalidaException
 import es.uclm.esibuy.backend.carrito.domain.exception.LineaCarritoNoEncontradaException;
 import es.uclm.esibuy.backend.carrito.domain.exception.ProductoNoComprableException;
 import es.uclm.esibuy.backend.carrito.domain.exception.StockInsuficienteException;
+import es.uclm.esibuy.backend.deseos.domain.exception.ListaDeseosInvalidaException;
+import es.uclm.esibuy.backend.deseos.domain.exception.ListaDeseosNoEncontradaException;
 import es.uclm.esibuy.backend.deseos.domain.exception.ProductoNoDisponibleException;
-import es.uclm.esibuy.backend.preferencias.domain.exception.PreferenciasInvalidasException;
+import es.uclm.esibuy.backend.preferencias.domain.exception.CategoriaNoDisponibleException;
 import es.uclm.esibuy.backend.direcciones.domain.exception.DireccionInvalidaException;
 import es.uclm.esibuy.backend.direcciones.domain.exception.DireccionNoEncontradaException;
 import es.uclm.esibuy.backend.direcciones.domain.exception.LimiteDireccionesException;
 import es.uclm.esibuy.backend.direcciones.domain.exception.NuevaPrincipalObligatoriaException;
 import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaInvalidaException;
+import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaNoAbiertaException;
 import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaNoEncontradaException;
 import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaYaAbiertaException;
+import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaYaResueltaException;
 import es.uclm.esibuy.backend.metodospago.domain.exception.LimiteMetodosPagoException;
 import es.uclm.esibuy.backend.metodospago.domain.exception.MetodoPagoInvalidoException;
 import es.uclm.esibuy.backend.metodospago.domain.exception.MetodoPagoNoEncontradoException;
@@ -26,9 +30,9 @@ import es.uclm.esibuy.backend.pedidos.domain.exception.DireccionNoValidaExceptio
 import es.uclm.esibuy.backend.pedidos.domain.exception.MetodoPagoNoValidoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoInvalidoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoCancelableException;
-import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoEntregableException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PagoRechazadoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoEncontradoException;
+import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoEntregableException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoEstadoNoAvanzableException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.StockInsuficientePedidoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.TotalNoCoincideException;
@@ -315,15 +319,6 @@ public class ManejadorGlobalErrores {
         return new RespuestaError("La categoría es inválida", CODIGO_VALIDACION);
     }
 
-    // 400 + code al guardar las preferencias (HU46, T287): faltan las categorías, o
-    // alguna no existe o no está activa.
-    // El mensaje es genérico: no dice cuál.
-    @ExceptionHandler(PreferenciasInvalidasException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public RespuestaError preferenciasInvalidas() {
-        return new RespuestaError("Las preferencias son inválidas", CODIGO_VALIDACION);
-    }
-
     // 409 + code cuando ya hay una categoría con ese nombre, sin distinguir
     // mayúsculas ni tildes (HU40, T323).
     // PENDIENTE: confirmar el code con quien haga la vista de creación (T320).
@@ -333,8 +328,9 @@ public class ManejadorGlobalErrores {
         return new RespuestaError("La categoría ya existe con el mismo nombre", "CATEGORY_NAME_ALREADY_EXISTS");
     }
 
-    // 404 + code cuando la categoría que se edita no existe (HU41, T328).
-    @ExceptionHandler(CategoriaNoEncontradaException.class)
+    // 404 + code cuando la categoría que se edita no existe (HU41, T328) o la que se marca como favorita no existe o no
+    // está activa (AB#528): una inactiva se responde igual que una inexistente.
+    @ExceptionHandler({ CategoriaNoEncontradaException.class, CategoriaNoDisponibleException.class })
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public RespuestaError categoriaNoEncontrada() {
         return new RespuestaError("La categoría no existe", "CATEGORY_NOT_FOUND");
@@ -410,6 +406,18 @@ public class ManejadorGlobalErrores {
 
     // Un producto que no existe o no está disponible se responde igual que uno
     // inexistente
+    @ExceptionHandler(ListaDeseosInvalidaException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public RespuestaError listaDeseosInvalida() {
+        return new RespuestaError("La lista de deseos es inválida", CODIGO_VALIDACION);
+    }
+
+    @ExceptionHandler(ListaDeseosNoEncontradaException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public RespuestaError listaDeseosNoEncontrada() {
+        return new RespuestaError("La lista de deseos no existe", "WISHLIST_NOT_FOUND");
+    }
+
     @ExceptionHandler({ ProductoNoComprableException.class, ProductoNoDisponibleException.class })
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public RespuestaError productoNoDisponible() {
@@ -494,14 +502,16 @@ public class ManejadorGlobalErrores {
         return new RespuestaError("No hay productos de ese proveedor en el carrito", "CART_EMPTY");
     }
 
-    // Pago simulado rechazado (HU10): el pedido no se confirma ni se descuenta stock
+    // Pago simulado rechazado (HU10): el pedido no se confirma ni se descuenta
+    // stock
     @ExceptionHandler(PagoRechazadoException.class)
     @ResponseStatus(HttpStatus.PAYMENT_REQUIRED)
     public RespuestaError pagoRechazado() {
         return new RespuestaError("El pago ha sido rechazado", "PAYMENT_REJECTED");
     }
 
-    // El total que el cliente vio al confirmar ya no es el real: tiene que volver a revisar la compra
+    // El total que el cliente vio al confirmar ya no es el real: tiene que volver a
+    // revisar la compra
     @ExceptionHandler(TotalNoCoincideException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError totalNoCoincide() {
@@ -511,7 +521,8 @@ public class ManejadorGlobalErrores {
     @ExceptionHandler(StockInsuficientePedidoException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError stockInsuficienteEnElPedido(StockInsuficientePedidoException e) {
-        // Dice qué producto falla para que el cliente pueda ajustarlo: es un producto de su propio carrito
+        // Dice qué producto falla para que el cliente pueda ajustarlo: es un producto
+        // de su propio carrito
         return new RespuestaError("No queda stock suficiente de «" + e.getNombreProducto() + "»", "INSUFFICIENT_STOCK");
     }
 
@@ -562,6 +573,21 @@ public class ManejadorGlobalErrores {
         return new RespuestaError("La incidencia ya está abierta", "INCIDENT_ALREADY_OPEN");
     }
 
+    // Incidencias (HU192): resolver o abrir una ya resuelta, para no sobrescribir
+    // su fecha de resolución
+    @ExceptionHandler(IncidenciaYaResueltaException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public RespuestaError incidenciaYaResuelta() {
+        return new RespuestaError("La incidencia ya está resuelta", "INCIDENT_ALREADY_RESOLVED");
+    }
+
+    // Incidencias (HU192): solo se resuelve una incidencia abierta
+    @ExceptionHandler(IncidenciaNoAbiertaException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public RespuestaError incidenciaNoAbierta() {
+        return new RespuestaError("Solo se puede resolver una incidencia abierta", "INCIDENT_NOT_OPEN");
+    }
+
     // 400 + code al cancelar Premium (CLI-02): el cliente ya era Estándar.
     @ExceptionHandler(ClienteNoPremiumException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -575,4 +601,14 @@ public class ManejadorGlobalErrores {
     public RespuestaError clienteYaPremium() {
         return new RespuestaError("Ya eres cliente Premium", "ALREADY_PREMIUM");
     }
+
+    // HU11: solo se puede confirmar la recepción de un pedido enviado.
+    @ExceptionHandler(PedidoNoEntregableException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public RespuestaError pedidoNoEntregable() {
+        return new RespuestaError(
+                "El pedido no se puede marcar como entregado",
+                "ORDER_NOT_DELIVERABLE");
+    }
+
 }

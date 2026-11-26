@@ -22,14 +22,16 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
 import es.uclm.esibuy.backend.productos.application.port.in.BuscarCatalogoQuery;
-import es.uclm.esibuy.backend.productos.application.port.in.CriterioOrdenCatalogo;
 import es.uclm.esibuy.backend.productos.application.port.in.ListarProductosQuery;
 import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
 import es.uclm.esibuy.backend.productos.domain.model.ProductoPage;
 
-/** Adaptador de salida que implementa el repositorio de productos con Spring Data MongoDB. */
+/**
+ * Adaptador de salida que implementa el repositorio de productos con Spring
+ * Data MongoDB.
+ */
 public class ProductoMongoAdapter implements ProductoRepositoryPort {
 
     private static final String CAMPO_STOCK = "stock";
@@ -55,7 +57,8 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
     public Producto guardar(Producto producto) {
         ProductoDocument documento = mapper.aDocumento(producto);
         if (producto.getId() != null) {
-            // Actualización: se conservan la fecha de creación y las valoraciones del documento guardado (HU13: las
+            // Actualización: se conservan la fecha de creación y las valoraciones del
+            // documento guardado (HU13: las
             // cambia solo actualizarValoracion, nunca el vendedor al editar el producto)
             repository.findById(producto.getId()).ifPresent(guardado -> {
                 documento.setCreatedAt(guardado.getCreatedAt());
@@ -66,7 +69,8 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
         try {
             return mapper.aDominio(repository.save(documento));
         } catch (DuplicateKeyException duplicateKeyException) {
-            // El índice único (vendedorId, nombre) lo ha rechazado: dos altas simultáneas con el mismo nombre.
+            // El índice único (vendedorId, nombre) lo ha rechazado: dos altas simultáneas
+            // con el mismo nombre.
             throw new ProductoDuplicadoException(duplicateKeyException);
         }
     }
@@ -76,7 +80,8 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
         return repository.findById(id).map(mapper::aDominio);
     }
 
-    // La condición (stock >= cantidad) y la resta van en la misma operación de MongoDB: dos compras a la vez del
+    // La condición (stock >= cantidad) y la resta van en la misma operación de
+    // MongoDB: dos compras a la vez del
     // último stock no pueden pasar las dos
     @Override
     public boolean descontarStock(String id, int cantidad) {
@@ -107,8 +112,8 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
         long total = mongoTemplate.count(new Query(criterios), ProductoDocument.class);
         Sort orden = ordenarPor(query);
         List<Producto> productos = mongoTemplate.find(new Query(criterios).with(PageRequest.of(
-                        query.pagina(), query.tamano(), orden)),
-                        ProductoDocument.class).stream()
+                query.pagina(), query.tamano(), orden)),
+                ProductoDocument.class).stream()
                 .map(mapper::aDominio)
                 .toList();
         return new ProductoPage(productos, query.pagina(), query.tamano(), total);
@@ -120,41 +125,74 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
                 .stream().map(mapper::aDominio).toList();
     }
 
-    // Catálogo del cliente (HU7): solo productos disponibles, de todos los vendedores; la búsqueda por nombre
+    // Catálogo del cliente (HU7): solo productos disponibles, de todos los
+    // vendedores; la búsqueda por nombre
     // no distingue mayúsculas ni tildes y trata el texto como literal.
     @Override
     public ProductoPage buscarEnCatalogo(BuscarCatalogoQuery query) {
+        Criteria criterios = construirCriteriosCatalogo(query, true);
+        long total = mongoTemplate.count(new Query(criterios), ProductoDocument.class);
+        // Por valoración, los empates van por nombre de la A a la Z en los dos
+        // sentidos.
+        Sort.Direction direccion = query.descendente() ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Sort orden = switch (query.criterio()) {
+            case VALORACION -> Sort.by(direccion, CAMPO_VALORACION_MEDIA)
+                    .and(Sort.by(Sort.Direction.ASC, CAMPO_NOMBRE));
+            case PRECIO -> Sort.by(direccion, CAMPO_PRECIO)
+                    .and(Sort.by(Sort.Direction.ASC, CAMPO_NOMBRE));
+            case NOMBRE -> Sort.by(direccion, CAMPO_NOMBRE);
+        };
+        // Sin collation, MongoDB ordena por código Unicode.
+        List<Producto> productos = mongoTemplate.find(new Query(criterios).with(PageRequest.of(
+                query.pagina(), query.tamano(), orden)),
+                ProductoDocument.class).stream()
+                .map(mapper::aDominio)
+                .toList();
+        return new ProductoPage(productos, query.pagina(), query.tamano(), total);
+    }
+
+    @Override
+    public BigDecimal precioMaximoEnCatalogo(BuscarCatalogoQuery query) {
+        Criteria criterios = construirCriteriosCatalogo(query, false);
+        ProductoDocument masCaro = mongoTemplate.findOne(
+                new Query(criterios).with(Sort.by(Sort.Direction.DESC, CAMPO_PRECIO)).limit(1),
+                ProductoDocument.class);
+        return masCaro == null ? BigDecimal.ZERO : mapper.aDominio(masCaro).getPrecio();
+    }
+
+    private static Criteria construirCriteriosCatalogo(BuscarCatalogoQuery query, boolean incluirRangoPrecio) {
         List<Criteria> filtros = new ArrayList<>();
         filtros.add(Criteria.where(CAMPO_DISPONIBLE).is(true));
+        if (query.soloStock()) {
+            filtros.add(Criteria.where(CAMPO_STOCK).gt(0));
+        }
+        if (query.soloOfertas()) {
+            Criteria descuentoGeneral = Criteria.where("descuento.activo").is(true);
+            filtros.add(query.clientePremium()
+                    ? new Criteria().orOperator(descuentoGeneral,
+                            Criteria.where("descuentoPremium.activo").is(true))
+                    : descuentoGeneral);
+        }
         if (query.busqueda() != null && !query.busqueda().isBlank()) {
             filtros.add(Criteria.where(CAMPO_NOMBRE).regex(patronSinTildes(query.busqueda()), "i"));
         }
         if (query.categoriaId() != null && !query.categoriaId().isBlank()) {
             filtros.add(Criteria.where(CAMPO_CATEGORIA_ID).is(query.categoriaId()));
         }
-        // Media de las valoraciones (HU13): un producto sin valoraciones no tiene el campo y no llega a ningún mínimo
+        if (incluirRangoPrecio && query.precioMinimo() != null) {
+            filtros.add(Criteria.where(CAMPO_PRECIO).gte(query.precioMinimo()));
+        }
+        if (incluirRangoPrecio && query.precioMaximo() != null) {
+            filtros.add(Criteria.where(CAMPO_PRECIO).lte(query.precioMaximo()));
+        }
         if (query.valoracionMinima() != null) {
             filtros.add(Criteria.where(CAMPO_VALORACION_MEDIA).gte(query.valoracionMinima()));
         }
-        Criteria criterios = new Criteria().andOperator(filtros);
-        long total = mongoTemplate.count(new Query(criterios), ProductoDocument.class);
-        // Por valoración, los empates van por nombre de la A a la Z en los dos sentidos. Sin valoraciones, MongoDB los
-        // trata como el valor más bajo: al principio en ascendente y al final en descendente.
-        Sort.Direction direccion = query.descendente() ? Sort.Direction.DESC : Sort.Direction.ASC;
-        Sort orden = query.criterio() == CriterioOrdenCatalogo.VALORACION
-                ? Sort.by(direccion, CAMPO_VALORACION_MEDIA).and(Sort.by(Sort.Direction.ASC, CAMPO_NOMBRE))
-                : Sort.by(direccion, CAMPO_NOMBRE);
-        // PENDIENTE DE DECIDIR (equipo): ordenar como en español con ORDEN_ALFABETICO_ES (UsuarioMongoAdapter).
-        // Sin collation, MongoDB ordena por código Unicode: las mayúsculas antes y las vocales con tilde tras la Z.
-        List<Producto> productos = mongoTemplate.find(new Query(criterios).with(PageRequest.of(
-                        query.pagina(), query.tamano(), orden)),
-                        ProductoDocument.class).stream()
-                .map(mapper::aDominio)
-                .toList();
-        return new ProductoPage(productos, query.pagina(), query.tamano(), total);
+        return new Criteria().andOperator(filtros);
     }
 
-    // Mismo vendedor y mismo nombre completo, sin distinguir mayúsculas y como texto literal (Pattern.quote).
+    // Mismo vendedor y mismo nombre completo, sin distinguir mayúsculas y como
+    // texto literal (Pattern.quote).
     @Override
     public boolean existePorVendedorYNombre(String vendedorId, String nombre) {
         Criteria criterios = new Criteria().andOperator(
@@ -163,12 +201,14 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
         return mongoTemplate.exists(new Query(criterios), ProductoDocument.class);
     }
 
-    // Siempre del vendedor; el nombre se busca como texto literal (Pattern.quote), sin distinguir mayúsculas.
+    // Siempre del vendedor; el nombre se busca como texto literal (Pattern.quote),
+    // sin distinguir mayúsculas.
     private static Criteria construirCriterios(String vendedorId, ListarProductosQuery query) {
         List<Criteria> criterios = new ArrayList<>();
         criterios.add(Criteria.where(CAMPO_VENDEDOR_ID).is(vendedorId));
         if (query.busqueda() != null && !query.busqueda().isBlank()) {
-            criterios.add(Criteria.where(CAMPO_NOMBRE).regex(".*" + Pattern.quote(query.busqueda().trim()) + ".*", "i"));
+            criterios
+                    .add(Criteria.where(CAMPO_NOMBRE).regex(".*" + Pattern.quote(query.busqueda().trim()) + ".*", "i"));
         }
         if (query.categoriaId() != null && !query.categoriaId().isBlank()) {
             criterios.add(Criteria.where(CAMPO_CATEGORIA_ID).is(query.categoriaId()));
@@ -188,16 +228,19 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
     private static Sort ordenarPor(ListarProductosQuery query) {
         Sort.Direction direccion = query.direccionOrden() != null
                 && query.direccionOrden().name().equals("DESC")
-                ? Sort.Direction.DESC : Sort.Direction.ASC;
+                        ? Sort.Direction.DESC
+                        : Sort.Direction.ASC;
         if (query.criterioOrden() != null) {
             String campo = query.criterioOrden().name().equals("PRECIO")
-                    ? CAMPO_PRECIO : CAMPO_STOCK;
+                    ? CAMPO_PRECIO
+                    : CAMPO_STOCK;
             return Sort.by(direccion, campo);
         }
         return Sort.by(Sort.Direction.DESC, "createdAt");
     }
 
-    // Regex que encuentra el texto con o sin tildes en las vocales; el resto de caracteres (la ñ incluida) se
+    // Regex que encuentra el texto con o sin tildes en las vocales; el resto de
+    // caracteres (la ñ incluida) se
     // busca literal con Pattern.quote.
     private static String patronSinTildes(String texto) {
         StringBuilder patron = new StringBuilder();
@@ -220,7 +263,8 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
         repository.deleteById(id);
     }
 
-    // Una sola agregación para todas las categorías: agrupa los productos por categoriaId y los cuenta.
+    // Una sola agregación para todas las categorías: agrupa los productos por
+    // categoriaId y los cuenta.
     @Override
     public Map<String, Long> contarPorCategoria() {
         Aggregation agrupar = Aggregation.newAggregation(

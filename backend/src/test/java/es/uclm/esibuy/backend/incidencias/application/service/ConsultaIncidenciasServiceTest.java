@@ -29,7 +29,7 @@ class ConsultaIncidenciasServiceTest {
     private static final String EMAIL_CLIENTE = "cliente@esibuy.test";
     private static final String EMAIL_VENDEDOR = "vendedor@esibuy.test";
     private static final Incidencia INCIDENCIA = new Incidencia("i-1", "c-1", "Asunto", "Descripción",
-            EstadoIncidencia.PENDIENTE, "", Instant.parse("2026-11-06T10:15:30Z"));
+            EstadoIncidencia.PENDIENTE, "", Instant.parse("2026-11-06T10:15:30Z"), null);
     private static final IncidenciaPage PAGINA = new IncidenciaPage(List.of(INCIDENCIA), 0, 10, 1);
 
     private final RepositorioFijo repositorio = new RepositorioFijo();
@@ -63,12 +63,28 @@ class ConsultaIncidenciasServiceTest {
         }
 
         @Override
+        public IncidenciaPage buscarPorEstado(EstadoIncidencia estado, int pagina, int tamano) {
+            throw new UnsupportedOperationException("No lo usa la consulta de las propias");
+        }
+
+        @Override
+        public IncidenciaPage buscarSupervisadas(EstadoIncidencia estado, String busqueda, String ordenarPor,
+                String sentido, int pagina, int tamano) {
+            throw new UnsupportedOperationException("No lo usa la consulta de las propias");
+        }
+
+        @Override
         public Optional<Incidencia> buscarPorId(String id) {
             throw new UnsupportedOperationException("No lo usa la consulta de las propias");
         }
 
         @Override
         public void eliminar(String id) {
+            throw new UnsupportedOperationException("No lo usa la consulta de las propias");
+        }
+
+        @Override
+        public boolean registrarResolucion(Incidencia resuelta) {
             throw new UnsupportedOperationException("No lo usa la consulta de las propias");
         }
     }

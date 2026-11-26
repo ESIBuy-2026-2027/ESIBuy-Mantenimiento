@@ -165,6 +165,7 @@ function ordenDelCatalogo(criterio, sentido) {
   const porNombre = (a, b) => comparar(a.nombre, b.nombre)
   const porCriterio = {
     valoracion: (a, b) => (a.valoracion ?? 0) - (b.valoracion ?? 0),
+    precio: (a, b) => a.precio - b.precio,
   }[criterio]
 
   if (!porCriterio) return (a, b) => signo * porNombre(a, b)
@@ -335,16 +336,29 @@ export const productsHandlers = [
     const busqueda = normalizar(params.get('search') ?? '')
     const categoria = params.get('category')
     const minima = Number(params.get('minRating')) || 0
-    const coincidentes = PRODUCTOS.filter(estaDisponible)
+    const soloStock = params.get('inStock') === 'true'
+    const soloOfertas = params.get('offersOnly') === 'true'
+    const minPrice = params.get('minPrice') === null ? null : Number(params.get('minPrice'))
+    const maxPrice = params.get('maxPrice') === null ? null : Number(params.get('maxPrice'))
+    const coincidentesSinMaximo = PRODUCTOS.filter(estaDisponible)
       .map((producto) => ({ ...aCatalogo(producto), ...datosComerciales(producto) }))
       .filter(
         (producto) =>
           normalizar(producto.nombre).includes(busqueda) &&
           (!categoria || producto.categoriaId === categoria) &&
-          (producto.valoracion ?? 0) >= minima,
+          (producto.valoracion ?? 0) >= minima &&
+          (!soloStock || producto.stock > 0) &&
+          (!soloOfertas || Boolean(producto.descuento?.activo || producto.descuentoPremium?.activo)) &&
+          (minPrice === null || producto.precio >= minPrice),
       )
+    const maxPriceDisponible = Math.max(0, ...coincidentesSinMaximo.map((producto) => producto.precio))
+    const coincidentes = coincidentesSinMaximo
+      .filter((producto) => maxPrice === null || producto.precio <= maxPrice)
       .sort(ordenDelCatalogo(params.get('sort'), params.get('order')))
-    return HttpResponse.json(paginar(coincidentes, leerPagina(params, TAMANO_CATALOGO)))
+    return HttpResponse.json({
+      ...paginar(coincidentes, leerPagina(params, TAMANO_CATALOGO)),
+      maxPrice: maxPriceDisponible,
+    })
   }),
 
   // Detalle de un producto del catálogo (HU8): solo los disponibles; el resto, como si no existieran.

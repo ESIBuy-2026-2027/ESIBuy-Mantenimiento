@@ -1,5 +1,7 @@
 package es.uclm.esibuy.backend.shared.infrastructure.config;
 
+import org.springframework.data.mongodb.core.index.Index;
+import org.springframework.data.domain.Sort;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -41,13 +43,13 @@ import es.uclm.esibuy.backend.shared.config.MongoConfig;
 // Los documentos se insertan tal cual (sin Spring Data) para probar las reglas de la base de datos,
 // que deben parar los datos incorrectos aunque fallen las capas de arriba.
 @DataMongoTest
-@Import({MongoTestcontainersConfig.class, MongoConfig.class, InicializadorColecciones.class})
+@Import({ MongoTestcontainersConfig.class, MongoConfig.class, InicializadorColecciones.class })
 class InicializadorColeccionesTest {
 
-    private static final int VALIDACION = 121;   // "Document failed validation"
-    private static final int DUPLICADO = 11000;  // "E11000 duplicate key error"
+    private static final int VALIDACION = 121; // "Document failed validation"
+    private static final int DUPLICADO = 11000; // "E11000 duplicate key error"
     private static final Date AHORA = Date.from(Instant.parse("2026-10-08T12:00:00Z"));
-        private static final String INCIDENCIAS = "incidencias";
+    private static final String INCIDENCIAS = "incidencias";
 
     @Autowired
     private MongoTemplate mongoTemplate;
@@ -57,14 +59,16 @@ class InicializadorColeccionesTest {
 
     @BeforeEach
     void vaciarColecciones() {
-        // Se vacían sin borrarlas, para conservar la validación y los índices que creó el inicializador.
+        // Se vacían sin borrarlas, para conservar la validación y los índices que creó
+        // el inicializador.
         ColeccionesEsiBuy.todas().forEach(c -> mongoTemplate.getCollection(c.nombre()).deleteMany(new Document()));
     }
 
     @Test
     @DisplayName("Inicialización: crea las 15 colecciones del modelo de BBDD")
     void creaLasQuinceColecciones() {
-        // Las 10 del modelo inicial, metodos_pago (HU6), direcciones_envio (HU5), contadores (HU10), preferencias (HU46)
+        // Las 10 del modelo inicial, metodos_pago (HU6), direcciones_envio (HU5),
+        // contadores (HU10), preferencias (HU46)
         // e incidencias (HU44)
         List<String> esperadas = List.of("usuarios", "sesiones", "factores_autenticacion", "tokens_seguridad",
                 "productos", "pedidos", "carritos", "valoraciones", "categorias", "listas_deseos", "metodos_pago",
@@ -96,7 +100,8 @@ class InicializadorColeccionesTest {
     @Test
     @DisplayName("Inicialización: sin permiso para cambiar la validación, avisa y la aplicación arranca igual")
     void sinPermisoParaCambiarLaValidacionNoFalla() {
-        // Es lo que pasa en Atlas con el usuario de la aplicación (mínimo privilegio): AtlasError 8000.
+        // Es lo que pasa en Atlas con el usuario de la aplicación (mínimo privilegio):
+        // AtlasError 8000.
         MongoTemplate sinPermiso = mock(MongoTemplate.class);
         when(sinPermiso.collectionExists(anyString())).thenReturn(true);
         when(sinPermiso.indexOps(anyString())).thenReturn(mock(IndexOperations.class));
@@ -106,8 +111,8 @@ class InicializadorColeccionesTest {
         when(sinPermiso.executeCommand(any(Document.class)))
                 .thenThrow(new UncategorizedMongoDbException(noPermitido.getMessage(), noPermitido));
 
-        InicializadorColecciones conUsuarioDeLaAplicacion =
-                new InicializadorColecciones(sinPermiso, new MongoMappingContext());
+        InicializadorColecciones conUsuarioDeLaAplicacion = new InicializadorColecciones(sinPermiso,
+                new MongoMappingContext());
 
         assertDoesNotThrow(() -> conUsuarioDeLaAplicacion.run(null));
     }
@@ -143,14 +148,16 @@ class InicializadorColeccionesTest {
     @Test
     @DisplayName("Índices de usuarios: DNI único por rol (opcional) y nombre comercial único")
     void usuariosConDniYNombreComercialUnicos() {
-        // MVP del Sprint 1: una persona puede tener cuenta de cliente y de vendedor con el mismo DNI.
+        // MVP del Sprint 1: una persona puede tener cuenta de cliente y de vendedor con
+        // el mismo DNI.
         acepta("usuarios", usuario("juan@uclm.es", "CLIENTE").append("dni", "12345678Z"));
         rechaza(DUPLICADO, "usuarios", usuario("otro@uclm.es", "CLIENTE").append("dni", "12345678Z"));
         acepta("usuarios", usuario("ventas@uclm.es", "VENDEDOR").append("dni", "12345678Z")
                 .append("nombreComercial", "Electrónica La Mancha"));
         rechaza(DUPLICADO, "usuarios", usuario("tienda@uclm.es", "VENDEDOR")
                 .append("nombreComercial", "Electrónica La Mancha"));
-        // Sin DNI ni nombre comercial no hay duplicados: el registro actual solo pide email y contraseña.
+        // Sin DNI ni nombre comercial no hay duplicados: el registro actual solo pide
+        // email y contraseña.
         acepta("usuarios", usuario("ana@uclm.es", "CLIENTE"));
         acepta("usuarios", usuario("luis@uclm.es", "CLIENTE"));
     }
@@ -160,7 +167,8 @@ class InicializadorColeccionesTest {
     void validaSesionesFactoresYTokens() {
         acepta("sesiones", sesion("u1", "ACTIVA"));
         rechaza(VALIDACION, "sesiones", sesion("u1", "ABIERTA"));
-        rechaza(VALIDACION, "sesiones", new Document("usuarioId", "u1").append("tokenHash", "t").append("estado", "ACTIVA"));
+        rechaza(VALIDACION, "sesiones",
+                new Document("usuarioId", "u1").append("tokenHash", "t").append("estado", "ACTIVA"));
         acepta("factores_autenticacion", new Document("usuarioId", "u1").append("totpEnabled", true));
         rechaza(VALIDACION, "factores_autenticacion", new Document("usuarioId", "u2").append("totpEnabled", "sí"));
         acepta("tokens_seguridad", token("LOGIN_2FA").append("tokenHash", "hash-del-codigo"));
@@ -202,7 +210,8 @@ class InicializadorColeccionesTest {
     @DisplayName("Validación de pedidos, carritos, valoraciones, categorías y listas de deseos")
     void validaElRestoDeColecciones() {
         acepta("pedidos", pedido("c1", 2));
-        rechaza(VALIDACION, "pedidos", new Document("clienteId", "c1").append("estado", "PENDIENTE").append("lineas", List.of()));
+        rechaza(VALIDACION, "pedidos",
+                new Document("clienteId", "c1").append("estado", "PENDIENTE").append("lineas", List.of()));
         rechaza(VALIDACION, "pedidos", pedido("c1", 0));
         rechaza(VALIDACION, "carritos", new Document("clienteId", "c9")
                 .append("items", List.of(new Document("productoId", "p1").append("cantidad", 0))));
@@ -213,7 +222,7 @@ class InicializadorColeccionesTest {
     }
 
     @Test
-    @DisplayName("Índices únicos: rechazan duplicados en carritos, valoraciones, categorías, listas de deseos y 2FA")
+    @DisplayName("Índices únicos: rechazan duplicados en carritos, valoraciones, categorías y 2FA, pero no en listas de deseos")
     void rechazaDuplicadosEnLosIndicesUnicos() {
         acepta("carritos", new Document("clienteId", "c1"));
         rechaza(DUPLICADO, "carritos", new Document("clienteId", "c1"));
@@ -223,7 +232,7 @@ class InicializadorColeccionesTest {
         acepta("categorias", new Document("nombre", "Hogar"));
         rechaza(DUPLICADO, "categorias", new Document("nombre", "Hogar"));
         acepta("listas_deseos", new Document("usuarioId", "u1"));
-        rechaza(DUPLICADO, "listas_deseos", new Document("usuarioId", "u1"));
+        acepta("listas_deseos", new Document("usuarioId", "u1"));
         acepta("factores_autenticacion", new Document("usuarioId", "u1"));
         rechaza(DUPLICADO, "factores_autenticacion", new Document("usuarioId", "u1"));
     }
@@ -291,7 +300,8 @@ class InicializadorColeccionesTest {
     @Test
     @DisplayName("HU7-CP20: productos tiene los índices de filtrado del catálogo (disponible con nombre y con valoración)")
     void productosTieneLosIndicesDelCatalogo() {
-        // Se compara el JSON de la clave porque el orden de los campos importa en un índice compuesto
+        // Se compara el JSON de la clave porque el orden de los campos importa en un
+        // índice compuesto
         // y la igualdad de Document no lo tiene en cuenta.
         List<Document> indices = mongoTemplate.getCollection("productos").listIndexes().into(new ArrayList<>());
         assertEquals("{\"disponible\": 1, \"nombre\": 1}", claveDelIndice(indices, "disponible_nombre"));
@@ -347,5 +357,22 @@ class InicializadorColeccionesTest {
     private static Document incidencia(String usuarioId, String asunto, String descripcion, String estado) {
         return new Document("usuarioId", usuarioId).append("asunto", asunto).append("descripcion", descripcion)
                 .append("estado", estado).append("fechaCreacion", AHORA);
+    }
+
+    // Atlas tiene este índice de cuando solo había una lista por cliente: si no se quita, la aplicación no arranca
+    @Test
+    @DisplayName("Índices de listas_deseos: sustituye el índice único antiguo por cliente, que impedía tener varias listas")
+    void sustituyeElIndiceUnicoAntiguoDeListasDeseos() {
+        mongoTemplate.indexOps("listas_deseos").dropIndex("usuarioId_1");
+        mongoTemplate.indexOps("listas_deseos").createIndex(new Index().on("usuarioId", Sort.Direction.ASC).unique());
+
+        inicializador.run(null);
+
+        acepta("listas_deseos", new Document("usuarioId", "u1").append("tipo", "LISTA"));
+        acepta("listas_deseos", new Document("usuarioId", "u1").append("tipo", "LISTA"));
+        acepta("listas_deseos", new Document("usuarioId", "u1").append("tipo", "FAVORITOS"));
+        rechaza(DUPLICADO, "listas_deseos", new Document("usuarioId", "u1").append("tipo", "FAVORITOS"));
+        acepta("listas_deseos", new Document("usuarioId", "u2").append("tipo", "FAVORITOS"));
+        rechaza(VALIDACION, "listas_deseos", new Document("usuarioId", "u3").append("tipo", "OTRO"));
     }
 }

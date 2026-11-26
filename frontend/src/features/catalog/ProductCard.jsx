@@ -2,8 +2,8 @@
 import PropTypes from 'prop-types'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Button, Text, makeStyles, tokens } from '@fluentui/react-components'
-import { Heart20Filled, Heart20Regular } from '@fluentui/react-icons'
+import { Button, Text, makeStyles, mergeClasses, tokens } from '@fluentui/react-components'
+import { Bookmark20Filled, Bookmark20Regular, Heart20Filled, Heart20Regular } from '@fluentui/react-icons'
 import { getProductDetailPath } from '../../routes/paths'
 import { catalogProductPropType } from '../../utils/propTypes'
 import { formatRating } from '../../utils/format'
@@ -14,9 +14,6 @@ import RatingStars from './RatingStars'
 const SIN_CATEGORIA = '—'
 
 const useStyles = makeStyles({
-  // La tarjeta es un contenedor con dos partes: el enlace al detalle del producto (imagen, categoría, nombre y
-  // valoración) y, debajo, el precio y el botón de añadir al carrito, que no puede ir dentro del enlace. El corazón de
-  // favoritos tampoco: se coloca encima de la esquina de la imagen.
   card: {
     position: 'relative',
     display: 'flex',
@@ -24,8 +21,8 @@ const useStyles = makeStyles({
     width: '100%',
     height: '100%',
     overflow: 'hidden',
-    backgroundColor: tokens.colorNeutralBackground1,
-    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    backgroundColor: '#fff0df',
+    border: '1px solid #e6bd91',
     borderRadius: tokens.borderRadiusXLarge,
     boxShadow: tokens.shadow2,
     transitionProperty: 'box-shadow, transform, border-color',
@@ -55,7 +52,29 @@ const useStyles = makeStyles({
     display: 'block',
     aspectRatio: '4 / 3',
     overflow: 'hidden',
-    backgroundColor: tokens.colorNeutralBackground3,
+    backgroundColor: '#fff8f0',
+  },
+  offerCard: {
+    backgroundColor: '#ffe1bd',
+    border: '1px solid #d98b45',
+    boxShadow: '0 3px 10px rgba(166, 86, 24, 0.13)',
+  },
+  offerMedia: {
+    backgroundColor: '#fff1df',
+  },
+  discountBadge: {
+    position: 'absolute',
+    top: tokens.spacingVerticalM,
+    left: tokens.spacingHorizontalM,
+    zIndex: 1,
+    padding: `${tokens.spacingVerticalXS} ${tokens.spacingHorizontalS}`,
+    borderRadius: tokens.borderRadiusMedium,
+    backgroundColor: '#b42332',
+    color: '#ffffff',
+    fontSize: tokens.fontSizeBase200,
+    fontWeight: tokens.fontWeightBold,
+    lineHeight: tokens.lineHeightBase200,
+    boxShadow: tokens.shadow4,
   },
   image: {
     display: 'block',
@@ -129,6 +148,18 @@ const useStyles = makeStyles({
     backgroundColor: tokens.colorNeutralBackground1,
     boxShadow: tokens.shadow4,
   },
+  // Debajo del corazón, con el mismo aspecto
+  saveToList: {
+    position: 'absolute',
+    top: `calc(${tokens.spacingVerticalS} + 40px)`,
+    right: tokens.spacingHorizontalS,
+    backgroundColor: tokens.colorNeutralBackground1,
+    boxShadow: tokens.shadow4,
+  },
+  // El marcador relleno es la señal de que está en alguna lista de deseos.
+  listIcon: {
+    color: tokens.colorBrandForeground1,
+  },
   // El corazón relleno en rojo es la señal de que ya está en favoritos, también mientras se quita.
   favoriteIcon: {
     color: tokens.colorPaletteRedForeground1,
@@ -151,23 +182,25 @@ const useStyles = makeStyles({
   },
 })
 
-// Tarjeta de un producto del catálogo: lo que se ve desde fuera (imagen, nombre, categoría, valoración y precio) y
-// el botón para añadirlo al carrito (HU9). `categoryName` lo traduce la página a partir del identificador de
-// categoría del producto. La imagen, el nombre y la valoración llevan al detalle (HU8). Con `onAddFavorite`, la
-// tarjeta tiene además un corazón para añadir el producto a favoritos (HU14), salvo si no está disponible, porque el
-// backend no lo aceptaría; uno agotado sí se puede añadir. Con `favorite`, el corazón sale relleno y, con
-// `onRemoveFavorite`, al pulsarlo se quita de favoritos. Si no se puede añadir o quitar, la tarjeta lo avisa.
+// Tarjeta de producto del catálogo. Permite acceder al detalle, añadir al carrito
+// y gestionar favoritos. Las tarjetas de ofertas utilizan un estilo diferenciado. Con `onSaveToList` tiene otro
+// botón para guardarlo en sus listas de deseos (PBI 534), relleno si está en alguna (`inList`).
 export default function ProductCard({
   product,
   categoryName,
   favorite = false,
   onAddFavorite,
   onRemoveFavorite,
+  inList = false,
+  onSaveToList,
+  offerStyle = false,
 }) {
   const styles = useStyles()
 
-  // Si la imagen no carga (dirección rota), se enseña el mismo marcador que cuando no hay imagen.
   const [imageFailed, setImageFailed] = useState(false)
+  const [savingFavorite, setSavingFavorite] = useState(false)
+  const [favoriteError, setFavoriteError] = useState('')
+
   const imageRef = useRef(null)
   const hasImage = Boolean(product.imagen) && !imageFailed
   const rated = product.valoracion !== null && product.numValoraciones > 0
@@ -178,16 +211,18 @@ export default function ProductCard({
 
     const handleError = () => setImageFailed(true)
     image.addEventListener('error', handleError)
-    if (image.complete && image.naturalWidth === 0) handleError()
+
+    if (image.complete && image.naturalWidth === 0) {
+      handleError()
+    }
 
     return () => image.removeEventListener('error', handleError)
   }, [])
 
-  const [savingFavorite, setSavingFavorite] = useState(false)
-  const [favoriteError, setFavoriteError] = useState('')
-
   const favoriteFailure = (failure) => {
-    if (favorite) return 'No se ha podido quitar de favoritos. Inténtalo de nuevo.'
+    if (favorite) {
+      return 'No se ha podido quitar de favoritos. Inténtalo de nuevo.'
+    }
 
     return failure?.code === 'PRODUCT_NOT_FOUND'
       ? 'Este producto ya no está disponible.'
@@ -199,7 +234,9 @@ export default function ProductCard({
     setSavingFavorite(true)
 
     try {
-      await (favorite ? onRemoveFavorite(product.id) : onAddFavorite(product.id))
+      await (favorite
+        ? onRemoveFavorite(product.id)
+        : onAddFavorite(product.id))
     } catch (failure) {
       setFavoriteError(favoriteFailure(failure))
     } finally {
@@ -208,9 +245,9 @@ export default function ProductCard({
   }
 
   return (
-    <div className={styles.card}>
+    <div className={mergeClasses(styles.card, offerStyle && styles.offerCard)}>
       <Link to={getProductDetailPath(product.id)} className={styles.link}>
-        <span className={styles.media}>
+        <span className={mergeClasses(styles.media, offerStyle && styles.offerMedia)}>
           {hasImage ? (
             <img
               ref={imageRef}
@@ -226,6 +263,12 @@ export default function ProductCard({
                 src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 3l18 18M10 12l-4 6h12l-3-4-2 2M6 6h11a2 2 0 0 1 2 2v8' fill='none' stroke='%23999999' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"
                 alt="Sin imagen"
               />
+            </span>
+          )}
+
+          {product.descuento && (
+            <span className={styles.discountBadge}>
+              {`OFERTA · -${product.descuento.porcentaje}%`}
             </span>
           )}
         </span>
@@ -253,6 +296,7 @@ export default function ProductCard({
                     <RatingStars value={product.valoracion} />
                   </span>
                 </span>
+
                 <Text weight="semibold">
                   {formatRating(product.valoracion)}
                 </Text>
@@ -273,7 +317,11 @@ export default function ProductCard({
           as="button"
           shape="circular"
           className={styles.favorite}
-          icon={favorite ? <Heart20Filled className={styles.favoriteIcon} /> : <Heart20Regular />}
+          icon={
+            favorite
+              ? <Heart20Filled className={styles.favoriteIcon} />
+              : <Heart20Regular />
+          }
           aria-label={
             favorite
               ? `Quitar ${product.nombre} de favoritos`
@@ -282,6 +330,18 @@ export default function ProductCard({
           title={favorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
           disabled={savingFavorite || (favorite && !onRemoveFavorite)}
           onClick={toggleFavorite}
+        />
+      )}
+
+      {onSaveToList && product.disponible && (
+        <Button
+          as="button"
+          shape="circular"
+          className={styles.saveToList}
+          icon={inList ? <Bookmark20Filled className={styles.listIcon} /> : <Bookmark20Regular />}
+          aria-label={inList ? `Cambiar las listas de ${product.nombre}` : `Guardar ${product.nombre} en una lista`}
+          title={inList ? 'Guardado en una lista' : 'Guardar en una lista'}
+          onClick={() => onSaveToList(product)}
         />
       )}
 
@@ -311,4 +371,7 @@ ProductCard.propTypes = {
   favorite: PropTypes.bool,
   onAddFavorite: PropTypes.func,
   onRemoveFavorite: PropTypes.func,
+  inList: PropTypes.bool,
+  onSaveToList: PropTypes.func,
+  offerStyle: PropTypes.bool,
 }

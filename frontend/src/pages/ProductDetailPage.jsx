@@ -11,20 +11,21 @@ import {
   tokens,
 } from '@fluentui/react-components'
 import { ArrowLeft20Regular, BoxSearch24Regular } from '@fluentui/react-icons'
+import { addFavoriteCategory, getPreferences, removeFavoriteCategory } from '../api/preferences'
 import { getCatalogProduct, getProductReviews, getProductReviewStatus } from '../api/products'
-import { addWishlistItem, getWishlist, removeWishlistItem } from '../api/wishlist'
 import EmptyState from '../components/EmptyState'
 import LinkButton from '../components/LinkButton'
+import FavoriteCategoryButton from '../features/catalog/FavoriteCategoryButton'
 import ProductDetail from '../features/catalog/ProductDetail'
+import WishlistPickerDialog from '../features/wishlist/WishlistPickerDialog'
 import { useApiQuery } from '../hooks/useApiQuery'
 import { useCategories } from '../hooks/useCategories'
+import { useFavoriteProducts } from '../hooks/useFavoriteProducts'
+import { useWishlists } from '../hooks/useWishlists'
 import { PATHS } from '../routes/paths'
 import PropTypes from 'prop-types'
 
 const NOT_FOUND = 404
-
-// Si un producto está en la lista de deseos que devuelve el backend (HU14).
-const estaEnLaLista = (lista, productId) => lista.items.some((item) => item.productoId === productId)
 
 const useStyles = makeStyles({
   page: {
@@ -109,36 +110,37 @@ export default function ProductDetailPage() {
   const reviewStatusFetcher = useCallback(() => getProductReviewStatus(id), [id])
   const { data: reviewStatus, failed: reviewStatusFailed, retry: retryReviewStatus } = useApiQuery(reviewStatusFetcher)
   const { categories } = useCategories()
-  // Si el producto está en los favoritos del cliente (HU14). Si la lista no se puede leer, se ofrece añadirlo.
-  // `cambiado` evita que una lectura lenta pise un cambio que el cliente ya ha hecho.
-  const [favorito, setFavorito] = useState(false)
-  const cambiado = useRef(false)
+  // Los favoritos (HU14) y las listas de deseos (PBI 534) van por separado (AB#528)
+  const { favoritos, anadirFavorito, quitarFavorito } = useFavoriteProducts()
+  const { listas, listasFallidas, recargarListas, cambiarListas, enAlgunaLista } = useWishlists()
+  const [selectorAbierto, setSelectorAbierto] = useState(false)
 
-  const anadirFavorito = async (productId) => {
-    const lista = await addWishlistItem(productId)
-    cambiado.current = true
-    setFavorito(estaEnLaLista(lista, id))
+  // Categorías favoritas del cliente (AB#528), para saber si ya lo es la del producto. Como con los favoritos, si no se
+  // pueden leer se ofrece añadirla, que no es un error si ya lo era.
+  const [categoriasFavoritas, setCategoriasFavoritas] = useState(() => new Set())
+  const categoriasCambiadas = useRef(false)
+
+  const guardarCategoria = async (peticion) => {
+    const { categorias } = await peticion
+    categoriasCambiadas.current = true
+    setCategoriasFavoritas(new Set(categorias))
   }
 
-  const quitarFavorito = async (productId) => {
-    const lista = await removeWishlistItem(productId)
-    cambiado.current = true
-    setFavorito(estaEnLaLista(lista, id))
-  }
   const notFound = failed && error?.status === NOT_FOUND
-  const categoryName = categories.find((category) => category.id === product?.categoriaId)?.nombre
+  // Solo las activas están en el listado: una categoría inactiva no se puede añadir a favoritas
+  const category = categories.find(({ id: categoryId }) => categoryId === product?.categoriaId)
 
   useEffect(() => {
     let cancelled = false
-    getWishlist()
-      .then((lista) => {
-        if (!cancelled && !cambiado.current) setFavorito(estaEnLaLista(lista, id))
+    getPreferences()
+      .then(({ categorias }) => {
+        if (!cancelled && !categoriasCambiadas.current) setCategoriasFavoritas(new Set(categorias))
       })
       .catch(() => { })
     return () => {
       cancelled = true
     }
-  }, [id])
+  }, [])
 
   return (
     <main className={styles.page}>
@@ -175,7 +177,17 @@ export default function ProductDetailPage() {
         <ProductDetail
           key={product.id}
           product={product}
-          categoryName={categoryName}
+          categoryName={category?.nombre}
+          categoryAction={
+            category && (
+              <FavoriteCategoryButton
+                category={category}
+                favorite={categoriasFavoritas.has(category.id)}
+                onAdd={(categoryId) => guardarCategoria(addFavoriteCategory(categoryId))}
+                onRemove={(categoryId) => guardarCategoria(removeFavoriteCategory(categoryId))}
+              />
+            )
+          }
           reviews={reviews}
           reviewsFailed={reviewsFailed}
           onRetryReviews={retryReviews}
@@ -186,9 +198,21 @@ export default function ProductDetailPage() {
             retryReviews()
             retryReviewStatus()
           }}
-          favorite={favorito}
+          favorite={favoritos.has(product.id)}
           onAddFavorite={anadirFavorito}
           onRemoveFavorite={quitarFavorito}
+          inList={enAlgunaLista.has(product.id)}
+          onSaveToList={() => setSelectorAbierto(true)}
+        />
+      )}
+      {selectorAbierto && product && (
+        <WishlistPickerDialog
+          product={product}
+          wishlists={listas}
+          failed={listasFallidas}
+          onRetry={recargarListas}
+          onClose={() => setSelectorAbierto(false)}
+          onWishlistsChange={cambiarListas}
         />
       )}
     </main>

@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server } from '../mocks/server'
-import { closeIncident, getAdminIncidents, openIncident } from './adminIncidents'
+import { abrirSesionPorApi } from '../test/renderApp'
+import { closeIncident, getAdminIncidents, openIncident, resolveIncident } from './adminIncidents'
 
 // Supervisión de incidencias del administrador (HU49, T304) contra el contrato del backend (PR #232):
 // GET /api/admin/incidencias?page&size, con el autor de cada incidencia ({email, rol} o null).
@@ -50,6 +51,40 @@ describe('getAdminIncidents', () => {
 
     expect(peticion).toEqual({ metodo: 'GET', page: '2', size: '5' })
     expect(respuesta).toEqual(PAGINA)
+  })
+
+  it('PBI239-CP05: cuando se indican filtros y ordenación, los envía como parámetros de consulta', async () => {
+    const peticion = {}
+    server.use(
+      http.get('/api/admin/incidencias', ({ request }) => {
+        const params = new URL(request.url).searchParams
+        peticion.page = params.get('page')
+        peticion.size = params.get('size')
+        peticion.estado = params.get('estado')
+        peticion.search = params.get('search')
+        peticion.sort = params.get('sort')
+        peticion.order = params.get('order')
+        return HttpResponse.json(PAGINA)
+      }),
+    )
+
+    await getAdminIncidents({
+      page: 1,
+      size: 10,
+      estado: 'PENDIENTE',
+      search: 'pedido',
+      sort: 'asunto',
+      order: 'desc',
+    })
+
+    expect(peticion).toEqual({
+      page: '1',
+      size: '10',
+      estado: 'PENDIENTE',
+      search: 'pedido',
+      sort: 'asunto',
+      order: 'desc',
+    })
   })
 
   it('HU49-CP15: un 403 llega como error con su estado y su código', async () => {
@@ -129,5 +164,55 @@ describe('closeIncident', () => {
     )
 
     await expect(closeIncident('inc-1')).rejects.toMatchObject({ status: 404, code: 'INCIDENT_NOT_FOUND' })
+  })
+})
+
+// Resolución de incidencias (HU192) contra el contrato docs/contratos/hu192-resolucion-incidencias.md:
+// PATCH /api/admin/incidencias/{id}/resolver, sin cuerpo. En el mock, inc-seed-2 está abierta e inc-seed-1, pendiente.
+
+describe('resolveIncident', () => {
+  it('HU192-CP22: pide PATCH /api/admin/incidencias/{id}/resolver sin cuerpo y devuelve la incidencia resuelta', async () => {
+    const resuelta = { ...ABIERTA, estado: 'RESUELTA', fechaResolucion: '2026-11-25T12:00:00Z' }
+    const peticion = {}
+    server.use(
+      http.patch('/api/admin/incidencias/:id/resolver', async ({ request, params }) => {
+        peticion.id = params.id
+        peticion.cuerpo = await request.text()
+        return HttpResponse.json(resuelta)
+      }),
+    )
+
+    const respuesta = await resolveIncident('inc-1')
+
+    expect(peticion).toEqual({ id: 'inc-1', cuerpo: '' })
+    expect(respuesta).toEqual(resuelta)
+  })
+
+  it('HU192-CP22: el mock resuelve una abierta con su fecha y no la resuelve dos veces', async () => {
+    await abrirSesionPorApi('admin@esibuy.test')
+
+    const resuelta = await resolveIncident('inc-seed-2')
+
+    expect(resuelta).toMatchObject({ id: 'inc-seed-2', estado: 'RESUELTA' })
+    expect(Date.parse(resuelta.fechaResolucion)).not.toBeNaN()
+    await expect(resolveIncident('inc-seed-2')).rejects.toMatchObject({ status: 409, code: 'INCIDENT_ALREADY_RESOLVED' })
+    await expect(openIncident('inc-seed-2', 'Otra')).rejects.toMatchObject({ code: 'INCIDENT_ALREADY_RESOLVED' })
+    const { items } = await getAdminIncidents({ page: 1, size: 50, estado: 'RESUELTA' })
+    expect(items.map((item) => item.id)).toEqual(['inc-seed-2'])
+  })
+
+  it.each([
+    ['una pendiente', 'inc-seed-1', 409, 'INCIDENT_NOT_OPEN'],
+    ['una que no existe', 'no-existe', 404, 'INCIDENT_NOT_FOUND'],
+  ])('HU192-CP22: el mock rechaza resolver %s', async (_caso, id, status, code) => {
+    await abrirSesionPorApi('admin@esibuy.test')
+
+    await expect(resolveIncident(id)).rejects.toMatchObject({ status, code })
+  })
+
+  it('HU192-CP22: el mock responde 403 ACCESS_DENIED a quien no es administrador', async () => {
+    await abrirSesionPorApi('cliente@esibuy.test')
+
+    await expect(resolveIncident('inc-seed-2')).rejects.toMatchObject({ status: 403, code: 'ACCESS_DENIED' })
   })
 })

@@ -22,10 +22,10 @@ function contarAltas() {
   return () => altas
 }
 
-function abrirPanel() {
+function abrirPanel(metodo = null) {
   const onSaved = vi.fn()
   const onCancel = vi.fn()
-  renderWithProviders(<AddPaymentMethodPanel onSaved={onSaved} onCancel={onCancel} />)
+  renderWithProviders(<AddPaymentMethodPanel metodo={metodo} onSaved={onSaved} onCancel={onCancel} />)
   return { onSaved, onCancel }
 }
 
@@ -78,6 +78,21 @@ describe('AddPaymentMethodPanel (HU6): validación', () => {
     expect(screen.getByText('Escribe la caducidad como MM/AA.')).toBeInTheDocument()
     expect(screen.getByText('El CVV tiene 3 o 4 dígitos.')).toBeInTheDocument()
     expect(screen.getByText(/el titular solo puede tener letras/i)).toBeInTheDocument()
+    expect(altas()).toBe(0)
+  })
+
+  it('HU6-CP31: rechaza números de tarjeta que no superan Luhn antes de llamar al backend', async () => {
+    const altas = contarAltas()
+    const usuario = userEvent.setup()
+    abrirPanel()
+
+    await usuario.type(screen.getByLabelText(/número de tarjeta/i), '1111 1111 1111 1111')
+    await usuario.type(screen.getByLabelText(/caducidad/i), '12/28')
+    await usuario.type(screen.getByLabelText(/cvv/i), '123')
+    await usuario.type(screen.getByLabelText(/titular/i), 'Ivan Moreno')
+    await usuario.click(screen.getByRole('button', { name: /guardar método de pago/i }))
+
+    expect(screen.getByText('El número de tarjeta no es válido. Comprueba sus dígitos.')).toBeInTheDocument()
     expect(altas()).toBe(0)
   })
 
@@ -201,6 +216,31 @@ describe('AddPaymentMethodPanel (HU6): guardar', () => {
   })
 })
 
+describe('AddPaymentMethodPanel (HU6): edición', () => {
+  it('solicita los datos de nuevo sin mostrar información sensible almacenada y actualiza el método', async () => {
+    const peticion = {}
+    const actualizado = { id: 'm-8', tipo: 'BIZUM', mascara: '•••• 678', predeterminado: true }
+    server.use(
+      http.put(`${URL_METODOS}/:id`, async ({ params, request }) => {
+        peticion.id = params.id
+        peticion.cuerpo = await request.json()
+        return HttpResponse.json(actualizado)
+      }),
+    )
+    const usuario = userEvent.setup()
+    const { onSaved } = abrirPanel({ id: 'm-8', tipo: 'BIZUM', mascara: '•••• 678', predeterminado: true })
+
+    expect(screen.getByRole('heading', { level: 2, name: /actualizar método de pago/i })).toBeInTheDocument()
+    expect(screen.getByText(/introduce de nuevo los datos/i)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Tarjeta' })).not.toBeInTheDocument()
+    await usuario.type(screen.getByLabelText(/teléfono de bizum/i), '612345678')
+    await usuario.click(screen.getByRole('button', { name: /guardar cambios/i }))
+
+    await waitFor(() => expect(onSaved).toHaveBeenCalledWith(actualizado))
+    expect(peticion).toEqual({ id: 'm-8', cuerpo: { tipo: 'BIZUM', telefonoBizum: '612345678' } })
+  })
+})
+
 describe('AddPaymentMethodPanel (HU6): errores del backend', () => {
   it('HU6-CP33: un método rechazado por el backend muestra un aviso sin repetir los datos enviados', async () => {
     // Formato correcto, pero el backend lo rechaza (no pasa Luhn o la tarjeta está caducada)
@@ -219,7 +259,7 @@ describe('AddPaymentMethodPanel (HU6): errores del backend', () => {
     await usuario.click(screen.getByRole('button', { name: /guardar método de pago/i }))
 
     expect(
-      await screen.findByText('No se ha podido guardar el método de pago. Revisa los datos: puede que la tarjeta esté caducada.'),
+      await screen.findByText('No se ha podido guardar el método de pago. Comprueba el número, la fecha de caducidad y el titular de la tarjeta.'),
     ).toBeInTheDocument()
     expect(onSaved).not.toHaveBeenCalled()
     // Ningún texto de la página repite el número ni el CVV (los campos los conservan para corregirlos)

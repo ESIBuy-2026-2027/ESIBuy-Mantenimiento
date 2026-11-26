@@ -27,6 +27,8 @@ import java.util.List;
 
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -94,12 +96,13 @@ class CatalogoControllerTest {
 
                 Producto producto = new Producto("p-1", datos);
                 when(catalogoProductos.buscarProductos(any(), any()))
-                                .thenReturn(new PaginaCatalogo(new ProductoPage(List.of(producto), 0, 10, 11), false));
+                                .thenReturn(new PaginaCatalogo(new ProductoPage(List.of(producto), 0, 10, 11), false, new BigDecimal("150.01")));
 
                 mockMvc.perform(get(URL).with(user(CLIENTE).roles("CLIENTE")))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.items[0].id").value("p-1"))
                                 .andExpect(jsonPath("$.items[0].nombre").value("Teclado mecánico"))
+                                .andExpect(jsonPath("$.maxPrice").value(150.01))
                                 .andExpect(jsonPath("$.items[0].imagen").value("https://esibuy.test/teclado.png"))
                                 .andExpect(jsonPath("$.items[0].categoriaId").value("cat-2"))
                                 // El precio que paga el cliente: sin descuento, el precio final es el precio
@@ -123,29 +126,44 @@ class CatalogoControllerTest {
         @DisplayName("HU7-CP17: los parámetros llegan al caso de uso traducidos: página desde 0, criterio y sentido")
         void traduceLosParametrosALaConsulta() throws Exception {
                 when(catalogoProductos.buscarProductos(any(), any()))
-                                .thenReturn(new PaginaCatalogo(new ProductoPage(List.of(), 1, 10, 0), false));
+                                .thenReturn(new PaginaCatalogo(new ProductoPage(List.of(), 1, 10, 0), false, BigDecimal.ZERO));
 
                 mockMvc.perform(get(URL).param("page", "2").param("size", "10").param("search", "teclado")
                                 .param("category", "cat-2").param("minRating", "4").param("sort", "valoracion")
-                                .param("order", "desc").with(user(CLIENTE).roles("CLIENTE")))
+                                .param("order", "desc").param("inStock", "true").param("offersOnly", "true")
+                                .param("minPrice", "24.99").param("maxPrice", "75.00")
+                                .with(user(CLIENTE).roles("CLIENTE")))
                                 .andExpect(status().isOk());
 
                 // La página llega al caso de uso empezando en 0; sort y order se traducen al
                 // enum y al boolean. El cliente
                 // sale de la sesión, para darle su precio
-                verify(catalogoProductos).buscarProductos(new BuscarCatalogoQuery("teclado", "cat-2", 4,
-                                CriterioOrdenCatalogo.VALORACION, true, 1, 10), CLIENTE);
+                verify(catalogoProductos).buscarProductos(new BuscarCatalogoQuery("teclado", "cat-2", 4, true, true, false, new BigDecimal("24.99"), new BigDecimal("75.00"), CriterioOrdenCatalogo.VALORACION, true, 1, 10), CLIENTE);
+        }
+
+        @Test
+        @DisplayName("HU7: acepta el criterio de ordenación por precio")
+        void aceptaOrdenarPorPrecio() throws Exception {
+                when(catalogoProductos.buscarProductos(any(), any()))
+                                .thenReturn(new PaginaCatalogo(new ProductoPage(List.of(), 1, 10, 0), false, BigDecimal.ZERO));
+
+                mockMvc.perform(get(URL).param("sort", "precio")
+                                .with(user(CLIENTE).roles("CLIENTE")))
+                                .andExpect(status().isOk());
+
+                verify(catalogoProductos).buscarProductos(
+                                argThat(query -> query.criterio() == CriterioOrdenCatalogo.PRECIO), eq(CLIENTE));
         }
 
         // Que minRating=6 no sea válido es una propuesta: la valoración va de 1 a 5.
         @ParameterizedTest(name = "{0}={1}")
-        @CsvSource({ "page, 0", "size, 0", "sort, precio", "order, arriba", "minRating, 6" })
+        @CsvSource({ "page, 0", "size, 0", "sort, popular", "order, arriba", "minRating, 6" })
         @DisplayName("HU7-CP18: un parámetro no válido devuelve 400 y no llega al caso de uso")
         void parametroNoValidoDevuelve400(String parametro, String valor) throws Exception {
                 // Con el caso de uso respondiendo, un 200 indicaría que el parámetro se ha
                 // aceptado
                 when(catalogoProductos.buscarProductos(any(), any()))
-                                .thenReturn(new PaginaCatalogo(new ProductoPage(List.of(), 0, 10, 0), false));
+                                .thenReturn(new PaginaCatalogo(new ProductoPage(List.of(), 0, 10, 0), false, BigDecimal.ZERO));
 
                 mockMvc.perform(get(URL).param(parametro, valor).with(user(CLIENTE).roles("CLIENTE")))
                                 .andExpect(status().isBadRequest());
@@ -168,7 +186,7 @@ class CatalogoControllerTest {
         void otroRolDevuelve403(String rol) throws Exception {
                 // Con el caso de uso respondiendo, un 200 indicaría que el rol tiene acceso
                 when(catalogoProductos.buscarProductos(any(), any()))
-                                .thenReturn(new PaginaCatalogo(new ProductoPage(List.of(), 0, 10, 0), false));
+                                .thenReturn(new PaginaCatalogo(new ProductoPage(List.of(), 0, 10, 0), false, BigDecimal.ZERO));
 
                 mockMvc.perform(get(URL).with(user("usuario@esibuy.test").roles(rol)))
                                 .andExpect(status().isForbidden());
@@ -196,7 +214,7 @@ class CatalogoControllerTest {
 
                 Producto valorado = new Producto("p-1", datos);
                 when(catalogoProductos.buscarProductos(any(), any()))
-                                .thenReturn(new PaginaCatalogo(new ProductoPage(List.of(valorado), 0, 10, 1), false));
+                                .thenReturn(new PaginaCatalogo(new ProductoPage(List.of(valorado), 0, 10, 1), false, BigDecimal.ZERO));
 
                 mockMvc.perform(get(URL).with(user(CLIENTE).roles("CLIENTE")))
                                 .andExpect(status().isOk())

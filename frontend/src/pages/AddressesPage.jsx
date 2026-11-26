@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import { useCallback, useState } from 'react'
 import {
   Badge,
@@ -8,7 +9,9 @@ import {
   MessageBarBody,
   Text,
   Title1,
+  Title3,
   makeStyles,
+  mergeClasses,
   tokens,
 } from '@fluentui/react-components'
 import { Add20Regular, Delete20Regular, Edit20Regular, Location24Regular } from '@fluentui/react-icons'
@@ -19,12 +22,28 @@ import AddressFormPanel from '../features/addresses/AddressFormPanel'
 import DeleteAddressDialog from '../features/addresses/DeleteAddressDialog'
 import { resumenDeDireccion } from '../features/addresses/direccionPropType'
 import { useApiQuery } from '../hooks/useApiQuery'
+import LinkButton from '../components/LinkButton'
+import { PATHS } from '../routes/paths'
 
 // Como el backend: un cliente tiene como máximo 5 direcciones de envío (HU5)
 const MAXIMO_DIRECCIONES = 5
 
 // Misma composición que la lista de métodos de pago (HU6)
 const useStyles = makeStyles({
+  embeddedPage: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: tokens.spacingVerticalM,
+    width: '100%',
+    minWidth: 0,
+  },
+  heading: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    justifyContent: 'space-between',
+    minHeight: '126px',
+  },
   list: {
     listStyle: 'none',
     margin: 0,
@@ -40,6 +59,9 @@ const useStyles = makeStyles({
     flexWrap: 'wrap',
     alignItems: 'center',
     gap: tokens.spacingHorizontalL,
+    minHeight: '148px',
+    padding: tokens.spacingHorizontalM,
+    boxSizing: 'border-box',
   },
   icon: {
     flexShrink: 0,
@@ -50,19 +72,42 @@ const useStyles = makeStyles({
     flexDirection: 'column',
     flexGrow: 1,
     minWidth: 0,
+    minHeight: '80px',
+    height: '80px',
+    justifyContent: 'center',
   },
   addressActions: {
     display: 'flex',
     flexWrap: 'wrap',
     alignItems: 'center',
+    justifyContent: 'flex-end',
     gap: tokens.spacingHorizontalS,
+    flexBasis: '100%',
+    width: '100%',
     marginLeft: 'auto',
+    paddingTop: tokens.spacingVerticalXS,
+    borderTop: `1px solid ${tokens.colorNeutralStroke2}`,
   },
   action: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'flex-end',
     gap: tokens.spacingVerticalXS,
+    minHeight: '40px',
+  },
+  embeddedAction: {
+    alignItems: 'stretch',
+    width: '100%',
+  },
+  addButton: {
+    minHeight: '40px',
+    minWidth: '170px',
+  },
+  embeddedAddButton: {
+    width: '100%',
+  },
+  seeAll: {
+    alignSelf: 'flex-start',
   },
   muted: {
     color: tokens.colorNeutralForeground3,
@@ -70,7 +115,7 @@ const useStyles = makeStyles({
 })
 
 // Direcciones de envío del cliente en sesión (HU5). La principal es la que el checkout (HU10) usa por defecto.
-export default function AddressesPage() {
+export default function AddressesPage({ embedded = false }) {
   const pageStyles = usePageStyles()
   const styles = useStyles()
   const fetcher = useCallback(() => getAddresses(), [])
@@ -81,6 +126,7 @@ export default function AddressesPage() {
   const [enPanel, setEnPanel] = useState(null)
   const [aEliminar, setAEliminar] = useState(null)
   const limiteAlcanzado = (direcciones?.length ?? 0) >= MAXIMO_DIRECCIONES
+  const direccionesVisibles = embedded ? (direcciones ?? []).slice(0, 3) : direcciones
 
   const abrirPanel = (direccion) => {
     setAviso(null)
@@ -111,34 +157,36 @@ export default function AddressesPage() {
     retry()
   }
 
+  const Root = embedded ? 'section' : 'main'
+  const SectionTitle = embedded ? Title3 : Title1
+
   return (
-    <main className={pageStyles.page}>
-      <div className={pageStyles.heading}>
+    <Root className={embedded ? styles.embeddedPage : pageStyles.page} aria-label={embedded ? 'Direcciones de envío' : undefined}>
+      <div className={mergeClasses(pageStyles.heading, embedded && styles.heading)}>
         <div className={pageStyles.titleBlock}>
-          <Title1 as="h1" className={pageStyles.title}>
+          <SectionTitle as={embedded ? 'h2' : 'h1'} className={pageStyles.title}>
             Direcciones de envío
-          </Title1>
+          </SectionTitle>
           <Text className={pageStyles.subtitle}>
-            Gestiona dónde recibes tus pedidos. La principal es la que se propone al pagar.
+            Gestiona dónde recibes tus pedidos.
           </Text>
         </div>
-        {direcciones?.length > 0 && (
-          <div className={styles.action}>
-            <Button
-              appearance="primary"
-              icon={<Add20Regular />}
-              disabled={limiteAlcanzado}
-              onClick={() => abrirPanel()}
-            >
-              Añadir dirección
-            </Button>
-            {limiteAlcanzado && (
-              <Text size={200} className={styles.muted}>
-                Has alcanzado el máximo de {MAXIMO_DIRECCIONES} direcciones.
-              </Text>
-            )}
-          </div>
-        )}
+        <div className={mergeClasses(styles.action, embedded && styles.embeddedAction)}>
+          <Button
+            className={mergeClasses(styles.addButton, embedded && styles.embeddedAddButton)}
+            appearance="primary"
+            icon={<Add20Regular />}
+            disabled={limiteAlcanzado}
+            onClick={() => abrirPanel()}
+          >
+            Añadir dirección
+          </Button>
+          {limiteAlcanzado && (
+            <Text size={200} className={styles.muted}>
+              Has alcanzado el máximo de {MAXIMO_DIRECCIONES} direcciones.
+            </Text>
+          )}
+        </div>
       </div>
       {failed && (
         <MessageBar intent="error">
@@ -166,15 +214,11 @@ export default function AddressesPage() {
           icon={<Location24Regular />}
           title="Aún no tienes direcciones de envío"
           description="Añade la dirección donde quieres recibir tus pedidos."
-        >
-          <Button appearance="primary" icon={<Add20Regular />} onClick={() => abrirPanel()}>
-            Añadir dirección
-          </Button>
-        </EmptyState>
+        />
       )}
       {direcciones?.length > 0 && (
         <ul aria-label="Tus direcciones" className={styles.list}>
-          {direcciones.map((direccion) => (
+          {direccionesVisibles.map((direccion) => (
             <li key={direccion.id}>
               <Card className={styles.address}>
                 <Location24Regular className={styles.icon} aria-hidden />
@@ -186,11 +230,11 @@ export default function AddressesPage() {
                 <div className={styles.addressActions}>
                   {direccion.principal ? (
                     <Badge appearance="tint" color="brand">
-                      Principal
+                      Predeterminado
                     </Badge>
                   ) : (
                     <Button appearance="subtle" onClick={() => marcarPrincipal(direccion.id)}>
-                      Marcar como principal
+                      Marcar como predeterminado
                     </Button>
                   )}
                   <Button appearance="subtle" icon={<Edit20Regular />} onClick={() => abrirPanel(direccion)}>
@@ -205,6 +249,11 @@ export default function AddressesPage() {
           ))}
         </ul>
       )}
+      {embedded && (direcciones?.length ?? 0) > 3 && (
+        <LinkButton to={PATHS.ADDRESSES} appearance="subtle" className={styles.seeAll}>
+          Ver todas las direcciones ({direcciones.length})
+        </LinkButton>
+      )}
       {aEliminar && (
         <DeleteAddressDialog
           direccion={aEliminar}
@@ -213,6 +262,10 @@ export default function AddressesPage() {
           onDeleted={alEliminar}
         />
       )}
-    </main>
+    </Root>
   )
+}
+
+AddressesPage.propTypes = {
+  embedded: PropTypes.bool,
 }

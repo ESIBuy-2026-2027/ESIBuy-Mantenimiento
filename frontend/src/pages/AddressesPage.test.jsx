@@ -47,8 +47,8 @@ describe('AddressesPage (HU5): listado', () => {
     await abrirDirecciones()
 
     const [mayor, toledo] = await screen.findAllByRole('listitem')
-    expect(within(mayor).getByText('Principal')).toBeInTheDocument()
-    expect(within(toledo).queryByText('Principal')).not.toBeInTheDocument()
+    expect(within(mayor).getByText('Predeterminado')).toBeInTheDocument()
+    expect(within(toledo).queryByText('Predeterminado')).not.toBeInTheDocument()
   })
 
   it('HU5-CP18: sin direcciones muestra un estado vacío con el botón para añadir la primera', async () => {
@@ -106,12 +106,12 @@ describe('AddressesPage (HU5): principal', () => {
     await abrirDirecciones()
     const [, toledo] = await screen.findAllByRole('listitem')
     // La principal no ofrece marcarse otra vez
-    expect(within(tarjetasDeDireccion()[0]).queryByRole('button', { name: /marcar como principal/i })).toBeNull()
+    expect(within(tarjetasDeDireccion()[0]).queryByRole('button', { name: /marcar como predeterminado/i })).toBeNull()
 
-    await usuario.click(within(toledo).getByRole('button', { name: /marcar como principal/i }))
+    await usuario.click(within(toledo).getByRole('button', { name: /marcar como predeterminado/i }))
 
-    await waitFor(() => expect(within(tarjetasDeDireccion()[1]).getByText('Principal')).toBeInTheDocument())
-    expect(within(tarjetasDeDireccion()[0]).queryByText('Principal')).not.toBeInTheDocument()
+    await waitFor(() => expect(within(tarjetasDeDireccion()[1]).getByText('Predeterminado')).toBeInTheDocument())
+    expect(within(tarjetasDeDireccion()[0]).queryByText('Predeterminado')).not.toBeInTheDocument()
   })
 
   it('HU5-CP20: si la dirección ya no existe avisa y recarga la lista', async () => {
@@ -132,7 +132,7 @@ describe('AddressesPage (HU5): principal', () => {
     await abrirDirecciones()
     const [, eliminada] = await screen.findAllByRole('listitem')
 
-    await usuario.click(within(eliminada).getByRole('button', { name: /marcar como principal/i }))
+    await usuario.click(within(eliminada).getByRole('button', { name: /marcar como predeterminado/i }))
 
     expect(await screen.findByText(/esa dirección ya no existe/i)).toBeInTheDocument()
     await waitFor(() => expect(tarjetasDeDireccion()).toHaveLength(1))
@@ -210,7 +210,7 @@ describe('AddressesPage (HU5): añadir y editar', () => {
     expect(screen.queryByRole('region', { name: /editar dirección/i })).not.toBeInTheDocument()
     await waitFor(() => expect(tarjetasDeDireccion()[1]).toHaveTextContent('Calle Toledo 7, 2º B'))
     // Editar no cambia la principal
-    expect(within(tarjetasDeDireccion()[0]).getByText('Principal')).toBeInTheDocument()
+    expect(within(tarjetasDeDireccion()[0]).getByText('Predeterminado')).toBeInTheDocument()
   })
 })
 
@@ -223,7 +223,7 @@ describe('AddressesPage (HU5): eliminar', () => {
     await usuario.click(within(mayor).getByRole('button', { name: /eliminar/i }))
     const dialogo = screen.getByRole('alertdialog', { name: /eliminar dirección/i })
     await usuario.selectOptions(
-      within(dialogo).getByRole('combobox', { name: /nueva dirección principal/i }),
+      within(dialogo).getByRole('combobox', { name: /nueva dirección predeterminada/i }),
       within(dialogo).getByRole('option', { name: /calle toledo 5/i }),
     )
     await usuario.click(within(dialogo).getByRole('button', { name: /^eliminar$/i }))
@@ -231,6 +231,6 @@ describe('AddressesPage (HU5): eliminar', () => {
     expect(await screen.findByText('Dirección eliminada.')).toBeInTheDocument()
     await waitFor(() => expect(tarjetasDeDireccion()).toHaveLength(1))
     expect(tarjetasDeDireccion()[0]).toHaveTextContent('Calle Toledo 5')
-    expect(within(tarjetasDeDireccion()[0]).getByText('Principal')).toBeInTheDocument()
+    expect(within(tarjetasDeDireccion()[0]).getByText('Predeterminado')).toBeInTheDocument()
   })
 })

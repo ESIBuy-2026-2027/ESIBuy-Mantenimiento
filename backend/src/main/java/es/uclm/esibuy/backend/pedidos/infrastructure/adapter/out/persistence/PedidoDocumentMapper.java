@@ -89,13 +89,15 @@ public class PedidoDocumentMapper {
 
     private static LineaPedidoDocument aDocumento(LineaPedido linea) {
         LineaPedidoDocument documento = new LineaPedidoDocument();
+
         documento.setProductoId(linea.productoId());
         documento.setNombreProducto(linea.nombreProducto());
-        documento.setVendedorId(vendedorId);
+        documento.setVendedorId(linea.vendedorId());
         documento.setImagen(linea.imagen());
         documento.setCantidad(linea.cantidad());
         documento.setPrecioUnitario(linea.precioUnitario());
         documento.setSubtotal(linea.subtotal());
+
         return documento;
     }
 

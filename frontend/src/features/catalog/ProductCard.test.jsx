@@ -290,3 +290,40 @@ describe('ProductCard (HU14): favoritos', () => {
     expect(screen.getByRole('button', { name: 'Quitar Teclado mecánico de favoritos' })).toBeEnabled()
   })
 })
+
+// Guardar en una lista de deseos (AB#528): un botón aparte del corazón, que abre el selector de listas de la página
+describe('ProductCard (AB#528): listas de deseos', () => {
+  const pintarConListas = (producto = PRODUCTO, props = {}) =>
+    renderWithProviders(
+      conCarrito(<ProductCard product={producto} categoryName="Tecnología" onSaveToList={vi.fn()} {...props} />),
+    )
+
+  it('HU528-CP36: la tarjeta tiene un botón para guardar el producto en una lista, fuera del enlace y aparte del corazón', async () => {
+    const onSaveToList = vi.fn()
+    const onAddFavorite = vi.fn()
+    pintarConListas(PRODUCTO, { onSaveToList, onAddFavorite })
+
+    const boton = screen.getByRole('button', { name: 'Guardar Teclado mecánico en una lista' })
+    expect(boton.closest('a')).toBeNull()
+    await userEvent.click(boton)
+
+    expect(onSaveToList).toHaveBeenCalledWith(PRODUCTO)
+    expect(onAddFavorite).not.toHaveBeenCalled()
+    expect(screen.getByRole('button', { name: 'Añadir Teclado mecánico a favoritos' })).toBeInTheDocument()
+  })
+
+  it('HU528-CP36: si el producto ya está en alguna lista, el botón lo indica', () => {
+    pintarConListas(PRODUCTO, { inList: true })
+
+    expect(screen.getByRole('button', { name: 'Cambiar las listas de Teclado mecánico' })).toHaveAttribute(
+      'title',
+      'Guardado en una lista',
+    )
+  })
+
+  it('HU528-CP36: un producto no disponible no se puede guardar en una lista', () => {
+    pintarConListas({ ...PRODUCTO, disponible: false })
+
+    expect(screen.queryByRole('button', { name: /lista/i })).not.toBeInTheDocument()
+  })
+})

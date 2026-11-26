@@ -67,7 +67,7 @@ class IncidenciaControllerTest {
 
     private static Incidencia incidenciaDe(String autorId) {
         return new Incidencia("i-1", autorId, "No me llega el pedido", "Lo pedi hace una semana",
-                EstadoIncidencia.PENDIENTE, "", AHORA);
+                EstadoIncidencia.PENDIENTE, "", AHORA, null);
     }
 
     private ResultActions crearComoCliente(String cuerpo) throws Exception {

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { cleanup, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { delay, http, HttpResponse } from 'msw'
+import { http, HttpResponse } from 'msw'
 import { login } from '../api/auth'
 import { server } from '../mocks/server'
 import { abrirSesionPorApi, renderApp } from '../test/renderApp'
@@ -99,136 +99,13 @@ describe('ProfilePage (HU4): datos del perfil', () => {
   })
 })
 
-// Preferencias del cliente (HU46, T286): las categorías que le interesan. Del mock de categorías: Tecnología (cat-1) y
-// Hogar (cat-2), las dos activas.
-describe('ProfilePage (HU46): preferencias', () => {
-  const seccion = () => screen.findByRole('group', { name: 'Mis preferencias' })
-
-  it('HU46-CP20: el cliente ve sus preferencias, con una casilla por cada categoría activa', async () => {
+// Las categorías favoritas (AB#528) se añaden desde el detalle de un producto y se revisan en Mis favoritos
+describe('ProfilePage (AB#528): sin categorías favoritas', () => {
+  it('HU528-CP43: el perfil del cliente no tiene la selección de categorías favoritas', async () => {
     await abrirPerfil('cliente@esibuy.test')
 
-    const preferencias = await seccion()
-    expect(within(preferencias).getByRole('checkbox', { name: 'Tecnología' })).not.toBeChecked()
-    expect(within(preferencias).getByRole('checkbox', { name: 'Hogar' })).not.toBeChecked()
-  })
-
-  it('HU46-CP20: las categorías que ya eligió aparecen marcadas', async () => {
-    server.use(http.get('/api/customer/preferences', () => HttpResponse.json({ categorias: ['cat-2'] })))
-    await abrirPerfil('cliente@esibuy.test')
-
-    const preferencias = await seccion()
-    await waitFor(() => expect(within(preferencias).getByRole('checkbox', { name: 'Hogar' })).toBeChecked())
-    expect(within(preferencias).getByRole('checkbox', { name: 'Tecnología' })).not.toBeChecked()
-  })
-
-  it('HU46-CP21: al marcar una categoría se guarda al momento y se avisa', async () => {
-    const user = userEvent.setup()
-    let cuerpo = null
-    server.use(
-      http.put('/api/customer/preferences', async ({ request }) => {
-        cuerpo = await request.json()
-        return HttpResponse.json(cuerpo)
-      }),
-    )
-    await abrirPerfil('cliente@esibuy.test')
-    const preferencias = await seccion()
-
-    await user.click(within(preferencias).getByRole('checkbox', { name: 'Tecnología' }))
-
-    expect(await screen.findByText('Preferencias guardadas.')).toBeInTheDocument()
-    expect(cuerpo).toEqual({ categorias: ['cat-1'] })
-    expect(within(preferencias).getByRole('checkbox', { name: 'Tecnología' })).toBeChecked()
-  })
-
-  it('HU46-CP21: al desmarcar una categoría elegida se guarda sin ella', async () => {
-    const user = userEvent.setup()
-    let cuerpo = null
-    server.use(
-      http.get('/api/customer/preferences', () => HttpResponse.json({ categorias: ['cat-2'] })),
-      http.put('/api/customer/preferences', async ({ request }) => {
-        cuerpo = await request.json()
-        return HttpResponse.json(cuerpo)
-      }),
-    )
-    await abrirPerfil('cliente@esibuy.test')
-    const preferencias = await seccion()
-    await waitFor(() => expect(within(preferencias).getByRole('checkbox', { name: 'Hogar' })).toBeChecked())
-
-    await user.click(within(preferencias).getByRole('checkbox', { name: 'Hogar' }))
-
-    expect(await screen.findByText('Preferencias guardadas.')).toBeInTheDocument()
-    expect(cuerpo).toEqual({ categorias: [] })
-    expect(within(preferencias).getByRole('checkbox', { name: 'Hogar' })).not.toBeChecked()
-  })
-
-  it('HU46-CP21: mientras se guarda, las casillas quedan deshabilitadas', async () => {
-    const user = userEvent.setup()
-    server.use(
-      http.put('/api/customer/preferences', async () => {
-        await delay('infinite')
-      }),
-    )
-    await abrirPerfil('cliente@esibuy.test')
-    const preferencias = await seccion()
-
-    await user.click(within(preferencias).getByRole('checkbox', { name: 'Tecnología' }))
-
-    expect(within(preferencias).getByRole('checkbox', { name: 'Tecnología' })).toBeDisabled()
-    expect(within(preferencias).getByRole('checkbox', { name: 'Hogar' })).toBeDisabled()
-  })
-
-  it('HU46-CP21: al volver al perfil, las preferencias siguen guardadas', async () => {
-    const user = userEvent.setup()
-    await abrirPerfil('cliente@esibuy.test')
-    await user.click(within(await seccion()).getByRole('checkbox', { name: 'Hogar' }))
-    await screen.findByText('Preferencias guardadas.')
-    cleanup()
-
-    renderApp('/profile')
-
-    const preferencias = await seccion()
-    await waitFor(() => expect(within(preferencias).getByRole('checkbox', { name: 'Hogar' })).toBeChecked())
-  })
-
-  it('HU46-CP22: si no se pueden guardar, lo avisa y la casilla vuelve a como estaba', async () => {
-    const user = userEvent.setup()
-    server.use(http.put('/api/customer/preferences', () => new HttpResponse(null, { status: 500 })))
-    await abrirPerfil('cliente@esibuy.test')
-    const preferencias = await seccion()
-
-    await user.click(within(preferencias).getByRole('checkbox', { name: 'Tecnología' }))
-
-    expect(
-      await screen.findByText('No se han podido guardar tus preferencias. Inténtalo de nuevo.'),
-    ).toBeInTheDocument()
-    expect(within(preferencias).getByRole('checkbox', { name: 'Tecnología' })).not.toBeChecked()
-    expect(within(preferencias).getByRole('checkbox', { name: 'Tecnología' })).toBeEnabled()
-  })
-
-  it('HU46-CP22: si no se pueden cargar, lo avisa sin mostrar las casillas y permite reintentar', async () => {
-    const user = userEvent.setup()
-    // Falla hasta que se pulsa Reintentar (la página puede pedirlas más de una vez al montarse)
-    let falla = true
-    server.use(
-      http.get('/api/customer/preferences', () =>
-        falla ? new HttpResponse(null, { status: 500 }) : HttpResponse.json({ categorias: ['cat-1'] }),
-      ),
-    )
-    await abrirPerfil('cliente@esibuy.test')
-
-    expect(await screen.findByText('No se han podido cargar tus preferencias. Inténtalo de nuevo.')).toBeInTheDocument()
-    expect(screen.queryByRole('group', { name: /preferencias/i })).not.toBeInTheDocument()
-    falla = false
-    await user.click(screen.getByRole('button', { name: 'Reintentar' }))
-
-    const preferencias = await seccion()
-    await waitFor(() => expect(within(preferencias).getByRole('checkbox', { name: 'Tecnología' })).toBeChecked())
-  })
-
-  it('HU46-CP20: el vendedor no tiene preferencias', async () => {
-    await abrirPerfil('vendedor@esibuy.test')
-
-    expect(screen.queryByRole('group', { name: 'Mis preferencias' })).not.toBeInTheDocument()
+    expect(screen.queryByText(/categorías favoritas/i)).not.toBeInTheDocument()
+    expect(screen.queryByRole('checkbox', { name: 'Tecnología' })).not.toBeInTheDocument()
   })
 })
 
@@ -238,12 +115,17 @@ describe('ProfilePage (HU45): ESIBuy Premium', () => {
     const user = userEvent.setup()
     await abrirPerfil('nuevo@esibuy.test')
 
-    const cuenta = within(screen.getByRole('region', { name: 'Mi cuenta' }))
-    const enlace = cuenta.getByRole('link', { name: /hazte premium/i })
+    const main = screen.getByRole('main')
+    const enlace = screen.getByRole('link', { name: /hazte premium/i })
     expect(enlace).toHaveAttribute('href', '/premium')
-    expect(cuenta.getByRole('link', { name: 'Métodos de pago' })).toHaveAttribute('href', '/payment-methods')
-    expect(cuenta.getByRole('link', { name: 'Direcciones' })).toHaveAttribute('href', '/addresses')
-    expect(within(screen.getByRole('main')).queryByText('Premium')).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: 'Da el salto a ESIBuy Premium' })).toBeInTheDocument()
+    expect(screen.getByText('Al hacerte Premium, obtendrás las siguientes ventajas:')).toBeInTheDocument()
+    expect(main.querySelector('h2')).toHaveTextContent('Da el salto a ESIBuy Premium')
+    expect(main.querySelector('h2').compareDocumentPosition(screen.getByLabelText('Nombre')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(screen.getByRole('region', { name: 'Direcciones de envío' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Métodos de pago' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /añadir dirección/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /añadir método de pago/i })).toBeInTheDocument()
     await user.click(enlace)
 
     await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/premium$/))
@@ -252,9 +134,11 @@ describe('ProfilePage (HU45): ESIBuy Premium', () => {
   it('HU45-CP28: el cliente Premium ve el distintivo Premium en vez del botón', async () => {
     await abrirPerfil('cliente@esibuy.test')
 
-    const cuenta = within(screen.getByRole('region', { name: 'Mi cuenta' }))
-    expect(cuenta.getByText('Premium')).toBeInTheDocument()
-    expect(cuenta.getByRole('link', { name: /ver beneficios/i })).toHaveAttribute('href', '/premium')
+    expect(screen.getByText('MIEMBRO ESIBUY PREMIUM')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Ya eres ESIBuy Premium' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /cancelar mi suscripción/i })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Ventajas de ESIBuy Premium' })).not.toBeInTheDocument()
+    expect(screen.getByRole('list', { name: 'Ventajas de ESIBuy Premium' })).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /hazte premium/i })).not.toBeInTheDocument()
   })
 
@@ -742,5 +626,43 @@ describe('ProfilePage (HU45): cambios sin guardar', () => {
     await abrirPerfil('cliente@esibuy.test')
 
     expect(cerrarLaPestana().defaultPrevented).toBe(false)
+  })
+})
+
+
+describe('ProfilePage: resumen de direcciones y métodos de pago', () => {
+  it('muestra tres elementos como máximo y permite abrir cada listado completo', async () => {
+    const direcciones = Array.from({ length: 4 }, (_, i) => ({
+      id: `d-${i + 1}`,
+      destinatario: 'Carlos Cliente',
+      calle: `Calle ${i + 1}`,
+      detalles: null,
+      codigoPostal: '13001',
+      ciudad: 'Ciudad Real',
+      provincia: 'Ciudad Real',
+      telefono: '611222333',
+      principal: i === 0,
+    }))
+    const metodos = Array.from({ length: 4 }, (_, i) => ({
+      id: `m-${i + 1}`,
+      tipo: 'BIZUM',
+      mascara: `•••• ${600 + i}`,
+      predeterminado: i === 0,
+    }))
+    server.use(
+      http.get('/api/customer/addresses', () => HttpResponse.json(direcciones)),
+      http.get('/api/customer/payment-methods', () => HttpResponse.json(metodos)),
+    )
+
+    await abrirPerfil('cliente@esibuy.test')
+
+    const listaDirecciones = await screen.findByRole('list', { name: 'Tus direcciones' })
+    const listaMetodos = await screen.findByRole('list', { name: 'Tus métodos de pago' })
+    expect(within(listaDirecciones).getAllByRole('listitem')).toHaveLength(3)
+    expect(within(listaMetodos).getAllByRole('listitem')).toHaveLength(3)
+
+    await userEvent.setup().click(screen.getByRole('link', { name: /ver todas las direcciones \(4\)/i }))
+    expect(await screen.findByRole('heading', { level: 1, name: /direcciones de envío/i })).toBeInTheDocument()
+    expect(await screen.findAllByRole('listitem')).toHaveLength(4)
   })
 })

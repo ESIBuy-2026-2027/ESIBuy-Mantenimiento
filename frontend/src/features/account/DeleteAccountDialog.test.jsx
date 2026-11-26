@@ -116,7 +116,7 @@ describe('DeleteAccountDialog (HU25): consecuencias del cliente', () => {
     expect(dialogo).toHaveTextContent(/direcciones/i)
     expect(dialogo).toHaveTextContent(/métodos de pago/i)
     expect(dialogo).toHaveTextContent(/carrito/i)
-    expect(dialogo).toHaveTextContent(/lista de deseos/i)
+    expect(dialogo).toHaveTextContent(/favoritos y tus listas de deseos/i)
     expect(dialogo).toHaveTextContent(/doble factor/i)
     expect(dialogo).toHaveTextContent(/pedidos y las valoraciones se conservan/i)
     expect(dialogo).toHaveTextContent(/se cerrará la sesión/i)
@@ -134,7 +134,7 @@ describe('DeleteAccountDialog (HU25): consecuencias del cliente', () => {
     const dialogo = screen.getByRole('alertdialog', { name: /eliminar mi cuenta/i })
     expect(dialogo).toHaveTextContent(/productos que no tienen pedidos se eliminan/i)
     expect(dialogo).toHaveTextContent(/productos con pedidos se desactivan y se conservan/i)
-    expect(dialogo).not.toHaveTextContent(/carrito|direcciones|lista de deseos/i)
+    expect(dialogo).not.toHaveTextContent(/carrito|direcciones|listas de deseos/i)
   })
 
   it('HU25-CP08: las consecuencias salen de una lista, un elemento por consecuencia', () => {

@@ -1,7 +1,6 @@
 import { makeStyles, tokens } from '@fluentui/react-components'
 import { Outlet, useLocation } from 'react-router-dom'
 import CartProvider from '../features/cart/CartProvider'
-import CartWidget from '../features/cart/CartWidget'
 import { PATHS } from '../routes/paths'
 import AppHeader from './AppHeader'
 
@@ -25,7 +24,6 @@ export default function AppLayout() {
       <div className={styles.page}>
         {!isRegisterPage && !isHomePage && <AppHeader />}
         <Outlet />
-        <CartWidget />
       </div>
     </CartProvider>
   )
