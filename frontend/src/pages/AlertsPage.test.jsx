@@ -20,14 +20,20 @@ const ALERTAS = {
       tipo: 'BAJADA_PRECIO',
       fecha: '2026-11-26T10:00:00Z',
       leida: false,
-      producto: { id: 'p-1', nombre: 'Auriculares inalámbricos', precioAnterior: 59.9, precioNuevo: 53.91 },
+      producto: {
+        id: 'p-1',
+        nombre: 'Auriculares inalámbricos',
+        imagen: 'https://tienda.test/auriculares.png',
+        precioAnterior: 59.9,
+        precioNuevo: 53.91,
+      },
     },
     {
       id: 'a-1',
       tipo: 'DISPONIBILIDAD',
       fecha: '2026-11-25T18:30:00Z',
       leida: true,
-      producto: { id: 'p-3', nombre: 'Ratón ergonómico', precioAnterior: null, precioNuevo: null },
+      producto: { id: 'p-3', nombre: 'Ratón ergonómico', imagen: '', precioAnterior: null, precioNuevo: null },
     },
   ],
 }
@@ -48,21 +54,37 @@ describe('AlertsPage', () => {
 
     const lista = await screen.findByRole('list', { name: 'Tus alertas' })
     const [bajada, disponible] = within(lista).getAllByRole('listitem')
-    expect(within(bajada).getByText('Ha bajado de precio')).toBeInTheDocument()
+    expect(within(bajada).getByText('¡Bajada de precio!')).toBeInTheDocument()
     expect(within(bajada).getByRole('link', { name: 'Auriculares inalámbricos' })).toHaveAttribute('href', '/products/p-1')
-    expect(within(disponible).getByText('Vuelve a estar disponible')).toBeInTheDocument()
+    expect(within(bajada).getByRole('link', { name: 'Ver Auriculares inalámbricos' })).toHaveAttribute('href', '/products/p-1')
+    expect(within(disponible).getByText('¡De nuevo en stock!')).toBeInTheDocument()
     expect(within(disponible).getByRole('link', { name: 'Ratón ergonómico' })).toHaveAttribute('href', '/products/p-3')
     expect(within(bajada).getByText(/26\/11\/2026/)).toBeInTheDocument()
   })
 
-  it('HU529-CP26: una bajada de precio muestra el precio anterior y el nuevo; una de disponibilidad no muestra precios', async () => {
+  it('HU529-CP26: una bajada de precio muestra el precio nuevo, el anterior tachado, el descuento y lo que se ahorra; una de disponibilidad no muestra precios', async () => {
     await abrirMisAlertas()
 
     const lista = await screen.findByRole('list', { name: 'Tus alertas' })
     const [bajada, disponible] = within(lista).getAllByRole('listitem')
-    expect(within(bajada).getByText(/59,90/)).toBeInTheDocument()
     expect(within(bajada).getByText(/53,91/)).toBeInTheDocument()
+    expect(within(bajada).getByText(/59,90/).closest('del')).not.toBeNull()
+    expect(within(bajada).getByText('-10%')).toBeInTheDocument()
+    expect(within(bajada).getByText(/Ahorras 5,99/)).toBeInTheDocument()
     expect(within(disponible).queryByText(/€/)).not.toBeInTheDocument()
+    expect(within(disponible).getByText('Ya puedes comprarlo otra vez. ¡Que no se te escape!')).toBeInTheDocument()
+  })
+
+  it('HU529-CP26: cada alerta muestra la imagen del producto o, si no tiene, un marcador', async () => {
+    await abrirMisAlertas()
+
+    const lista = await screen.findByRole('list', { name: 'Tus alertas' })
+    const [bajada, disponible] = within(lista).getAllByRole('listitem')
+    expect(within(bajada).getByRole('img', { name: 'Auriculares inalámbricos' })).toHaveAttribute(
+      'src',
+      'https://tienda.test/auriculares.png',
+    )
+    expect(within(disponible).getByRole('img', { name: 'Sin imagen' })).toBeInTheDocument()
   })
 
   it('HU529-CP27: sin alertas muestra un estado vacío que lleva a los favoritos', async () => {
