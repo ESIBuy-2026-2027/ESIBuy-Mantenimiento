@@ -19,11 +19,9 @@ describe('AlertsLoginNotice', () => {
     await abrirSesionPorApi('cliente@esibuy.test')
     renderApp(TRAS_INICIAR_SESION)
 
-    // Como una notificación del móvil, sale del botón de la cuenta: va en la cabecera, no en la página
     const notificacion = await screen.findByRole('status', { name: 'Notificación de alertas' })
     expect(notificacion).toHaveTextContent('Novedades en tus favoritos')
     expect(notificacion).toHaveTextContent(AVISO)
-    expect(within(screen.getByRole('banner')).getByRole('status', { name: 'Notificación de alertas' })).toBe(notificacion)
     await user.click(within(notificacion).getByRole('link', { name: 'Ver alertas' }))
 
     await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/alerts$/))
@@ -53,8 +51,33 @@ describe('AlertsLoginNotice', () => {
     await abrirSesionPorApi('cliente@esibuy.test')
     renderApp('/products')
 
-    // Las alertas ya han llegado: la campanita lleva su número (AB#531)
+    // Las alertas ya han llegado: la campanita lleva su número (AB#531), pero ni suena ni sale la notificación
     expect(await screen.findByTestId('contador-alertas')).toBeInTheDocument()
     expect(screen.queryByText(AVISO)).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Mis alertas' }).querySelector('[data-sonando]')).toBeNull()
+  })
+})
+
+// La notificación sale de la campanita, que suena (AB#531). PENDIENTE DE CONFIRMAR CON EL EQUIPO: caso HU531-CP12,
+// propuesto.
+describe('AlertsLoginNotice · campanita', () => {
+  it('HU531-CP12: al iniciar sesión con alertas sin leer, la campanita suena y de ella sale la notificación', async () => {
+    await abrirSesionPorApi('cliente@esibuy.test')
+    renderApp(TRAS_INICIAR_SESION)
+
+    expect(await screen.findByRole('status', { name: 'Notificación de alertas' })).toBeInTheDocument()
+    const campanita = screen.getByRole('link', { name: 'Mis alertas' })
+    expect(campanita.querySelector('[data-sonando="true"]')).not.toBeNull()
+  })
+
+  it('HU531-CP12: la notificación se cierra al pulsar fuera de ella', async () => {
+    const user = userEvent.setup()
+    await abrirSesionPorApi('cliente@esibuy.test')
+    renderApp(TRAS_INICIAR_SESION)
+    await screen.findByRole('status', { name: 'Notificación de alertas' })
+
+    await user.click(document.body)
+
+    await waitFor(() => expect(screen.queryByText(AVISO)).not.toBeInTheDocument())
   })
 })

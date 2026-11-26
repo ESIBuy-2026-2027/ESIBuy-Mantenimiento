@@ -29,6 +29,7 @@ import {
 import AlertsLoginNotice from '../features/alerts/AlertsLoginNotice'
 import { textoSinLeer } from '../features/alerts/alertsText'
 import { useAlerts } from '../features/alerts/useAlerts'
+import { useAvisoTrasIniciarSesion } from '../features/alerts/useAvisoTrasIniciarSesion'
 import CartWidget from '../features/cart/CartWidget'
 import { getProfile } from '../api/profile'
 import { useApiQuery } from '../hooks/useApiQuery'
@@ -204,6 +205,37 @@ const useStyles = makeStyles({
     right: '-10px',
     boxShadow: `0 0 0 1.5px ${tokens.colorNeutralBackground1}`,
   },
+  // Al iniciar sesión con alertas sin leer, la campanita suena: se balancea dos veces y el número late. Con «reducir
+  // movimiento» no se mueve: solo se colorea.
+  bellRinging: {
+    color: '#B54708',
+    transformOrigin: '50% 15%',
+    animationName: {
+      '0%': { transform: 'rotate(0deg)' },
+      '15%': { transform: 'rotate(16deg)' },
+      '30%': { transform: 'rotate(-14deg)' },
+      '45%': { transform: 'rotate(10deg)' },
+      '60%': { transform: 'rotate(-8deg)' },
+      '75%': { transform: 'rotate(4deg)' },
+      '100%': { transform: 'rotate(0deg)' },
+    },
+    animationDuration: '900ms',
+    animationDelay: '250ms',
+    animationIterationCount: 2,
+    animationTimingFunction: 'ease-in-out',
+    '@media (prefers-reduced-motion: reduce)': { animationName: 'none' },
+  },
+  bellBadgePulse: {
+    animationName: {
+      '0%': { transform: 'scale(1)' },
+      '50%': { transform: 'scale(1.3)' },
+      '100%': { transform: 'scale(1)' },
+    },
+    animationDuration: '600ms',
+    animationDelay: '250ms',
+    animationIterationCount: 3,
+    '@media (prefers-reduced-motion: reduce)': { animationName: 'none' },
+  },
   srOnly: visuallyHidden,
   premiumCrown: {
     width: '20px',
@@ -320,29 +352,33 @@ function PremiumAwarePersonIcon() {
 
 // Campanita de las alertas (AB#531), que lleva a «Mis alertas». Con alertas sin leer lleva su número (9+ a partir de
 // diez); el número no cambia el nombre accesible: lo anuncia la descripción. Sustituye al punto que AB#529 ponía en el
-// botón de la cuenta.
+// botón de la cuenta. Al iniciar sesión con alertas sin leer suena y de ella sale la notificación de AB#529.
 function AlertsBell() {
   const styles = useStyles()
   const { pathname } = useLocation()
   const { sinLeer } = useAlerts()
+  const sonando = useAvisoTrasIniciarSesion()
   const descripcion = useId()
+  // Estado y no useRef: la notificación necesita volver a pintarse cuando el botón ya existe
+  const [boton, setBoton] = useState(null)
   const active = pathname === PATHS.ALERTS
 
   return (
     <>
       <LinkButton
+        ref={setBoton}
         to={PATHS.ALERTS}
         appearance="subtle"
         icon={
-          <span className={styles.bellIcon}>
-            <Alert20Regular aria-hidden="true" />
+          <span className={styles.bellIcon} data-sonando={sonando ? 'true' : undefined}>
+            <Alert20Regular aria-hidden="true" className={sonando ? styles.bellRinging : undefined} />
             {sinLeer > 0 && (
               <CounterBadge
                 count={sinLeer}
                 overflowCount={9}
                 size="small"
                 color="danger"
-                className={styles.bellBadge}
+                className={mergeClasses(styles.bellBadge, sonando && styles.bellBadgePulse)}
                 aria-hidden="true"
                 data-testid="contador-alertas"
               />
@@ -360,6 +396,7 @@ function AlertsBell() {
           {textoSinLeer(sinLeer)}
         </span>
       )}
+      <AlertsLoginNotice target={boton} />
     </>
   )
 }
@@ -502,8 +539,6 @@ export default function AppHeader() {
       <nav className={mergeClasses(styles.actions, user && styles.userActions)} aria-label="Cuenta">
         {!loading && (user ? <UserActions rol={user.rol} onSignOut={handleSignOut} disabled={signingOut} /> : <GuestActions />)}
       </nav>
-      {/* Alertas de los favoritos (AB#529): notificación que sale del botón de la cuenta al iniciar sesión */}
-      {user?.rol === ROLES.CLIENTE && <AlertsLoginNotice />}
     </header>
   )
 }
