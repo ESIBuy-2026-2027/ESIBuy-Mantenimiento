@@ -7,12 +7,14 @@ import org.springframework.context.annotation.Configuration;
 
 import es.uclm.esibuy.backend.alertas.application.port.in.ConsultaAlertasUseCase;
 import es.uclm.esibuy.backend.alertas.application.port.in.GeneracionAlertasUseCase;
+import es.uclm.esibuy.backend.alertas.application.port.in.GestionAlertasUseCase;
 import es.uclm.esibuy.backend.alertas.application.port.out.AlertaRepositoryPort;
 import es.uclm.esibuy.backend.alertas.application.port.out.ClienteEnSesionPort;
 import es.uclm.esibuy.backend.alertas.application.port.out.FavoritosPort;
 import es.uclm.esibuy.backend.alertas.application.port.out.TiposClientePort;
 import es.uclm.esibuy.backend.alertas.application.service.ConsultaAlertasService;
 import es.uclm.esibuy.backend.alertas.application.service.GeneracionAlertasService;
+import es.uclm.esibuy.backend.alertas.application.service.GestionAlertasService;
 import es.uclm.esibuy.backend.alertas.infrastructure.adapter.out.deseos.FavoritosAdapter;
 import es.uclm.esibuy.backend.alertas.infrastructure.adapter.out.persistence.AlertaDocumentMapper;
 import es.uclm.esibuy.backend.alertas.infrastructure.adapter.out.persistence.AlertaMongoAdapter;
@@ -62,5 +64,11 @@ public class AlertasConfig {
     ConsultaAlertasUseCase consultaAlertasUseCase(AlertaRepositoryPort alertasRepositoryPort,
             ClienteEnSesionPort alertasClienteEnSesionPort) {
         return new ConsultaAlertasService(alertasRepositoryPort, alertasClienteEnSesionPort);
+    }
+
+    @Bean
+    GestionAlertasUseCase gestionAlertasUseCase(AlertaRepositoryPort alertasRepositoryPort,
+            ClienteEnSesionPort alertasClienteEnSesionPort) {
+        return new GestionAlertasService(alertasRepositoryPort, alertasClienteEnSesionPort);
     }
 }
