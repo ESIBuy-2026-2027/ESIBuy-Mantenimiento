@@ -1,10 +1,9 @@
-import { useEffect, useState } from 'react'
-import { Button, Text, makeStyles, mergeClasses, tokens } from '@fluentui/react-components'
+import { useEffect, useRef, useState } from 'react'
+import { Text, makeStyles, mergeClasses, tokens } from '@fluentui/react-components'
 import {
   ArrowRight16Regular,
   ArrowTrendingDown20Filled,
   BoxCheckmark20Filled,
-  Dismiss20Regular,
   Sparkle20Filled,
 } from '@fluentui/react-icons'
 import LinkButton from '../../components/LinkButton'
@@ -16,6 +15,8 @@ import { useAlerts } from './useAlerts'
 import { useAvisoTrasIniciarSesion } from './useAvisoTrasIniciarSesion'
 
 const MOVIL = '@media (max-width: 600px)'
+// Lo que dura en pantalla antes de cerrarse sola (AB#531); no se puede cerrar antes
+const DURACION_MS = 8000
 
 const useStyles = makeStyles({
   // Fija abajo a la derecha, por encima de la página y por debajo del carrito; en el móvil ocupa el ancho
@@ -44,7 +45,7 @@ const useStyles = makeStyles({
     display: 'flex',
     alignItems: 'center',
     gap: tokens.spacingHorizontalS,
-    padding: `${tokens.spacingVerticalS} ${tokens.spacingHorizontalS} ${tokens.spacingVerticalS} ${tokens.spacingHorizontalL}`,
+    padding: `${tokens.spacingVerticalM} ${tokens.spacingHorizontalL}`,
     color: '#FFFFFF',
     fontWeight: tokens.fontWeightBold,
     letterSpacing: '0.02em',
@@ -52,13 +53,19 @@ const useStyles = makeStyles({
   bandBajada: { backgroundImage: `linear-gradient(90deg, ${ROJO}, #F97066)` },
   bandDisponible: { backgroundImage: `linear-gradient(90deg, ${VERDE}, #32D583)` },
   bandNovedad: { backgroundImage: `linear-gradient(90deg, ${MORADO}, #9B8AFB)` },
-  bandText: { flexGrow: 1 },
-  close: {
-    minWidth: 'auto',
-    color: '#FFFFFF',
-    ':hover': { color: '#FFFFFF', backgroundColor: 'rgba(255, 255, 255, 0.2)' },
-    ':hover:active': { color: '#FFFFFF', backgroundColor: 'rgba(255, 255, 255, 0.3)' },
+  // Barrita que se vacía mientras corre el tiempo; con el ratón encima o el foco dentro se para
+  timer: {
+    height: '4px',
+    transformOrigin: 'left center',
+    animationName: {
+      from: { transform: 'scaleX(1)' },
+      to: { transform: 'scaleX(0)' },
+    },
+    animationDuration: `${DURACION_MS}ms`,
+    animationTimingFunction: 'linear',
+    animationFillMode: 'forwards',
   },
+  timerPaused: { animationPlayState: 'paused' },
   body: {
     display: 'grid',
     gridTemplateColumns: '104px 1fr',
@@ -147,23 +154,30 @@ function motivo(alerta) {
 
 // Notificación de alertas sin leer justo al iniciar sesión (AB#529). Desde AB#531 sale abajo a la derecha y destaca la
 // alerta sin leer más reciente: la foto del producto, el porqué en grande con el color de su tipo y, si es una rebaja,
-// los precios; si hay más, lo dice. Mientras, la campanita de la cabecera suena. Se cierra con la ✕ o con Escape, y
-// desaparece al navegar; después sigue avisando el número de la campanita.
+// los precios; si hay más, lo dice. Mientras, la campanita de la cabecera suena. No se puede cerrar: se va sola a los
+// 8 segundos (decisión del equipo) o al navegar; después sigue avisando el número de la campanita. Con el ratón encima
+// o el foco en «Ver alertas» la cuenta se para, para que no desaparezca justo al ir a pulsarlo.
 export default function AlertsLoginNotice() {
   const styles = useStyles()
   const { alertas, sinLeer } = useAlerts()
   const toca = useAvisoTrasIniciarSesion()
   const [cerrado, setCerrado] = useState(false)
+  const [encima, setEncima] = useState(false)
+  const [enfocado, setEnfocado] = useState(false)
+  const restante = useRef(DURACION_MS)
   const visible = toca && !cerrado
+  const pausado = encima || enfocado
 
+  // Al pausar se guarda lo que quedaba y al seguir se cuenta solo eso
   useEffect(() => {
-    if (!visible) return undefined
-    const alPulsar = (evento) => {
-      if (evento.key === 'Escape') setCerrado(true)
+    if (!visible || pausado) return undefined
+    const inicio = Date.now()
+    const temporizador = setTimeout(() => setCerrado(true), restante.current)
+    return () => {
+      clearTimeout(temporizador)
+      restante.current = Math.max(0, restante.current - (Date.now() - inicio))
     }
-    document.addEventListener('keydown', alPulsar)
-    return () => document.removeEventListener('keydown', alPulsar)
-  }, [visible])
+  }, [visible, pausado])
 
   // La lista viene de la más reciente a la más antigua
   const alerta = alertas.find((candidata) => !candidata.leida)
@@ -175,18 +189,20 @@ export default function AlertsLoginNotice() {
   const mas = sinLeer - 1
 
   return (
-    <div role="status" aria-label="Notificación de alertas" className={styles.notification}>
+    <div
+      role="status"
+      aria-label="Notificación de alertas"
+      className={styles.notification}
+      onMouseEnter={() => setEncima(true)}
+      onMouseLeave={() => setEncima(false)}
+      onFocus={() => setEnfocado(true)}
+      onBlur={(evento) => {
+        if (!evento.currentTarget.contains(evento.relatedTarget)) setEnfocado(false)
+      }}
+    >
       <div className={mergeClasses(styles.band, styles[`band${tipo.color}`])}>
         <span aria-hidden="true">{tipo.icono}</span>
-        <span className={styles.bandText}>{tipo.etiqueta}</span>
-        <Button
-          appearance="transparent"
-          size="small"
-          icon={<Dismiss20Regular />}
-          aria-label="Cerrar el aviso de alertas"
-          className={styles.close}
-          onClick={() => setCerrado(true)}
-        />
+        <span>{tipo.etiqueta}</span>
       </div>
       <div className={styles.body}>
         <div className={styles.media}>
@@ -224,6 +240,11 @@ export default function AlertsLoginNotice() {
           Ver alertas
         </LinkButton>
       </div>
+      <div
+        className={mergeClasses(styles.timer, styles[`band${tipo.color}`], pausado && styles.timerPaused)}
+        aria-hidden="true"
+        data-testid="tiempo-aviso"
+      />
     </div>
   )
 }

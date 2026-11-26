@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { screen, waitFor, within } from '@testing-library/react'
+import { afterEach, describe, it, expect, vi } from 'vitest'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { server } from '../../mocks/server'
@@ -23,10 +23,21 @@ const alerta = (id, tipo, leida, producto) => ({
   producto: { precioAnterior: null, precioNuevo: null, imagen: '', ...producto },
 })
 
+// Se va sola a los 8 s (AB#531). Los temporizadores simulados también avanzan solos, para que MSW y los findBy sigan
+// funcionando; se adelantan a mano con margen para lo que tarde el propio test.
+const pasar = (ms) => act(() => vi.advanceTimersByTime(ms))
+
+afterEach(() => {
+  vi.useRealTimers()
+})
+
 async function abrirNotificacion() {
   await abrirSesionPorApi('cliente@esibuy.test')
   renderApp(TRAS_INICIAR_SESION)
-  return screen.findByRole('status', { name: 'Notificación de alertas' })
+  const notificacion = await screen.findByRole('status', { name: 'Notificación de alertas' })
+  // Ya está pintada; esto deja correr los efectos pendientes, entre ellos el que arranca la cuenta de los 8 s
+  await act(async () => {})
+  return notificacion
 }
 
 describe('AlertsLoginNotice', () => {
@@ -42,11 +53,14 @@ describe('AlertsLoginNotice', () => {
     expect(screen.queryByText(AVISO)).not.toBeInTheDocument()
   })
 
-  it('HU529-CP29: el aviso se puede cerrar', async () => {
-    const user = userEvent.setup()
-    await abrirNotificacion()
+  it('HU529-CP29: el aviso no se puede cerrar a mano: se va solo a los 8 segundos', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    const notificacion = await abrirNotificacion()
 
-    await user.click(screen.getByRole('button', { name: 'Cerrar el aviso de alertas' }))
+    expect(within(notificacion).queryByRole('button')).not.toBeInTheDocument()
+    await pasar(7000)
+    expect(screen.getByText(AVISO)).toBeInTheDocument()
+    await pasar(1500)
 
     expect(screen.queryByText(AVISO)).not.toBeInTheDocument()
   })
@@ -125,12 +139,35 @@ describe('AlertsLoginNotice · alerta destacada', () => {
     expect(within(notificacion).getByText('¡Nuevo en tu categoría favorita!')).toBeInTheDocument()
   })
 
-  it('HU531-CP12: la notificación se cierra con Escape', async () => {
+  it('HU531-CP12: con el ratón encima la cuenta se para, y al quitarlo termina de contar', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    const notificacion = await abrirNotificacion()
+
+    fireEvent.mouseEnter(notificacion)
+    await pasar(12000)
+    expect(screen.getByText(AVISO)).toBeInTheDocument()
+    fireEvent.mouseLeave(notificacion)
+    await pasar(8500)
+
+    expect(screen.queryByText(AVISO)).not.toBeInTheDocument()
+  })
+
+  it('HU531-CP12: con el foco en «Ver alertas» la cuenta se para', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    const notificacion = await abrirNotificacion()
+
+    act(() => within(notificacion).getByRole('link', { name: 'Ver alertas' }).focus())
+    await pasar(12000)
+
+    expect(screen.getByText(AVISO)).toBeInTheDocument()
+  })
+
+  it('HU531-CP12: Escape no la cierra', async () => {
     const user = userEvent.setup()
     await abrirNotificacion()
 
     await user.keyboard('{Escape}')
 
-    await waitFor(() => expect(screen.queryByText(AVISO)).not.toBeInTheDocument())
+    expect(screen.getByText(AVISO)).toBeInTheDocument()
   })
 })
