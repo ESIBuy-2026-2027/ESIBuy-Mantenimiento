@@ -30,14 +30,15 @@ import { useAlerts } from '../features/alerts/useAlerts'
 import { useApiQuery } from '../hooks/useApiQuery'
 import { PATHS, getProductDetailPath } from '../routes/paths'
 import { formatDateTime, formatPrice } from '../utils/format'
-
-// Colores de cada tipo de alerta, como los carteles de una tienda: rojo para las rebajas, verde para el stock y morado
-// para las novedades (AB#530)
-const ROJO = '#D92D20'
-const VERDE = '#079455'
-const MORADO = '#7A5AF8'
-// Color de la marca (el de la cabecera) para el distintivo de las alertas nuevas (AB#531)
-const NARANJA = '#B54708'
+import {
+  MORADO,
+  NARANJA,
+  ROJO,
+  SIN_IMAGEN,
+  VERDE,
+  esBajadaConPrecios,
+  porcentajeRebaja,
+} from '../features/alerts/alertPresentation'
 
 const useStyles = makeStyles({
   list: {
@@ -275,12 +276,6 @@ const TIPOS = {
   PRODUCTO_NUEVO: { etiqueta: '¡Novedad!', icono: <Sparkle16Filled />, tarjeta: 'novedad', chip: 'chipNovedad' },
 }
 
-const SIN_IMAGEN =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 3l18 18M10 12l-4 6h12l-3-4-2 2M6 6h11a2 2 0 0 1 2 2v8' fill='none' stroke='%23999999' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"
-
-// Porcentaje de rebaja, redondeado: de 59,90 € a 53,91 € es un 10 %
-const porcentajeRebaja = (anterior, nuevo) => Math.round((1 - nuevo / anterior) * 100)
-
 // Una alerta como un cartel de tienda. Si es nueva (AB#531), conserva su color, lleva la etiqueta «Nueva» y el botón
 // para marcarla como leída; si ya está leída, se queda en la lista sin color.
 function AlertItem({ alerta, marcando, onMarcarLeida }) {
@@ -288,8 +283,7 @@ function AlertItem({ alerta, marcando, onMarcarLeida }) {
   const verProducto = useRef(null)
   const tipo = TIPOS[alerta.tipo] ?? TIPOS.PRODUCTO_NUEVO
   const { producto, leida } = alerta
-  const esBajada =
-    alerta.tipo === 'BAJADA_PRECIO' && producto.precioAnterior != null && producto.precioNuevo != null
+  const esBajada = esBajadaConPrecios(alerta)
   const detalle = getProductDetailPath(producto.id)
 
   // Al marcarla, el botón desaparece: el foco pasa a «Ver producto» de la misma alerta para no perderse

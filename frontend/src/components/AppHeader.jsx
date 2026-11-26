@@ -352,21 +352,18 @@ function PremiumAwarePersonIcon() {
 
 // Campanita de las alertas (AB#531), que lleva a «Mis alertas». Con alertas sin leer lleva su número (9+ a partir de
 // diez); el número no cambia el nombre accesible: lo anuncia la descripción. Sustituye al punto que AB#529 ponía en el
-// botón de la cuenta. Al iniciar sesión con alertas sin leer suena y de ella sale la notificación de AB#529.
+// botón de la cuenta. Al iniciar sesión con alertas sin leer suena, mientras sale la notificación de AlertsLoginNotice.
 function AlertsBell() {
   const styles = useStyles()
   const { pathname } = useLocation()
   const { sinLeer } = useAlerts()
   const sonando = useAvisoTrasIniciarSesion()
   const descripcion = useId()
-  // Estado y no useRef: la notificación necesita volver a pintarse cuando el botón ya existe
-  const [boton, setBoton] = useState(null)
   const active = pathname === PATHS.ALERTS
 
   return (
     <>
       <LinkButton
-        ref={setBoton}
         to={PATHS.ALERTS}
         appearance="subtle"
         icon={
@@ -396,7 +393,6 @@ function AlertsBell() {
           {textoSinLeer(sinLeer)}
         </span>
       )}
-      <AlertsLoginNotice target={boton} />
     </>
   )
 }
@@ -539,6 +535,9 @@ export default function AppHeader() {
       <nav className={mergeClasses(styles.actions, user && styles.userActions)} aria-label="Cuenta">
         {!loading && (user ? <UserActions rol={user.rol} onSignOut={handleSignOut} disabled={signingOut} /> : <GuestActions />)}
       </nav>
+      {/* Alertas sin leer al iniciar sesión (AB#529): notificación abajo a la derecha, fuera de la barra de accesos,
+          que en el móvil se desliza y la recortaría (AB#531) */}
+      {user?.rol === ROLES.CLIENTE && <AlertsLoginNotice />}
     </header>
   )
 }

@@ -7,21 +7,35 @@ import { abrirSesionPorApi, renderApp } from '../../test/renderApp'
 
 // Aviso de alertas sin leer justo al iniciar sesión (AB#529): el login lleva al cliente a su inicio con
 // `state.trasIniciarSesion`, y ahí se avisa si tiene alertas sin leer, con un enlace a «Mis alertas».
-// El cliente de ejemplo de los mocks (cliente@esibuy.test) tiene una alerta sin leer y otra leída.
+// El cliente de ejemplo de los mocks (cliente@esibuy.test) tiene una alerta sin leer (el teclado mecánico baja de
+// 89,50 € a 74,90 €) y dos leídas.
 // PENDIENTE DE CONFIRMAR CON EL EQUIPO: caso HU529-CP29, propuesto.
 
 const TRAS_INICIAR_SESION = { pathname: '/products', state: { trasIniciarSesion: true } }
-const AVISO = 'Tienes 1 alerta sin leer de tus productos favoritos.'
+const AVISO = '¡Baja un 16 %!'
+const URL_ALERTAS = '/api/customer/alerts'
+
+const alerta = (id, tipo, leida, producto) => ({
+  id,
+  tipo,
+  fecha: '2026-11-26T10:00:00Z',
+  leida,
+  producto: { precioAnterior: null, precioNuevo: null, imagen: '', ...producto },
+})
+
+async function abrirNotificacion() {
+  await abrirSesionPorApi('cliente@esibuy.test')
+  renderApp(TRAS_INICIAR_SESION)
+  return screen.findByRole('status', { name: 'Notificación de alertas' })
+}
 
 describe('AlertsLoginNotice', () => {
-  it('HU529-CP29: al iniciar sesión avisa de las alertas sin leer con una notificación en la cabecera que enlaza a Mis alertas', async () => {
+  it('HU529-CP29: al iniciar sesión avisa de las alertas sin leer con una notificación que enlaza a Mis alertas', async () => {
     const user = userEvent.setup()
-    await abrirSesionPorApi('cliente@esibuy.test')
-    renderApp(TRAS_INICIAR_SESION)
+    const notificacion = await abrirNotificacion()
 
-    const notificacion = await screen.findByRole('status', { name: 'Notificación de alertas' })
-    expect(notificacion).toHaveTextContent('Novedades en tus favoritos')
     expect(notificacion).toHaveTextContent(AVISO)
+    expect(notificacion).toHaveTextContent('Tienes 1 alerta sin leer')
     await user.click(within(notificacion).getByRole('link', { name: 'Ver alertas' }))
 
     await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/alerts$/))
@@ -30,21 +44,20 @@ describe('AlertsLoginNotice', () => {
 
   it('HU529-CP29: el aviso se puede cerrar', async () => {
     const user = userEvent.setup()
-    await abrirSesionPorApi('cliente@esibuy.test')
-    renderApp(TRAS_INICIAR_SESION)
+    await abrirNotificacion()
 
-    await user.click(await screen.findByRole('button', { name: 'Cerrar el aviso de alertas' }))
+    await user.click(screen.getByRole('button', { name: 'Cerrar el aviso de alertas' }))
 
     expect(screen.queryByText(AVISO)).not.toBeInTheDocument()
   })
 
   it('HU529-CP29: sin alertas sin leer no hay aviso al iniciar sesión', async () => {
-    server.use(http.get('/api/customer/alerts', () => HttpResponse.json({ mensaje: 'No tienes alertas', alertas: [] })))
+    server.use(http.get(URL_ALERTAS, () => HttpResponse.json({ mensaje: 'No tienes alertas', alertas: [] })))
     await abrirSesionPorApi('cliente@esibuy.test')
     renderApp(TRAS_INICIAR_SESION)
 
     expect(await screen.findByRole('heading', { level: 1 })).toBeInTheDocument()
-    expect(screen.queryByText(/alertas? sin leer/)).not.toBeInTheDocument()
+    expect(screen.queryByRole('status', { name: 'Notificación de alertas' })).not.toBeInTheDocument()
   })
 
   it('HU529-CP29: si no viene de iniciar sesión, no hay aviso aunque tenga alertas sin leer', async () => {
@@ -58,25 +71,65 @@ describe('AlertsLoginNotice', () => {
   })
 })
 
-// La notificación sale de la campanita, que suena (AB#531). PENDIENTE DE CONFIRMAR CON EL EQUIPO: caso HU531-CP12,
-// propuesto.
-describe('AlertsLoginNotice · campanita', () => {
-  it('HU531-CP12: al iniciar sesión con alertas sin leer, la campanita suena y de ella sale la notificación', async () => {
-    await abrirSesionPorApi('cliente@esibuy.test')
-    renderApp(TRAS_INICIAR_SESION)
+// Desde AB#531 la notificación sale abajo a la derecha y destaca la alerta sin leer más reciente, mientras la
+// campanita suena. PENDIENTE DE CONFIRMAR CON EL EQUIPO: caso HU531-CP12, propuesto.
+describe('AlertsLoginNotice · alerta destacada', () => {
+  it('HU531-CP12: destaca la alerta sin leer más reciente con la foto, el porqué en grande y los precios, y la campanita suena', async () => {
+    const notificacion = await abrirNotificacion()
 
-    expect(await screen.findByRole('status', { name: 'Notificación de alertas' })).toBeInTheDocument()
-    const campanita = screen.getByRole('link', { name: 'Mis alertas' })
-    expect(campanita.querySelector('[data-sonando="true"]')).not.toBeNull()
+    expect(within(notificacion).getByText('¡Bajada de precio!')).toBeInTheDocument()
+    expect(within(notificacion).getByText('Teclado mecánico')).toBeInTheDocument()
+    expect(within(notificacion).getByText(AVISO)).toBeInTheDocument()
+    expect(within(notificacion).getByText(/74,90/)).toBeInTheDocument()
+    expect(within(notificacion).getByText(/89,50/).closest('del')).not.toBeNull()
+    expect(within(notificacion).getByRole('img', { name: 'Teclado mecánico' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Mis alertas' }).querySelector('[data-sonando="true"]')).not.toBeNull()
   })
 
-  it('HU531-CP12: la notificación se cierra al pulsar fuera de ella', async () => {
-    const user = userEvent.setup()
-    await abrirSesionPorApi('cliente@esibuy.test')
-    renderApp(TRAS_INICIAR_SESION)
-    await screen.findByRole('status', { name: 'Notificación de alertas' })
+  it('HU531-CP12: con varias sin leer destaca la más reciente y dice cuántas más hay; las leídas no cuentan', async () => {
+    server.use(
+      http.get(URL_ALERTAS, () =>
+        HttpResponse.json({
+          mensaje: 'Alertas consultadas correctamente',
+          alertas: [
+            alerta('a-4', 'DISPONIBILIDAD', true, { id: 'p-9', nombre: 'Altavoz' }),
+            alerta('a-3', 'DISPONIBILIDAD', false, { id: 'p-2', nombre: 'Ratón inalámbrico' }),
+            alerta('a-2', 'PRODUCTO_NUEVO', false, { id: 'p-4', nombre: 'Auriculares' }),
+            alerta('a-1', 'BAJADA_PRECIO', false, { id: 'p-1', nombre: 'Teclado', precioAnterior: 50, precioNuevo: 40 }),
+          ],
+        }),
+      ),
+    )
+    const notificacion = await abrirNotificacion()
 
-    await user.click(document.body)
+    expect(within(notificacion).getByText('¡De nuevo en stock!')).toBeInTheDocument()
+    expect(within(notificacion).getByText('Ratón inalámbrico')).toBeInTheDocument()
+    expect(within(notificacion).getByText('¡Vuelve a estar disponible!')).toBeInTheDocument()
+    expect(within(notificacion).getByRole('img', { name: 'Sin imagen' })).toBeInTheDocument()
+    expect(within(notificacion).queryByText(/€/)).not.toBeInTheDocument()
+    expect(within(notificacion).getByText('+2 alertas más sin leer')).toBeInTheDocument()
+  })
+
+  it('HU531-CP12: un producto nuevo de una categoría favorita se cuenta como novedad', async () => {
+    server.use(
+      http.get(URL_ALERTAS, () =>
+        HttpResponse.json({
+          mensaje: 'Alertas consultadas correctamente',
+          alertas: [alerta('a-1', 'PRODUCTO_NUEVO', false, { id: 'p-4', nombre: 'Auriculares' })],
+        }),
+      ),
+    )
+    const notificacion = await abrirNotificacion()
+
+    expect(within(notificacion).getByText('¡Novedad!')).toBeInTheDocument()
+    expect(within(notificacion).getByText('¡Nuevo en tu categoría favorita!')).toBeInTheDocument()
+  })
+
+  it('HU531-CP12: la notificación se cierra con Escape', async () => {
+    const user = userEvent.setup()
+    await abrirNotificacion()
+
+    await user.keyboard('{Escape}')
 
     await waitFor(() => expect(screen.queryByText(AVISO)).not.toBeInTheDocument())
   })
