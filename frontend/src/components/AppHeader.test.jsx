@@ -171,7 +171,7 @@ describe('AppHeader', () => {
     await user.click(within(nav).getByRole('button', { name: 'Mi perfil' }))
 
     const menu = within(await screen.findByRole('menu'))
-    const accesos = ['Mis pedidos', 'Mis alertas', 'Incidencias', 'Mi perfil']
+    const accesos = ['Mis pedidos', 'Incidencias', 'Mi perfil']
     for (const nombre of accesos) {
       expect(menu.getByRole('menuitem', { name: nombre })).toBeInTheDocument()
     }
@@ -486,20 +486,20 @@ describe('AppHeader (HU45): acceso a ESIBuy Premium', () => {
     expect(await screen.findByRole('heading', { level: 1, name: /esibuy premium/i })).toBeInTheDocument()
   })
 
-  it('HU529-CP30: el menú de la cuenta del cliente tiene «Mis alertas», que lleva a /alerts', async () => {
+  // Campanita de las alertas (AB#531): sustituye al punto que AB#529 ponía en el botón de la cuenta y a «Mis alertas»
+  // en su menú. PENDIENTE DE CONFIRMAR CON EL EQUIPO: caso HU531-CP11, propuesto.
+  it('HU531-CP11: «Mis alertas» ya no está en el menú de la cuenta: se llega por la campanita', async () => {
     const user = userEvent.setup()
     await abrirSesionPorApi('cliente@esibuy.test')
     renderApp('/products')
 
     await user.click(await screen.findByRole('button', { name: 'Mi perfil' }))
-    await user.click(await screen.findByRole('menuitem', { name: 'Mis alertas' }))
+    const menu = within(await screen.findByRole('menu'))
 
-    await esperarRuta('/alerts')
-    expect(await screen.findByRole('heading', { level: 1, name: 'Mis alertas' })).toBeInTheDocument()
+    expect(menu.getByRole('menuitem', { name: 'Mis pedidos' })).toBeInTheDocument()
+    expect(menu.queryByRole('menuitem', { name: 'Mis alertas' })).not.toBeInTheDocument()
   })
 
-  // Campanita de las alertas (AB#531): sustituye al punto que AB#529 ponía en el botón de la cuenta.
-  // PENDIENTE DE CONFIRMAR CON EL EQUIPO: caso HU531-CP11, propuesto.
   it('HU531-CP11: el cliente tiene una campanita en la cabecera que lleva a «Mis alertas»', async () => {
     const user = userEvent.setup()
     await abrirSesionPorApi('cliente@esibuy.test')

@@ -186,6 +186,8 @@ const useStyles = makeStyles({
   },
   // Campanita de las alertas (AB#531): solo icono, con el número de alertas sin leer encima
   bell: {
+    // El botón de Fluent recorta lo que sale de él: sin esto, el número se corta
+    overflow: 'visible',
     minWidth: 'auto',
     paddingLeft: tokens.spacingHorizontalS,
     paddingRight: tokens.spacingHorizontalS,
@@ -366,12 +368,10 @@ function ClientMenu({ compact, onSignOut, disabled }) {
   const styles = useStyles()
   const navigate = useNavigate()
   const { pathname } = useLocation()
-  // «Mis alertas» sigue en el menú con su número (AB#529); el aviso en la cabecera lo da la campanita (AB#531)
-  const { sinLeer } = useAlerts()
+  // «Mis alertas» ya no está en el menú: se llega por la campanita de la cabecera (AB#531)
   const profileSectionActive = [PATHS.PROFILE, PATHS.ORDERS, PATHS.INCIDENTS].includes(pathname)
   const enlaces = [
     [PATHS.ORDERS, <Receipt20Regular />, 'Mis pedidos'],
-    [PATHS.ALERTS, <Alert20Regular />, 'Mis alertas'],
     [PATHS.INCIDENTS, <ChatWarning20Regular />, 'Incidencias'],
     [PATHS.PROFILE, <Person20Regular />, 'Mi perfil'],
   ]
@@ -397,11 +397,6 @@ function ClientMenu({ compact, onSignOut, disabled }) {
                 key={to}
                 className={styles.accountMenuItem}
                 icon={icon}
-                secondaryContent={
-                  to === PATHS.ALERTS && sinLeer > 0 ? (
-                    <CounterBadge count={sinLeer} size="small" color="danger" aria-hidden="true" />
-                  ) : undefined
-                }
                 onClick={() => navigate(to)}
               >
                 {label}
