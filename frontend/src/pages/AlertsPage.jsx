@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types'
-import { useCallback } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import {
   Button,
   MessageBar,
@@ -17,13 +17,16 @@ import {
   ArrowRight16Regular,
   ArrowTrendingDown16Filled,
   BoxCheckmark16Filled,
+  Checkmark16Regular,
   Sparkle16Filled,
 } from '@fluentui/react-icons'
 import { Link } from 'react-router-dom'
-import { getAlerts } from '../api/alerts'
+import { getAlerts, markAlertAsRead } from '../api/alerts'
 import EmptyState from '../components/EmptyState'
 import LinkButton from '../components/LinkButton'
 import { usePageStyles } from '../components/pageStyles'
+import { textoSinLeer } from '../features/alerts/alertsText'
+import { useAlerts } from '../features/alerts/useAlerts'
 import { useApiQuery } from '../hooks/useApiQuery'
 import { PATHS, getProductDetailPath } from '../routes/paths'
 import { formatDateTime, formatPrice } from '../utils/format'
@@ -33,6 +36,8 @@ import { formatDateTime, formatPrice } from '../utils/format'
 const ROJO = '#D92D20'
 const VERDE = '#079455'
 const MORADO = '#7A5AF8'
+// Color de la marca (el de la cabecera) para el distintivo de las alertas nuevas (AB#531)
+const NARANJA = '#B54708'
 
 const useStyles = makeStyles({
   list: {
@@ -83,6 +88,69 @@ const useStyles = makeStyles({
   novedad: {
     borderLeftColor: MORADO,
     backgroundImage: 'linear-gradient(100deg, #F4F3FF 0%, #FFFFFF 45%)',
+  },
+  // Una alerta leída (AB#531) sigue en la lista, pero pierde el color: franja gris, sin degradado y con la foto
+  // atenuada. El texto conserva su contraste.
+  leida: {
+    borderLeftColor: tokens.colorNeutralStroke1,
+    backgroundImage: 'none',
+    backgroundColor: tokens.colorNeutralBackground2,
+    boxShadow: 'none',
+  },
+  mediaLeida: {
+    opacity: 0.7,
+    filter: 'grayscale(60%)',
+  },
+  tags: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: tokens.spacingHorizontalS,
+  },
+  // Etiqueta «Nueva» de las alertas sin leer (AB#531)
+  newBadge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '5px',
+    padding: '2px 9px',
+    borderRadius: tokens.borderRadiusCircular,
+    border: `1.5px solid ${NARANJA}`,
+    color: NARANJA,
+    backgroundColor: '#FFF6ED',
+    fontWeight: tokens.fontWeightBold,
+    fontSize: tokens.fontSizeBase200,
+    letterSpacing: '0.04em',
+    textTransform: 'uppercase',
+  },
+  newDot: {
+    width: '7px',
+    height: '7px',
+    borderRadius: tokens.borderRadiusCircular,
+    backgroundColor: NARANJA,
+  },
+  markButton: {
+    borderRadius: tokens.borderRadiusCircular,
+    color: '#93370D',
+    backgroundColor: '#FFFFFF',
+    border: '1px solid #F4D1B3',
+    ':hover': { color: '#7A2E0E', backgroundColor: '#FFF1E3', border: '1px solid #EFAE79' },
+    ':hover:active': { color: '#7A2E0E', backgroundColor: '#FCE4CC' },
+  },
+  unreadCount: {
+    color: NARANJA,
+    fontWeight: tokens.fontWeightSemibold,
+  },
+  // Oculto a la vista, pero no a los lectores de pantalla
+  srOnly: {
+    position: 'absolute',
+    width: '1px',
+    height: '1px',
+    margin: '-1px',
+    padding: 0,
+    overflow: 'hidden',
+    clip: 'rect(0 0 0 0)',
+    whiteSpace: 'nowrap',
+    border: 0,
   },
   media: {
     position: 'relative',
@@ -213,17 +281,25 @@ const SIN_IMAGEN =
 // Porcentaje de rebaja, redondeado: de 59,90 € a 53,91 € es un 10 %
 const porcentajeRebaja = (anterior, nuevo) => Math.round((1 - nuevo / anterior) * 100)
 
-function AlertItem({ alerta }) {
+// Una alerta como un cartel de tienda. Si es nueva (AB#531), conserva su color, lleva la etiqueta «Nueva» y el botón
+// para marcarla como leída; si ya está leída, se queda en la lista sin color.
+function AlertItem({ alerta, marcando, onMarcarLeida }) {
   const styles = useStyles()
+  const verProducto = useRef(null)
   const tipo = TIPOS[alerta.tipo] ?? TIPOS.PRODUCTO_NUEVO
-  const { producto } = alerta
+  const { producto, leida } = alerta
   const esBajada =
     alerta.tipo === 'BAJADA_PRECIO' && producto.precioAnterior != null && producto.precioNuevo != null
   const detalle = getProductDetailPath(producto.id)
 
+  // Al marcarla, el botón desaparece: el foco pasa a «Ver producto» de la misma alerta para no perderse
+  const marcar = async () => {
+    if (await onMarcarLeida(alerta)) verProducto.current?.focus()
+  }
+
   return (
-    <article className={mergeClasses(styles.card, styles[tipo.tarjeta])}>
-      <div className={styles.media}>
+    <article className={mergeClasses(styles.card, styles[tipo.tarjeta], leida && styles.leida)}>
+      <div className={mergeClasses(styles.media, leida && styles.mediaLeida)}>
         {producto.imagen ? (
           <img className={styles.image} src={producto.imagen} alt={producto.nombre} loading="lazy" />
         ) : (
@@ -236,9 +312,18 @@ function AlertItem({ alerta }) {
         )}
       </div>
       <div className={styles.text}>
-        <span className={mergeClasses(styles.chip, styles[tipo.chip])}>
-          <span aria-hidden="true">{tipo.icono}</span>
-          {tipo.etiqueta}
+        <span className={styles.tags}>
+          {!leida && (
+            <span className={styles.newBadge}>
+              <span className={styles.newDot} aria-hidden="true" />
+              Nueva
+            </span>
+          )}
+          <span className={mergeClasses(styles.chip, styles[tipo.chip])}>
+            <span aria-hidden="true">{tipo.icono}</span>
+            {tipo.etiqueta}
+          </span>
+          {leida && <span className={styles.srOnly}>Leída</span>}
         </span>
         <Link to={detalle} className={styles.name}>
           {producto.nombre}
@@ -266,7 +351,19 @@ function AlertItem({ alerta }) {
         <Text size={200} className={styles.date}>
           {formatDateTime(alerta.fecha)}
         </Text>
+        {!leida && (
+          <Button
+            className={styles.markButton}
+            icon={<Checkmark16Regular />}
+            disabled={marcando}
+            onClick={marcar}
+            aria-label={`Marcar como leída la alerta de ${producto.nombre}`}
+          >
+            {marcando ? 'Marcando…' : 'Marcar como leída'}
+          </Button>
+        )}
         <LinkButton
+          ref={verProducto}
           to={detalle}
           className={styles.cta}
           icon={<ArrowRight16Regular />}
@@ -284,6 +381,7 @@ AlertItem.propTypes = {
   alerta: PropTypes.shape({
     tipo: PropTypes.string.isRequired,
     fecha: PropTypes.string.isRequired,
+    leida: PropTypes.bool.isRequired,
     producto: PropTypes.shape({
       id: PropTypes.string.isRequired,
       nombre: PropTypes.string,
@@ -292,17 +390,52 @@ AlertItem.propTypes = {
       precioNuevo: PropTypes.number,
     }).isRequired,
   }).isRequired,
+  marcando: PropTypes.bool.isRequired,
+  onMarcarLeida: PropTypes.func.isRequired,
 }
+
+const ERROR_AL_MARCAR = 'No se ha podido marcar la alerta como leída. Inténtalo de nuevo.'
+const ALERTA_YA_NO_EXISTE = 'Esa alerta ya no existe. Hemos actualizado tu lista.'
 
 // «Mis alertas» del cliente (AB#529): las bajadas de precio y las vueltas a estar disponibles de sus productos
 // favoritos, de la más reciente a la más antigua, presentadas como los carteles de una tienda. No se envían por correo:
-// se ven aquí. Será la bandeja de AB#531 (marcar como leídas) y AB#532 (eliminarlas).
+// se ven aquí. Desde AB#531 cada alerta nueva se puede marcar como leída: sigue en la lista, pero deja de ser nueva, y
+// el contador de la cabecera se actualiza. Eliminarlas es de AB#532.
 export default function AlertsPage() {
   const pageStyles = usePageStyles()
   const styles = useStyles()
   const fetcher = useCallback(() => getAlerts(), [])
   const { data, failed, retry } = useApiQuery(fetcher)
-  const alertas = data?.alertas
+  const { recargar } = useAlerts()
+  // Las que se marcan en esta visita, sin volver a pedir la lista; `marcando` es la que espera respuesta
+  const [leidas, setLeidas] = useState(() => new Set())
+  const [marcando, setMarcando] = useState(null)
+  const [aviso, setAviso] = useState(null)
+  const alertas = data?.alertas.map((alerta) => (leidas.has(alerta.id) ? { ...alerta, leida: true } : alerta))
+  const sinLeer = alertas?.filter((alerta) => !alerta.leida).length ?? 0
+
+  // Devuelve si se ha marcado, para que la alerta mueva el foco
+  const marcarComoLeida = async (alerta) => {
+    setMarcando(alerta.id)
+    setAviso(null)
+    try {
+      const respuesta = await markAlertAsRead(alerta.id)
+      setLeidas((anteriores) => new Set(anteriores).add(alerta.id))
+      setAviso({ intent: 'success', texto: respuesta?.mensaje ?? 'Alerta marcada como leída' })
+      recargar()
+      return true
+    } catch (error) {
+      const yaNoExiste = error?.code === 'ALERT_NOT_FOUND'
+      setAviso({ intent: 'error', texto: yaNoExiste ? ALERTA_YA_NO_EXISTE : ERROR_AL_MARCAR })
+      if (yaNoExiste) {
+        retry()
+        recargar()
+      }
+      return false
+    } finally {
+      setMarcando(null)
+    }
+  }
 
   return (
     <main className={pageStyles.page}>
@@ -312,7 +445,16 @@ export default function AlertsPage() {
             Mis alertas
           </Title1>
           <Text className={pageStyles.subtitle}>Las rebajas y las vueltas al stock de tus productos favoritos.</Text>
+          {sinLeer > 0 && <Text className={styles.unreadCount}>{textoSinLeer(sinLeer)}</Text>}
         </div>
+      </div>
+      {/* Región viva siempre presente: así se anuncia el resultado de marcar una alerta como leída */}
+      <div aria-live="polite">
+        {aviso && (
+          <MessageBar intent={aviso.intent}>
+            <MessageBarBody>{aviso.texto}</MessageBarBody>
+          </MessageBar>
+        )}
       </div>
       {failed && (
         <MessageBar intent="error">
@@ -338,7 +480,7 @@ export default function AlertsPage() {
         <ul aria-label="Tus alertas" className={styles.list}>
           {alertas.map((alerta) => (
             <li key={alerta.id}>
-              <AlertItem alerta={alerta} />
+              <AlertItem alerta={alerta} marcando={marcando === alerta.id} onMarcarLeida={marcarComoLeida} />
             </li>
           ))}
         </ul>
