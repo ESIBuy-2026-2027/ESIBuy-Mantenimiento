@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -110,5 +111,34 @@ class AlertaTest {
         assertEquals("a-1", alerta.getId());
         assertTrue(alerta.isLeida());
         assertNull(alerta.getDetalle().nombreProducto());
+    }
+
+    // Lectura de alertas (AB#531). PENDIENTE DE CONFIRMAR CON EL EQUIPO: caso HU531-CP01, propuesto.
+    @Test
+    @DisplayName("HU531-CP01: marcar una alerta nueva como leída da la misma alerta, ya leída y con todos sus datos")
+    void marcarComoLeidaConservaLosDatos() {
+        DetalleAlerta detalle = new DetalleAlerta("Teclado", "https://img.test/p.png", new BigDecimal("50.00"),
+                new BigDecimal("40.00"));
+        Alerta nueva = new Alerta("a-1", "c-1", "p-1", TipoAlerta.BAJADA_PRECIO, AHORA, false, detalle);
+
+        Alerta leida = nueva.marcarComoLeida();
+
+        assertAll(
+                () -> assertTrue(leida.isLeida()),
+                () -> assertFalse(nueva.isLeida()),
+                () -> assertEquals("a-1", leida.getId()),
+                () -> assertEquals("c-1", leida.getClienteId()),
+                () -> assertEquals("p-1", leida.getProductoId()),
+                () -> assertEquals(TipoAlerta.BAJADA_PRECIO, leida.getTipo()),
+                () -> assertEquals(AHORA, leida.getFecha()),
+                () -> assertEquals(detalle, leida.getDetalle()));
+    }
+
+    @Test
+    @DisplayName("HU531-CP01: marcar como leída una alerta que ya lo estaba la deja igual")
+    void marcarComoLeidaUnaYaLeidaLaDejaIgual() {
+        Alerta yaLeida = new Alerta("a-1", "c-1", "p-1", TipoAlerta.DISPONIBILIDAD, AHORA, true, null);
+
+        assertSame(yaLeida, yaLeida.marcarComoLeida());
     }
 }
