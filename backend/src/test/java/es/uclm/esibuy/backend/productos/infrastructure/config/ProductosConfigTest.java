@@ -3,7 +3,9 @@ package es.uclm.esibuy.backend.productos.infrastructure.config;
 import es.uclm.esibuy.backend.MongoTestcontainersConfig;
 import es.uclm.esibuy.backend.productos.application.port.in.InventarioVendedorUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.ValoracionesProductoUseCase;
+import es.uclm.esibuy.backend.productos.application.port.out.AlertasFavoritosPort;
 import es.uclm.esibuy.backend.productos.application.port.out.AnalisisImagenPort;
+import es.uclm.esibuy.backend.productos.infrastructure.adapter.out.alertas.AlertasFavoritosAdapter;
 import es.uclm.esibuy.backend.productos.application.port.out.ImagenStoragePort;
 import es.uclm.esibuy.backend.productos.application.service.InventarioVendedorService;
 import es.uclm.esibuy.backend.productos.application.service.ValoracionesProductoService;
@@ -50,5 +52,11 @@ class ProductosConfigTest {
     @DisplayName("Configuración: el contexto conecta el inventario del vendedor para sus estadísticas (HU17)")
     void elContextoConectaElInventarioDelVendedor() {
         assertInstanceOf(InventarioVendedorService.class, contexto.getBean(InventarioVendedorUseCase.class));
+    }
+
+    @Test
+    @DisplayName("Configuración: el contexto conecta los cambios de los productos con las alertas de los favoritos (AB#529)")
+    void elContextoConectaLasAlertasDeLosFavoritos() {
+        assertInstanceOf(AlertasFavoritosAdapter.class, contexto.getBean(AlertasFavoritosPort.class));
     }
 }

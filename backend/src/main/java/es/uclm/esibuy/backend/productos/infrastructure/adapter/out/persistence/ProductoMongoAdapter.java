@@ -15,6 +15,7 @@ import org.bson.Document;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -100,10 +101,14 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
                 ProductoDocument.class);
     }
 
+    // La suma y la lectura del estado anterior van en la misma operación: dos reposiciones a la vez no ven las dos el
+    // producto agotado
     @Override
-    public void reponerStock(String id, int cantidad) {
-        mongoTemplate.updateFirst(new Query(Criteria.where("_id").is(id)), new Update().inc(CAMPO_STOCK, cantidad),
+    public Optional<Producto> reponerStock(String id, int cantidad) {
+        ProductoDocument antes = mongoTemplate.findAndModify(new Query(Criteria.where("_id").is(id)),
+                new Update().inc(CAMPO_STOCK, cantidad), FindAndModifyOptions.options().returnNew(false),
                 ProductoDocument.class);
+        return Optional.ofNullable(antes).map(mapper::aDominio);
     }
 
     @Override

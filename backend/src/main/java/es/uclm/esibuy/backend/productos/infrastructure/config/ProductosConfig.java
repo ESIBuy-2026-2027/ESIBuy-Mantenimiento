@@ -10,7 +10,10 @@ import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 
+import es.uclm.esibuy.backend.alertas.application.port.in.GeneracionAlertasUseCase;
 import es.uclm.esibuy.backend.categorias.application.port.out.CategoriaRepositoryPort;
+import es.uclm.esibuy.backend.productos.application.port.out.AlertasFavoritosPort;
+import es.uclm.esibuy.backend.productos.infrastructure.adapter.out.alertas.AlertasFavoritosAdapter;
 import es.uclm.esibuy.backend.productos.application.port.in.CatalogoProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.ExistenciasProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.ConteoProductosUseCase;
@@ -93,12 +96,18 @@ public class ProductosConfig {
         return new SupervisionProductosService(productoRepositoryPort, vendedorPort);
     }
 
+    // Alertas de los productos favoritos (AB#529): el módulo de alertas decide a quién avisar de cada cambio
+    @Bean
+    AlertasFavoritosPort productosAlertasPort(GeneracionAlertasUseCase generacionAlertasUseCase) {
+        return new AlertasFavoritosAdapter(generacionAlertasUseCase);
+    }
+
     @Bean
     GestionProductosUseCase gestionProductosUseCase(ProductoRepositoryPort productoRepositoryPort,
             CategoriaRepositoryPort categoriaRepositoryPort, UsuarioEnSesionPort usuarioEnSesionPort,
-            AnalisisImagenPort analisisImagenPort) {
+            AnalisisImagenPort analisisImagenPort, AlertasFavoritosPort productosAlertasPort) {
         return new GestionProductosService(productoRepositoryPort, categoriaRepositoryPort, usuarioEnSesionPort,
-                analisisImagenPort);
+                analisisImagenPort, productosAlertasPort);
     }
 
     @Bean
@@ -114,8 +123,9 @@ public class ProductosConfig {
     }
 
     @Bean
-    ExistenciasProductosUseCase existenciasProductosUseCase(ProductoRepositoryPort productoRepositoryPort) {
-        return new ExistenciasProductosService(productoRepositoryPort);
+    ExistenciasProductosUseCase existenciasProductosUseCase(ProductoRepositoryPort productoRepositoryPort,
+            AlertasFavoritosPort productosAlertasPort) {
+        return new ExistenciasProductosService(productoRepositoryPort, productosAlertasPort);
     }
 
     // HU13: el módulo de valoraciones deja aquí la media y el número de valoraciones de cada producto

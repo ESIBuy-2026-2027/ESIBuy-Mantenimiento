@@ -6,6 +6,7 @@ import es.uclm.esibuy.backend.categorias.domain.model.EstadoCategoria;
 import es.uclm.esibuy.backend.productos.application.port.in.CrearProductoCommand;
 import es.uclm.esibuy.backend.productos.application.port.in.GestionProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.ModificarProductoCommand;
+import es.uclm.esibuy.backend.productos.application.port.out.AlertasFavoritosPort;
 import es.uclm.esibuy.backend.productos.application.port.out.AnalisisImagenPort;
 import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
 import es.uclm.esibuy.backend.productos.application.port.out.ResultadoAnalisis;
@@ -25,13 +26,15 @@ public class GestionProductosService implements GestionProductosUseCase {
     private final CategoriaRepositoryPort categoriaRepository;
     private final UsuarioEnSesionPort usuarioEnSesion;
     private final AnalisisImagenPort analisisImagen;
+    private final AlertasFavoritosPort alertas;
 
     public GestionProductosService(ProductoRepositoryPort productoRepository, CategoriaRepositoryPort categoriaRepository,
-            UsuarioEnSesionPort usuarioEnSesion, AnalisisImagenPort analisisImagen) {
+            UsuarioEnSesionPort usuarioEnSesion, AnalisisImagenPort analisisImagen, AlertasFavoritosPort alertas) {
         this.productoRepository = productoRepository;
         this.categoriaRepository = categoriaRepository;
         this.usuarioEnSesion = usuarioEnSesion;
         this.analisisImagen = analisisImagen;
+        this.alertas = alertas;
     }
 
     @PreAuthorize(Permisos.SOLO_VENDEDOR_PROPIO_EN_COMANDO)
@@ -149,7 +152,10 @@ public class GestionProductosService implements GestionProductosUseCase {
         // antivirus al guardarla (decisión del
         // equipo, para no gastar la cuota de VirusTotal en cada modificación)
         boolean cambiaLaImagen = !modificado.getImagen().equals(actual.getImagen());
-        return productoRepository.guardar(cambiaLaImagen ? conImagenAnalizada(modificado) : modificado);
+        Producto guardado = productoRepository.guardar(cambiaLaImagen ? conImagenAnalizada(modificado) : modificado);
+        // Alertas de los favoritos (AB#529): bajada de precio o vuelta a estar disponible
+        alertas.notificarCambio(actual, guardado);
+        return guardado;
     }
 
     @PreAuthorize(Permisos.SOLO_VENDEDOR_PROPIO)
@@ -165,6 +171,9 @@ public class GestionProductosService implements GestionProductosUseCase {
     @Override
     public Producto cambiarDisponibilidadMiProducto(String emailVendedor, String productoId, boolean disponible) {
         Producto propio = consultarMiProducto(emailVendedor, productoId);
-        return productoRepository.guardar(propio.conDisponibilidad(disponible));
+        Producto guardado = productoRepository.guardar(propio.conDisponibilidad(disponible));
+        // Alertas de los favoritos (AB#529): un producto activado puede volver a estar disponible
+        alertas.notificarCambio(propio, guardado);
+        return guardado;
     }
 }

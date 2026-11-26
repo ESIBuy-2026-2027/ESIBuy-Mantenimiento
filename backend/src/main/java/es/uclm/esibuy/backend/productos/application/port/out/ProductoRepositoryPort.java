@@ -43,7 +43,8 @@ public interface ProductoRepositoryPort {
     // Stock al comprar (HU10): resta en una sola operación y solo si hay bastante; devuelve si lo ha restado
     boolean descontarStock(String id, int cantidad);
 
-    void reponerStock(String id, int cantidad);
+    // Devuelve el producto como estaba antes de reponer, para avisar a las alertas (AB#529); vacío si no existe
+    Optional<Producto> reponerStock(String id, int cantidad);
 
     // Media y número de valoraciones del producto (HU13), ya calculados con todas sus valoraciones
     void actualizarValoracion(String id, double media, int numero);

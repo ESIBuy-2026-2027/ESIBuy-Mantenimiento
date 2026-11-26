@@ -221,6 +221,24 @@ public class Producto {
         return new Producto(id, datos);
     }
 
+    /** Si un cliente lo puede comprar: disponible y con stock (alertas de disponibilidad, AB#529). */
+    public boolean esComprable() {
+        return disponible && stock > 0;
+    }
+
+    /**
+     * Copia del producto con {@code cantidad} unidades más de stock y el resto de datos iguales: cómo queda al
+     * reponer el stock de un pedido cancelado (AB#529).
+     */
+    public Producto conStockRepuesto(int cantidad) {
+        DatosProducto datos = new DatosProducto(
+                new DatosProducto.DatosBasicos(
+                        vendedorId, nombre, descripcion, precio, stock + cantidad, categoriaId, imagen),
+                new DatosProducto.Configuracion(disponible, descuento, descuentoPremium),
+                new DatosProducto.Valoraciones(valoracionMedia, numeroValoraciones));
+        return new Producto(id, datos);
+    }
+
     /**
      * Copia del producto sin imagen y con el resto de datos iguales (HU31, T397):
      * se usa cuando el antivirus no ha
