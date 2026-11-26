@@ -37,7 +37,8 @@ export default function LoginPage() {
   }
 
   if (user) {
-    return <Navigate to={getHomePath(user.rol)} replace />
+    // trasIniciarSesion: el cliente ve en su inicio el aviso de alertas sin leer (AB#529)
+    return <Navigate to={getHomePath(user.rol)} replace state={{ trasIniciarSesion: true }} />
   }
 
   return (
