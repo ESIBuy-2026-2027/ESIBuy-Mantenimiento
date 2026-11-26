@@ -85,7 +85,7 @@ final class ColeccionesEsiBuy {
                 return List.of(usuarios(), sesiones(), factoresAutenticacion(), tokensSeguridad(), productos(),
                                 pedidos(), carritos(), valoraciones(), categorias(), listasDeseos(), metodosPago(),
                                 direccionesEnvio(),
-                                contadores(), preferencias(), incidencias());
+                                contadores(), preferencias(), incidencias(), alertas());
         }
 
         // 1. usuarios: identidad, rol, estado y perfil, con los campos del modelo en la
@@ -408,6 +408,23 @@ final class ColeccionesEsiBuy {
                                 string("respuesta"),
                                 date("fechaCreacion")),
                                 List.of(indice(USUARIO_ID)));
+        }
+
+        // 16. alertas: lo que el cliente ve en su cuenta al iniciar sesión, sin correo (AB#529). Genérica para las
+        // historias de alertas: tipo (bajada de precio y disponibilidad de un favorito, AB#529; producto nuevo de una
+        // categoría favorita, AB#530), cliente, producto, fecha y si está leída (AB#531). Con los datos del producto
+        // en ese momento, opcionales. El índice por cliente y fecha lo declara AlertaDocument.
+        private static Coleccion alertas() {
+                return new Coleccion("alertas", esquema(List.of(CLIENTE_ID, PRODUCTO_ID, "tipo", "fecha", "leida"),
+                                textoNoVacio(CLIENTE_ID),
+                                textoNoVacio(PRODUCTO_ID),
+                                string("tipo").possibleValues("BAJADA_PRECIO", "DISPONIBILIDAD", "PRODUCTO_NUEVO"),
+                                date("fecha"),
+                                bool("leida"),
+                                string("nombreProducto"),
+                                importe("precioAnterior"),
+                                importe("precioNuevo")),
+                                List.of());
         }
 
         // Todas las colecciones llevan createdAt y updatedAt («Convenciones comunes»

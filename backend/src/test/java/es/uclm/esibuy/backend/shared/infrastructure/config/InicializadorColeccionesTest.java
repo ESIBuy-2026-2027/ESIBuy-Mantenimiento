@@ -50,6 +50,7 @@ class InicializadorColeccionesTest {
     private static final int DUPLICADO = 11000; // "E11000 duplicate key error"
     private static final Date AHORA = Date.from(Instant.parse("2026-10-08T12:00:00Z"));
     private static final String INCIDENCIAS = "incidencias";
+    private static final String ALERTAS = "alertas";
 
     @Autowired
     private MongoTemplate mongoTemplate;
@@ -65,14 +66,14 @@ class InicializadorColeccionesTest {
     }
 
     @Test
-    @DisplayName("Inicialización: crea las 15 colecciones del modelo de BBDD")
-    void creaLasQuinceColecciones() {
+    @DisplayName("Inicialización: crea las 16 colecciones del modelo de BBDD")
+    void creaLasDieciseisColecciones() {
         // Las 10 del modelo inicial, metodos_pago (HU6), direcciones_envio (HU5),
-        // contadores (HU10), preferencias (HU46)
-        // e incidencias (HU44)
+        // contadores (HU10), preferencias (HU46), incidencias (HU44)
+        // y alertas (AB#529)
         List<String> esperadas = List.of("usuarios", "sesiones", "factores_autenticacion", "tokens_seguridad",
                 "productos", "pedidos", "carritos", "valoraciones", "categorias", "listas_deseos", "metodos_pago",
-                "direcciones_envio", "contadores", "preferencias", "incidencias");
+                "direcciones_envio", "contadores", "preferencias", "incidencias", "alertas");
 
         assertTrue(mongoTemplate.getCollectionNames().containsAll(esperadas));
     }
@@ -307,6 +308,44 @@ class InicializadorColeccionesTest {
         assertEquals("{\"disponible\": 1, \"nombre\": 1}", claveDelIndice(indices, "disponible_nombre"));
         assertEquals("{\"disponible\": 1, \"valoracionMedia\": -1, \"nombre\": 1}",
                 claveDelIndice(indices, "disponible_valoracion"));
+    }
+
+    @Test
+    @DisplayName("HU529-CP19: la colección alertas admite alertas de los tres tipos, con o sin precios y varias por cliente")
+    void aceptaAlertasValidas() {
+        acepta(ALERTAS, alerta("c-1", "BAJADA_PRECIO").append("nombreProducto", "Teclado")
+                .append("precioAnterior", 50.0).append("precioNuevo", 40.0));
+        acepta(ALERTAS, alerta("c-1", "DISPONIBILIDAD"));
+        acepta(ALERTAS, alerta("c-1", "PRODUCTO_NUEVO"));
+    }
+
+    @Test
+    @DisplayName("HU529-CP19: la colección alertas rechaza un tipo que no existe, un dato obligatorio ausente o un precio negativo")
+    void rechazaAlertasInvalidas() {
+        rechaza(VALIDACION, ALERTAS, alerta("c-1", "OFERTA"));
+        rechaza(VALIDACION, ALERTAS, alerta("", "DISPONIBILIDAD"));
+        rechaza(VALIDACION, ALERTAS, new Document("clienteId", "c-1").append("productoId", "p-1")
+                .append("tipo", "DISPONIBILIDAD").append("fecha", AHORA));
+        rechaza(VALIDACION, ALERTAS, alerta("c-1", "BAJADA_PRECIO").append("precioNuevo", -1.0));
+    }
+
+    @Test
+    @DisplayName("HU529-CP19: alertas tiene el índice por cliente y fecha (de la más reciente a la más antigua)")
+    void alertasTieneElIndicePorClienteYFecha() {
+        List<Document> indices = mongoTemplate.getCollection(ALERTAS).listIndexes().into(new ArrayList<>());
+        assertEquals("{\"clienteId\": 1, \"fecha\": -1}", claveDelIndice(indices, "cliente_fecha"));
+    }
+
+    @Test
+    @DisplayName("HU529-CP19: listas_deseos tiene el índice por producto, para buscar quién lo tiene en favoritos")
+    void listasDeseosTieneElIndicePorProducto() {
+        List<Document> indices = mongoTemplate.getCollection("listas_deseos").listIndexes().into(new ArrayList<>());
+        assertEquals("{\"items.productoId\": 1}", claveDelIndice(indices, "items.productoId_1"));
+    }
+
+    private static Document alerta(String clienteId, String tipo) {
+        return new Document("clienteId", clienteId).append("productoId", "p-1").append("tipo", tipo)
+                .append("fecha", AHORA).append("leida", false);
     }
 
     private static String claveDelIndice(List<Document> indices, String nombre) {
