@@ -6,7 +6,7 @@ import es.uclm.esibuy.backend.alertas.domain.model.Alerta;
 
 /**
  * Consulta de sus alertas por parte del cliente (AB#529). Recibe el correo del cliente en sesión: solo ve las suyas.
- * Marcarlas como leídas (AB#531) y eliminarlas (AB#532) son de otras historias.
+ * Marcarlas como leídas (AB#531) es de GestionAlertasUseCase.
  */
 public interface ConsultaAlertasUseCase {
 

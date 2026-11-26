@@ -9,7 +9,9 @@ import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.Clock;
+import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -27,12 +29,15 @@ import es.uclm.esibuy.backend.alertas.application.port.in.CambioProducto;
 import es.uclm.esibuy.backend.alertas.application.port.in.CambioProducto.Situacion;
 import es.uclm.esibuy.backend.alertas.application.port.in.ConsultaAlertasUseCase;
 import es.uclm.esibuy.backend.alertas.application.port.in.GeneracionAlertasUseCase;
+import es.uclm.esibuy.backend.alertas.application.port.in.GestionAlertasUseCase;
 import es.uclm.esibuy.backend.alertas.application.port.out.AlertaRepositoryPort;
 import es.uclm.esibuy.backend.alertas.application.port.out.ClienteEnSesionPort;
 import es.uclm.esibuy.backend.alertas.application.port.out.FavoritosPort;
 import es.uclm.esibuy.backend.alertas.application.port.out.TiposClientePort;
+import es.uclm.esibuy.backend.alertas.domain.model.Alerta;
+import es.uclm.esibuy.backend.alertas.domain.model.TipoAlerta;
 
-// Seguridad en la capa de negocio (R8): un cliente solo consulta sus alertas, y las alertas solo se generan desde un
+// Seguridad en la capa de negocio (R8): un cliente solo consulta y marca como leídas sus alertas (AB#531), y las alertas solo se generan desde un
 // cambio de producto hecho por un vendedor (modificar o activar) o por un cliente (cancelar un pedido repone stock).
 // Las anotaciones solo se evalúan con Spring: contexto mínimo (sin MongoDB) con los servicios reales y dobles.
 // PENDIENTE DE CONFIRMAR CON EL EQUIPO: caso HU529-CP10, propuesto.
@@ -76,6 +81,11 @@ class SeguridadAlertasServiceTest {
                 TiposClientePort tipos) {
             return new GeneracionAlertasService(repositorio, favoritos, tipos, Clock.systemUTC());
         }
+
+        @Bean
+        GestionAlertasUseCase gestion(AlertaRepositoryPort repositorio, ClienteEnSesionPort sesion) {
+            return new GestionAlertasService(repositorio, sesion);
+        }
     }
 
     @Autowired
@@ -86,6 +96,8 @@ class SeguridadAlertasServiceTest {
     private ConsultaAlertasUseCase consulta;
     @Autowired
     private GeneracionAlertasUseCase generacion;
+    @Autowired
+    private GestionAlertasUseCase gestion;
 
     @BeforeEach
     void limpiarDobles() {
@@ -150,5 +162,47 @@ class SeguridadAlertasServiceTest {
     @DisplayName("HU529-CP10: un administrador no genera alertas: solo lee los productos de los vendedores")
     void unAdministradorNoGeneraAlertas() {
         assertThrows(AccessDeniedException.class, () -> generacion.notificarCambio(SIN_CAMBIOS));
+    }
+
+    // Marcar como leídas (AB#531). PENDIENTE DE CONFIRMAR CON EL EQUIPO: caso HU531-CP03, propuesto.
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU531-CP03: el cliente marca como leída una alerta propia")
+    void elClienteMarcaComoLeidaLaSuya() {
+        Alerta suya = new Alerta("a-1", "c-1", "p-1", TipoAlerta.DISPONIBILIDAD, Instant.now(), true, null);
+        when(clienteEnSesion.idPorCorreo(CLIENTE)).thenReturn("c-1");
+        when(alertaRepository.buscarPorIdYCliente("a-1", "c-1")).thenReturn(Optional.of(suya));
+
+        assertDoesNotThrow(() -> gestion.marcarComoLeida(CLIENTE, "a-1"));
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU531-CP03: un cliente no puede marcar como leídas las alertas de otro cliente")
+    void unClienteNoMarcaLasDeOtro() {
+        assertThrows(AccessDeniedException.class, () -> gestion.marcarComoLeida("otro@esibuy.test", "a-1"));
+        verifyNoInteractions(clienteEnSesion, alertaRepository);
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "VENDEDOR")
+    @DisplayName("HU531-CP03: un vendedor no marca alertas como leídas, aunque use el mismo correo")
+    void unVendedorNoMarcaAlertas() {
+        assertThrows(AccessDeniedException.class, () -> gestion.marcarComoLeida(CLIENTE, "a-1"));
+        verifyNoInteractions(clienteEnSesion, alertaRepository);
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "ADMINISTRADOR")
+    @DisplayName("HU531-CP03: un administrador no marca alertas como leídas")
+    void unAdministradorNoMarcaAlertas() {
+        assertThrows(AccessDeniedException.class, () -> gestion.marcarComoLeida(CLIENTE, "a-1"));
+        verifyNoInteractions(clienteEnSesion, alertaRepository);
+    }
+
+    @Test
+    @DisplayName("HU531-CP03: sin sesión no se marcan alertas como leídas")
+    void sinSesionNoSeMarcan() {
+        assertThrows(AuthenticationCredentialsNotFoundException.class, () -> gestion.marcarComoLeida(CLIENTE, "a-1"));
     }
 }

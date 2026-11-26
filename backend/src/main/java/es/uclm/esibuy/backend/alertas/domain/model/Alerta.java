@@ -56,6 +56,14 @@ public class Alerta {
                 new DetalleAlerta(nombreProducto, imagenProducto, null, null));
     }
 
+    /**
+     * La misma alerta, ya leída (AB#531): sigue en la lista del cliente, pero deja de ser nueva. Si ya estaba leída,
+     * se devuelve tal cual.
+     */
+    public Alerta marcarComoLeida() {
+        return leida ? this : new Alerta(id, clienteId, productoId, tipo, fecha, true, detalle);
+    }
+
     private static String exigirTexto(String valor, String mensaje) {
         if (valor == null || valor.isBlank()) {
             throw new AlertaInvalidaException(mensaje);

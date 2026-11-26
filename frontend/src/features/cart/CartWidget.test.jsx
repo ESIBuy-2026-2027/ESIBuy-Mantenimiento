@@ -43,7 +43,8 @@ describe('CartWidget (HU9): acceso en la cabecera', () => {
     pintar()
 
     expect(botonDelCarrito()).toHaveAccessibleName('Carrito, 4 productos')
-    expect(botonDelCarrito()).toHaveTextContent('Mi carrito')
+    // Solo el icono y el número, sin el texto «Mi carrito» (AB#531)
+    expect(botonDelCarrito()).toHaveTextContent(/^\(4\)$/)
   })
 
   it('HU9-CP05: con un solo producto lo dice en singular', () => {

@@ -171,7 +171,7 @@ describe('AppHeader', () => {
     await user.click(within(nav).getByRole('button', { name: 'Mi perfil' }))
 
     const menu = within(await screen.findByRole('menu'))
-    const accesos = ['Mis pedidos', 'Mis alertas', 'Incidencias', 'Mi perfil']
+    const accesos = ['Mis pedidos', 'Incidencias', 'Mi perfil']
     for (const nombre of accesos) {
       expect(menu.getByRole('menuitem', { name: nombre })).toBeInTheDocument()
     }
@@ -486,35 +486,77 @@ describe('AppHeader (HU45): acceso a ESIBuy Premium', () => {
     expect(await screen.findByRole('heading', { level: 1, name: /esibuy premium/i })).toBeInTheDocument()
   })
 
-  it('HU529-CP30: el menú de la cuenta del cliente tiene «Mis alertas», que lleva a /alerts', async () => {
+  // Campanita de las alertas (AB#531): sustituye al punto que AB#529 ponía en el botón de la cuenta y a «Mis alertas»
+  // en su menú. PENDIENTE DE CONFIRMAR CON EL EQUIPO: caso HU531-CP11, propuesto.
+  it('HU531-CP11: «Mis alertas» ya no está en el menú de la cuenta: se llega por la campanita', async () => {
     const user = userEvent.setup()
     await abrirSesionPorApi('cliente@esibuy.test')
     renderApp('/products')
 
     await user.click(await screen.findByRole('button', { name: 'Mi perfil' }))
-    await user.click(await screen.findByRole('menuitem', { name: 'Mis alertas' }))
+    const menu = within(await screen.findByRole('menu'))
 
-    await esperarRuta('/alerts')
-    expect(await screen.findByRole('heading', { level: 1, name: 'Mis alertas' })).toBeInTheDocument()
+    expect(menu.getByRole('menuitem', { name: 'Mis pedidos' })).toBeInTheDocument()
+    expect(menu.queryByRole('menuitem', { name: 'Mis alertas' })).not.toBeInTheDocument()
   })
 
-  it('HU529-CP30: con alertas sin leer, el botón de la cuenta lleva un indicador y lo anuncia sin cambiar su nombre', async () => {
+  it('HU531-CP11: el cliente tiene una campanita en la cabecera que lleva a «Mis alertas»', async () => {
+    const user = userEvent.setup()
     await abrirSesionPorApi('cliente@esibuy.test')
     renderApp('/products')
 
-    const perfil = await screen.findByRole('button', { name: 'Mi perfil' })
-    expect(await within(perfil).findByTestId('alertas-sin-leer')).toBeInTheDocument()
-    expect(perfil).toHaveAccessibleDescription('Tienes 1 alerta sin leer')
+    const nav = await screen.findByRole('navigation', { name: 'Cuenta' })
+    await user.click(within(nav).getByRole('link', { name: 'Mis alertas' }))
+
+    await esperarRuta('/alerts')
+    expect(await screen.findByRole('heading', { level: 1, name: 'Mis alertas' })).toBeInTheDocument()
+    expect(within(nav).getByRole('link', { name: 'Mis alertas' })).toHaveAttribute('aria-current', 'page')
   })
 
-  it('HU529-CP30: sin alertas sin leer, el botón de la cuenta no lleva indicador', async () => {
+  it('HU531-CP11: con alertas sin leer, la campanita lleva su número y lo anuncia sin cambiar su nombre; el botón de la cuenta no lleva indicador', async () => {
+    await abrirSesionPorApi('cliente@esibuy.test')
+    renderApp('/products')
+
+    const campanita = await screen.findByRole('link', { name: 'Mis alertas' })
+    expect(await within(campanita).findByTestId('contador-alertas')).toHaveTextContent('1')
+    expect(campanita).toHaveAccessibleDescription('Tienes 1 alerta sin leer')
+    const perfil = screen.getByRole('button', { name: 'Mi perfil' })
+    expect(perfil).not.toHaveAccessibleDescription(/alerta/)
+  })
+
+  it('HU531-CP11: con más de nueve alertas sin leer, la campanita muestra 9+ y anuncia el número exacto', async () => {
+    const alertas = Array.from({ length: 12 }, (_, i) => ({
+      id: `a-${i}`,
+      tipo: 'DISPONIBILIDAD',
+      fecha: '2026-11-26T10:00:00Z',
+      leida: false,
+      producto: { id: `p-${i}`, nombre: `Producto ${i}`, imagen: '', precioAnterior: null, precioNuevo: null },
+    }))
+    server.use(http.get('/api/customer/alerts', () => HttpResponse.json({ mensaje: 'Alertas consultadas correctamente', alertas })))
+    await abrirSesionPorApi('cliente@esibuy.test')
+    renderApp('/products')
+
+    const campanita = await screen.findByRole('link', { name: 'Mis alertas' })
+    expect(await within(campanita).findByTestId('contador-alertas')).toHaveTextContent('9+')
+    expect(campanita).toHaveAccessibleDescription('Tienes 12 alertas sin leer')
+  })
+
+  it('HU531-CP11: sin alertas sin leer, la campanita no lleva número ni descripción', async () => {
     server.use(http.get('/api/customer/alerts', () => HttpResponse.json({ mensaje: 'No tienes alertas', alertas: [] })))
     await abrirSesionPorApi('cliente@esibuy.test')
     renderApp('/products')
 
-    const perfil = await screen.findByRole('button', { name: 'Mi perfil' })
-    await waitFor(() => expect(within(perfil).queryByTestId('alertas-sin-leer')).not.toBeInTheDocument())
-    expect(perfil).not.toHaveAccessibleDescription(/alerta/)
+    const campanita = await screen.findByRole('link', { name: 'Mis alertas' })
+    await waitFor(() => expect(within(campanita).queryByTestId('contador-alertas')).not.toBeInTheDocument())
+    expect(campanita).not.toHaveAccessibleDescription(/sin leer/)
+  })
+
+  it('HU531-CP11: el vendedor no tiene campanita de alertas', async () => {
+    await abrirSesionPorApi('vendedor@esibuy.test')
+    renderApp('/seller/products')
+
+    await screen.findByRole('button', { name: /cerrar sesión/i })
+    expect(screen.queryByRole('link', { name: 'Mis alertas' })).not.toBeInTheDocument()
   })
 
   it('HU45-CP27: el vendedor, el administrador y quien no tiene sesión no ven el botón Premium', async () => {

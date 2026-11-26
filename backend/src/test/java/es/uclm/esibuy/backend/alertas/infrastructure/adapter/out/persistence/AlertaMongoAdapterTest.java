@@ -88,4 +88,35 @@ class AlertaMongoAdapterTest {
         assertNotNull(guardado.getDate("createdAt"));
         assertTrue(guardado.get("precioNuevo") instanceof org.bson.types.Decimal128);
     }
+
+    // Lectura de alertas (AB#531). PENDIENTE DE CONFIRMAR CON EL EQUIPO: caso HU531-CP04, propuesto.
+    @Test
+    @DisplayName("HU531-CP04: una alerta se encuentra por su id solo con su cliente; con otro cliente o un id que no existe, no")
+    void buscaUnaAlertaPorIdYCliente() {
+        adapter.guardarTodas(List.of(Alerta.disponibilidad("c-1", "p-1", "Teclado", "https://img.test/p.png", HOY)));
+        String id = adapter.buscarPorCliente("c-1").get(0).getId();
+
+        assertTrue(adapter.buscarPorIdYCliente(id, "c-1").isPresent());
+        assertTrue(adapter.buscarPorIdYCliente(id, "c-2").isEmpty());
+        assertTrue(adapter.buscarPorIdYCliente("000000000000000000000000", "c-1").isEmpty());
+    }
+
+    @Test
+    @DisplayName("HU531-CP04: guardar una alerta leída la actualiza sin duplicarla y conserva su fecha de creación")
+    void guardarUnaAlertaLeidaLaActualiza() {
+        adapter.guardarTodas(List.of(Alerta.disponibilidad("c-1", "p-1", "Teclado", "https://img.test/p.png", HOY)));
+        Alerta nueva = adapter.buscarPorCliente("c-1").get(0);
+        Object creadaEl = mongoTemplate.getCollection("alertas").find().first().get("createdAt");
+
+        Alerta guardada = adapter.guardar(nueva.marcarComoLeida());
+
+        assertTrue(guardada.isLeida());
+        assertEquals(nueva.getId(), guardada.getId());
+        assertEquals(1, mongoTemplate.getCollection("alertas").countDocuments());
+        Document documento = mongoTemplate.getCollection("alertas").find().first();
+        assertNotNull(documento);
+        assertEquals(true, documento.getBoolean("leida"));
+        assertEquals(creadaEl, documento.get("createdAt"));
+        assertEquals("Teclado", documento.getString("nombreProducto"));
+    }
 }

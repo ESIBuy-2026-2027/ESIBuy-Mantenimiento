@@ -29,6 +29,7 @@ import {
 import AlertsLoginNotice from '../features/alerts/AlertsLoginNotice'
 import { textoSinLeer } from '../features/alerts/alertsText'
 import { useAlerts } from '../features/alerts/useAlerts'
+import { useAvisoTrasIniciarSesion } from '../features/alerts/useAvisoTrasIniciarSesion'
 import CartWidget from '../features/cart/CartWidget'
 import { getProfile } from '../api/profile'
 import { useApiQuery } from '../hooks/useApiQuery'
@@ -184,16 +185,56 @@ const useStyles = makeStyles({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  // Punto sobre el icono de la cuenta cuando hay alertas sin leer (AB#529)
-  alertDot: {
+  // Campanita de las alertas (AB#531): solo icono, con el número de alertas sin leer encima
+  bell: {
+    // El botón de Fluent recorta lo que sale de él: sin esto, el número se corta
+    overflow: 'visible',
+    minWidth: 'auto',
+    paddingLeft: tokens.spacingHorizontalS,
+    paddingRight: tokens.spacingHorizontalS,
+  },
+  bellIcon: {
+    position: 'relative',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bellBadge: {
     position: 'absolute',
-    top: '-2px',
-    right: '-3px',
-    width: '8px',
-    height: '8px',
-    borderRadius: tokens.borderRadiusCircular,
-    backgroundColor: tokens.colorPaletteRedBackground3,
+    top: '-8px',
+    right: '-10px',
     boxShadow: `0 0 0 1.5px ${tokens.colorNeutralBackground1}`,
+  },
+  // Al iniciar sesión con alertas sin leer, la campanita suena: se balancea dos veces y el número late. Con «reducir
+  // movimiento» no se mueve: solo se colorea.
+  bellRinging: {
+    color: '#B54708',
+    transformOrigin: '50% 15%',
+    animationName: {
+      '0%': { transform: 'rotate(0deg)' },
+      '15%': { transform: 'rotate(16deg)' },
+      '30%': { transform: 'rotate(-14deg)' },
+      '45%': { transform: 'rotate(10deg)' },
+      '60%': { transform: 'rotate(-8deg)' },
+      '75%': { transform: 'rotate(4deg)' },
+      '100%': { transform: 'rotate(0deg)' },
+    },
+    animationDuration: '900ms',
+    animationDelay: '250ms',
+    animationIterationCount: 2,
+    animationTimingFunction: 'ease-in-out',
+    '@media (prefers-reduced-motion: reduce)': { animationName: 'none' },
+  },
+  bellBadgePulse: {
+    animationName: {
+      '0%': { transform: 'scale(1)' },
+      '50%': { transform: 'scale(1.3)' },
+      '100%': { transform: 'scale(1)' },
+    },
+    animationDuration: '600ms',
+    animationDelay: '250ms',
+    animationIterationCount: 3,
+    '@media (prefers-reduced-motion: reduce)': { animationName: 'none' },
   },
   srOnly: visuallyHidden,
   premiumCrown: {
@@ -288,7 +329,7 @@ function GuestActions() {
   )
 }
 
-function PremiumAwarePersonIcon({ conAlertas }) {
+function PremiumAwarePersonIcon() {
   const { data: profile, retry } = useApiQuery(getProfile)
   const styles = useStyles()
 
@@ -305,26 +346,65 @@ function PremiumAwarePersonIcon({ conAlertas }) {
       ) : (
         <Person20Regular aria-hidden="true" data-testid="standard-person-icon" />
       )}
-      {conAlertas && <span className={styles.alertDot} aria-hidden="true" data-testid="alertas-sin-leer" />}
     </span>
   )
 }
 
-PremiumAwarePersonIcon.propTypes = {
-  conAlertas: PropTypes.bool.isRequired,
+// Campanita de las alertas (AB#531), que lleva a «Mis alertas». Con alertas sin leer lleva su número (9+ a partir de
+// diez); el número no cambia el nombre accesible: lo anuncia la descripción. Sustituye al punto que AB#529 ponía en el
+// botón de la cuenta. Al iniciar sesión con alertas sin leer suena, mientras sale la notificación de AlertsLoginNotice.
+function AlertsBell() {
+  const styles = useStyles()
+  const { pathname } = useLocation()
+  const { sinLeer } = useAlerts()
+  const sonando = useAvisoTrasIniciarSesion()
+  const descripcion = useId()
+  const active = pathname === PATHS.ALERTS
+
+  return (
+    <>
+      <LinkButton
+        to={PATHS.ALERTS}
+        appearance="subtle"
+        icon={
+          <span className={styles.bellIcon} data-sonando={sonando ? 'true' : undefined}>
+            <Alert20Regular aria-hidden="true" className={sonando ? styles.bellRinging : undefined} />
+            {sinLeer > 0 && (
+              <CounterBadge
+                count={sinLeer}
+                overflowCount={9}
+                size="small"
+                color="danger"
+                className={mergeClasses(styles.bellBadge, sonando && styles.bellBadgePulse)}
+                aria-hidden="true"
+                data-testid="contador-alertas"
+              />
+            )}
+          </span>
+        }
+        aria-label="Mis alertas"
+        title="Mis alertas"
+        className={mergeClasses(styles.item, styles.navAction, styles.bell, active && styles.navActionActive)}
+        aria-current={active ? 'page' : undefined}
+        aria-describedby={sinLeer > 0 ? descripcion : undefined}
+      />
+      {sinLeer > 0 && (
+        <span id={descripcion} className={styles.srOnly}>
+          {textoSinLeer(sinLeer)}
+        </span>
+      )}
+    </>
+  )
 }
 
 function ClientMenu({ compact, onSignOut, disabled }) {
   const styles = useStyles()
   const navigate = useNavigate()
   const { pathname } = useLocation()
-  // Alertas de los favoritos (AB#529): el punto y el número no cambian el nombre accesible; lo anuncia la descripción
-  const { sinLeer } = useAlerts()
-  const descripcionAlertas = useId()
-  const profileSectionActive = [PATHS.PROFILE, PATHS.ORDERS, PATHS.ALERTS, PATHS.INCIDENTS].includes(pathname)
+  // «Mis alertas» ya no está en el menú: se llega por la campanita de la cabecera (AB#531)
+  const profileSectionActive = [PATHS.PROFILE, PATHS.ORDERS, PATHS.INCIDENTS].includes(pathname)
   const enlaces = [
     [PATHS.ORDERS, <Receipt20Regular />, 'Mis pedidos'],
-    [PATHS.ALERTS, <Alert20Regular />, 'Mis alertas'],
     [PATHS.INCIDENTS, <ChatWarning20Regular />, 'Incidencias'],
     [PATHS.PROFILE, <Person20Regular />, 'Mi perfil'],
   ]
@@ -335,11 +415,10 @@ function ClientMenu({ compact, onSignOut, disabled }) {
         <MenuTrigger>
           <Button
             appearance="subtle"
-            icon={<PremiumAwarePersonIcon conAlertas={sinLeer > 0} />}
+            icon={<PremiumAwarePersonIcon />}
             title={compact ? 'Mi perfil' : undefined}
             className={mergeClasses(styles.item, styles.profileTrigger, profileSectionActive && styles.profileTriggerActive, compact && styles.compactItem)}
             aria-current={profileSectionActive ? 'page' : undefined}
-            aria-describedby={sinLeer > 0 ? descripcionAlertas : undefined}
           >
             <span className={compact ? styles.compactLabel : undefined}>Mi perfil</span>
           </Button>
@@ -351,11 +430,6 @@ function ClientMenu({ compact, onSignOut, disabled }) {
                 key={to}
                 className={styles.accountMenuItem}
                 icon={icon}
-                secondaryContent={
-                  to === PATHS.ALERTS && sinLeer > 0 ? (
-                    <CounterBadge count={sinLeer} size="small" color="danger" aria-hidden="true" />
-                  ) : undefined
-                }
                 onClick={() => navigate(to)}
               >
                 {label}
@@ -367,11 +441,6 @@ function ClientMenu({ compact, onSignOut, disabled }) {
           </MenuList>
         </MenuPopover>
       </Menu>
-      {sinLeer > 0 && (
-        <span id={descripcionAlertas} className={styles.srOnly}>
-          {textoSinLeer(sinLeer)}
-        </span>
-      )}
     </>
   )
 }
@@ -432,6 +501,7 @@ function UserActions({ rol, onSignOut, disabled }) {
         </NavLink>
       )}
       {esCliente && <CartWidget />}
+      {esCliente && <AlertsBell />}
       {esCliente && <ClientMenu compact={compact} onSignOut={onSignOut} disabled={disabled} />}
       {!esCliente && (
         <Button appearance="primary" icon={<ArrowExit20Regular />} onClick={onSignOut} disabled={disabled}>
@@ -465,7 +535,8 @@ export default function AppHeader() {
       <nav className={mergeClasses(styles.actions, user && styles.userActions)} aria-label="Cuenta">
         {!loading && (user ? <UserActions rol={user.rol} onSignOut={handleSignOut} disabled={signingOut} /> : <GuestActions />)}
       </nav>
-      {/* Alertas de los favoritos (AB#529): notificación que sale del botón de la cuenta al iniciar sesión */}
+      {/* Alertas sin leer al iniciar sesión (AB#529): notificación abajo a la derecha, fuera de la barra de accesos,
+          que en el móvil se desliza y la recortaría (AB#531) */}
       {user?.rol === ROLES.CLIENTE && <AlertsLoginNotice />}
     </header>
   )
