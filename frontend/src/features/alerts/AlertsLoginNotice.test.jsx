@@ -53,7 +53,8 @@ describe('AlertsLoginNotice', () => {
     await abrirSesionPorApi('cliente@esibuy.test')
     renderApp('/products')
 
-    expect(await screen.findByTestId('alertas-sin-leer')).toBeInTheDocument()
+    // Las alertas ya han llegado: la campanita lleva su número (AB#531)
+    expect(await screen.findByTestId('contador-alertas')).toBeInTheDocument()
     expect(screen.queryByText(AVISO)).not.toBeInTheDocument()
   })
 })

@@ -184,15 +184,22 @@ const useStyles = makeStyles({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  // Punto sobre el icono de la cuenta cuando hay alertas sin leer (AB#529)
-  alertDot: {
+  // Campanita de las alertas (AB#531): solo icono, con el número de alertas sin leer encima
+  bell: {
+    minWidth: 'auto',
+    paddingLeft: tokens.spacingHorizontalS,
+    paddingRight: tokens.spacingHorizontalS,
+  },
+  bellIcon: {
+    position: 'relative',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bellBadge: {
     position: 'absolute',
-    top: '-2px',
-    right: '-3px',
-    width: '8px',
-    height: '8px',
-    borderRadius: tokens.borderRadiusCircular,
-    backgroundColor: tokens.colorPaletteRedBackground3,
+    top: '-8px',
+    right: '-10px',
     boxShadow: `0 0 0 1.5px ${tokens.colorNeutralBackground1}`,
   },
   srOnly: visuallyHidden,
@@ -288,7 +295,7 @@ function GuestActions() {
   )
 }
 
-function PremiumAwarePersonIcon({ conAlertas }) {
+function PremiumAwarePersonIcon() {
   const { data: profile, retry } = useApiQuery(getProfile)
   const styles = useStyles()
 
@@ -305,23 +312,63 @@ function PremiumAwarePersonIcon({ conAlertas }) {
       ) : (
         <Person20Regular aria-hidden="true" data-testid="standard-person-icon" />
       )}
-      {conAlertas && <span className={styles.alertDot} aria-hidden="true" data-testid="alertas-sin-leer" />}
     </span>
   )
 }
 
-PremiumAwarePersonIcon.propTypes = {
-  conAlertas: PropTypes.bool.isRequired,
+// Campanita de las alertas (AB#531), que lleva a «Mis alertas». Con alertas sin leer lleva su número (9+ a partir de
+// diez); el número no cambia el nombre accesible: lo anuncia la descripción. Sustituye al punto que AB#529 ponía en el
+// botón de la cuenta.
+function AlertsBell() {
+  const styles = useStyles()
+  const { pathname } = useLocation()
+  const { sinLeer } = useAlerts()
+  const descripcion = useId()
+  const active = pathname === PATHS.ALERTS
+
+  return (
+    <>
+      <LinkButton
+        to={PATHS.ALERTS}
+        appearance="subtle"
+        icon={
+          <span className={styles.bellIcon}>
+            <Alert20Regular aria-hidden="true" />
+            {sinLeer > 0 && (
+              <CounterBadge
+                count={sinLeer}
+                overflowCount={9}
+                size="small"
+                color="danger"
+                className={styles.bellBadge}
+                aria-hidden="true"
+                data-testid="contador-alertas"
+              />
+            )}
+          </span>
+        }
+        aria-label="Mis alertas"
+        title="Mis alertas"
+        className={mergeClasses(styles.item, styles.navAction, styles.bell, active && styles.navActionActive)}
+        aria-current={active ? 'page' : undefined}
+        aria-describedby={sinLeer > 0 ? descripcion : undefined}
+      />
+      {sinLeer > 0 && (
+        <span id={descripcion} className={styles.srOnly}>
+          {textoSinLeer(sinLeer)}
+        </span>
+      )}
+    </>
+  )
 }
 
 function ClientMenu({ compact, onSignOut, disabled }) {
   const styles = useStyles()
   const navigate = useNavigate()
   const { pathname } = useLocation()
-  // Alertas de los favoritos (AB#529): el punto y el número no cambian el nombre accesible; lo anuncia la descripción
+  // «Mis alertas» sigue en el menú con su número (AB#529); el aviso en la cabecera lo da la campanita (AB#531)
   const { sinLeer } = useAlerts()
-  const descripcionAlertas = useId()
-  const profileSectionActive = [PATHS.PROFILE, PATHS.ORDERS, PATHS.ALERTS, PATHS.INCIDENTS].includes(pathname)
+  const profileSectionActive = [PATHS.PROFILE, PATHS.ORDERS, PATHS.INCIDENTS].includes(pathname)
   const enlaces = [
     [PATHS.ORDERS, <Receipt20Regular />, 'Mis pedidos'],
     [PATHS.ALERTS, <Alert20Regular />, 'Mis alertas'],
@@ -335,11 +382,10 @@ function ClientMenu({ compact, onSignOut, disabled }) {
         <MenuTrigger>
           <Button
             appearance="subtle"
-            icon={<PremiumAwarePersonIcon conAlertas={sinLeer > 0} />}
+            icon={<PremiumAwarePersonIcon />}
             title={compact ? 'Mi perfil' : undefined}
             className={mergeClasses(styles.item, styles.profileTrigger, profileSectionActive && styles.profileTriggerActive, compact && styles.compactItem)}
             aria-current={profileSectionActive ? 'page' : undefined}
-            aria-describedby={sinLeer > 0 ? descripcionAlertas : undefined}
           >
             <span className={compact ? styles.compactLabel : undefined}>Mi perfil</span>
           </Button>
@@ -367,11 +413,6 @@ function ClientMenu({ compact, onSignOut, disabled }) {
           </MenuList>
         </MenuPopover>
       </Menu>
-      {sinLeer > 0 && (
-        <span id={descripcionAlertas} className={styles.srOnly}>
-          {textoSinLeer(sinLeer)}
-        </span>
-      )}
     </>
   )
 }
@@ -432,6 +473,7 @@ function UserActions({ rol, onSignOut, disabled }) {
         </NavLink>
       )}
       {esCliente && <CartWidget />}
+      {esCliente && <AlertsBell />}
       {esCliente && <ClientMenu compact={compact} onSignOut={onSignOut} disabled={disabled} />}
       {!esCliente && (
         <Button appearance="primary" icon={<ArrowExit20Regular />} onClick={onSignOut} disabled={disabled}>
