@@ -16,6 +16,7 @@ import es.uclm.esibuy.backend.pedidos.application.port.in.RealizacionPedidoUseCa
 import es.uclm.esibuy.backend.pedidos.application.port.in.SeguimientoEnvioUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.ProductosConPedidosUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.VentasVendedorUseCase;
+import es.uclm.esibuy.backend.pedidos.application.port.in.VentasPlataformaUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.GestionPedidosVendedorUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.out.CarritoPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.ClienteEnSesionPort;
@@ -34,6 +35,7 @@ import es.uclm.esibuy.backend.pedidos.application.service.RealizacionPedidoServi
 import es.uclm.esibuy.backend.pedidos.application.service.SeguimientoEnvioService;
 import es.uclm.esibuy.backend.pedidos.application.service.ProductosConPedidosService;
 import es.uclm.esibuy.backend.pedidos.application.service.VentasVendedorService;
+import es.uclm.esibuy.backend.pedidos.application.service.VentasPlataformaService;
 import es.uclm.esibuy.backend.pedidos.application.service.GestionPedidosVendedorService;
 import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.carrito.CarritoAdapter;
 import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.direcciones.DireccionesAdapter;
@@ -161,6 +163,11 @@ public class PedidosConfig {
     @Bean
     VentasVendedorUseCase ventasVendedorUseCase(PedidoRepositoryPort pedidoRepositoryPort) {
         return new VentasVendedorService(pedidoRepositoryPort);
+    }
+
+    @Bean
+    VentasPlataformaUseCase ventasPlataformaUseCase(PedidoRepositoryPort pedidoRepositoryPort) {
+        return new VentasPlataformaService(pedidoRepositoryPort);
     }
 
     @Bean

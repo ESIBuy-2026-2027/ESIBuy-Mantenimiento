@@ -179,5 +179,10 @@ class ConsultaComprasServiceTest {
         public List<Pedido> buscarPorVendedor(String vendedorId) {
             throw new UnsupportedOperationException("La consulta de compras no busca por vendedor");
         }
+
+        @Override
+        public List<Pedido> buscarTodos() {
+            throw new UnsupportedOperationException("La consulta de compras no busca todos los pedidos");
+        }
     }
 }

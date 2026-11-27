@@ -50,6 +50,20 @@ describe('AdminPage (HU18)', () => {
     await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/admin\/admins$/))
   })
 
+  it('HU546-CP05: desde la tarjeta Estadísticas se abre el panel de rankings', async () => {
+    const user = userEvent.setup()
+    await abrirSesionPorApi('admin@esibuy.test')
+    renderApp('/admin')
+
+    await user.click(await screen.findByRole('button', { name: /estadísticas/i }))
+
+    await waitFor(() =>
+      expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/admin\/statistics$/),
+    )
+    expect(await screen.findByRole('heading', { level: 1, name: /estadísticas de la plataforma/i }))
+      .toBeInTheDocument()
+  })
+
   it('HU39-CP15: el panel tiene la tarjeta Categorías, con su descripción', async () => {
     await abrirSesionPorApi('admin@esibuy.test')
     renderApp('/admin')

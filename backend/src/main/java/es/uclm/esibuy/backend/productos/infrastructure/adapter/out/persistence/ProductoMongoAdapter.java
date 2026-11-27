@@ -130,6 +130,11 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
                 .stream().map(mapper::aDominio).toList();
     }
 
+    @Override
+    public List<Producto> listarTodos() {
+        return mongoTemplate.findAll(ProductoDocument.class).stream().map(mapper::aDominio).toList();
+    }
+
     // Catálogo del cliente (HU7): solo productos disponibles, de todos los
     // vendedores; la búsqueda por nombre
     // no distingue mayúsculas ni tildes y trata el texto como literal.

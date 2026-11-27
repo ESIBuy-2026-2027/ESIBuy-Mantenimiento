@@ -1,6 +1,7 @@
 import { Text, Title1, makeStyles, tokens } from '@fluentui/react-components'
 import {
   BuildingShop24Regular,
+  DataBarVertical24Regular,
   ChatWarning24Regular,
   People24Regular,
   PersonKey24Regular,
@@ -39,6 +40,13 @@ const sections = [
     title: 'Categorías',
     to: PATHS.ADMIN_CATEGORIES,
     description: 'Consulta las categorías de productos y cuántos productos tiene cada una.',
+  },
+  {
+    id: 'statistics',
+    icon: <DataBarVertical24Regular />,
+    title: 'Estadísticas',
+    to: PATHS.ADMIN_STATISTICS,
+    description: 'Consulta los rankings de ventas y valoraciones de productos.',
   },
   {
     id: 'incidents',
