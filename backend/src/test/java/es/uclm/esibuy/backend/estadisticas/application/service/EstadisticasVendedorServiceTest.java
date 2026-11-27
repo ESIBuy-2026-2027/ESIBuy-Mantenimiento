@@ -77,9 +77,9 @@ class EstadisticasVendedorServiceTest {
         assertEquals(List.of(), estadisticas.productosSinStock());
         assertEquals(List.of("v-1"), ventas.consultas);
         assertEquals(List.of("v-1"), inventario.consultas);
-        assertEquals(60, estadisticas.evolucionVentas().size());
-        assertEquals(5, estadisticas.evolucionVentas().get(0).unidades());
-        assertEquals(2, estadisticas.evolucionVentas().get(59).unidades());
+        assertEquals(7, estadisticas.evolucionVentas().size());
+        assertEquals(0, estadisticas.evolucionVentas().get(0).unidades());
+        assertEquals(2, estadisticas.evolucionVentas().get(5).unidades());
         assertEquals("vendedor@esibuy.test", valoraciones.emailConsultado);
     }
 

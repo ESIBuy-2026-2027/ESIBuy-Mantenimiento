@@ -13,6 +13,14 @@ import { abrirSesionPorApi, renderApp } from '../test/renderApp'
 
 const CLIENTE = 'cliente@esibuy.test'
 
+const pasoDelEnvio = (descripcion) => {
+  const [etiqueta, estado] = descripcion.split(': ')
+  return within(screen.getByRole('list', { name: /pasos del envío/i }))
+    .getAllByRole('listitem')
+    .find((paso) => within(paso).queryByText(etiqueta, { exact: true })
+      && new RegExp(estado, 'i').test(paso.textContent))
+}
+
 async function abrirPedido(id) {
   await abrirSesionPorApi(CLIENTE)
   renderApp(`/orders/${id}`)
@@ -73,12 +81,14 @@ describe('OrderDetailPage (HU11): detalle', () => {
   it('HU11-CP15: un pedido entregado tiene los cuatro pasos completados y ninguno como actual', async () => {
     await abrirPedido('o-102')
 
-    await screen.findByRole('list', { name: /estado del envío/i })
-    expect(pasoDelEnvio('Enviado: completado')).toBeInTheDocument()
-    const enviado = pasoDelEnvio('Enviado: completado')
-    const entregado = pasoDelEnvio('Entregado: estado actual')
-    expect(entregado).toHaveAttribute('aria-current', 'step')
-    expect(entregado.className).toBe(enviado.className)
+    await screen.findByRole('list', { name: /pasos del envío/i })
+    const pasos = pasosDelEnvio()
+    expect(pasos).toHaveLength(4)
+    pasos.forEach((paso) => {
+      expect(paso).toHaveTextContent('Completado')
+      expect(paso).not.toHaveAttribute('aria-current')
+    })
+    expect(pasoDelEnvio('Entregado: completado')).toBeInTheDocument()
   })
 
   it('HU11-CP16: un pedido cancelado lo indica en lugar de la línea de estados del envío', async () => {

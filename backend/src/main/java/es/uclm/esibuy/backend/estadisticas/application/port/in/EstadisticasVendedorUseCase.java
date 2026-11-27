@@ -1,5 +1,7 @@
 package es.uclm.esibuy.backend.estadisticas.application.port.in;
 
+import java.time.ZoneId;
+
 import es.uclm.esibuy.backend.estadisticas.domain.model.EstadisticasVendedor;
 import es.uclm.esibuy.backend.estadisticas.domain.model.PeriodoEstadisticasVendedor;
 
@@ -8,4 +10,9 @@ public interface EstadisticasVendedorUseCase {
 
     /** Las estadísticas del vendedor con ese correo, que debe ser el de la sesión. */
     EstadisticasVendedor consultar(String emailVendedor, PeriodoEstadisticasVendedor periodo);
+
+    default EstadisticasVendedor consultar(String emailVendedor, PeriodoEstadisticasVendedor periodo,
+            ZoneId zonaHoraria) {
+        return consultar(emailVendedor, periodo);
+    }
 }

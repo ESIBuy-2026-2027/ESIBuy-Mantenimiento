@@ -3,6 +3,7 @@ package es.uclm.esibuy.backend.estadisticas.domain.model;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -10,7 +11,6 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 
@@ -41,11 +41,17 @@ public record EstadisticasVendedor(int pedidos, int unidadesVendidas, BigDecimal
                 .mapToDouble(v -> v.media() * v.numero()).sum() / total;
         return calcular(ventas, productos,
                 new ResumenValoracionesPeriodo(media, total, valoraciones, List.of()),
-                PeriodoEstadisticasVendedor.TODO_EL_PERIODO, LocalDate.now(ZoneOffset.UTC));
+                PeriodoEstadisticasVendedor.TODO_EL_PERIODO, LocalDate.now(ZoneOffset.UTC), ZoneOffset.UTC);
     }
 
     public static EstadisticasVendedor calcular(List<VentaRegistrada> ventas, List<ProductoInventariado> productos,
             ResumenValoracionesPeriodo resumenValoraciones, PeriodoEstadisticasVendedor periodo, LocalDate hoy) {
+        return calcular(ventas, productos, resumenValoraciones, periodo, hoy, ZoneOffset.UTC);
+    }
+
+    public static EstadisticasVendedor calcular(List<VentaRegistrada> ventas, List<ProductoInventariado> productos,
+            ResumenValoracionesPeriodo resumenValoraciones, PeriodoEstadisticasVendedor periodo, LocalDate hoy,
+            ZoneId zonaHoraria) {
         int pedidos = (int) ventas.stream().map(VentaRegistrada::pedidoId).distinct().count();
         int unidades = ventas.stream().mapToInt(VentaRegistrada::unidades).sum();
         BigDecimal ingresos = ventas.stream().map(VentaRegistrada::importe).reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -72,7 +78,7 @@ public record EstadisticasVendedor(int pedidos, int unidadesVendidas, BigDecimal
                 productos.size(), contar(productos, p -> p.stock() == 0),
                 contar(productos, p -> p.stock() > 0 && p.stock() <= UMBRAL_STOCK_BAJO),
                 contar(productos, p -> !p.disponible()), productosStockBajo, productosSinStock,
-                distribucionValoraciones(resumenValoraciones), evolucionVentas(ventas, hoy),
+                distribucionValoraciones(resumenValoraciones), evolucionVentas(ventas, hoy, zonaHoraria),
                 periodo.granularidad());
     }
 
@@ -179,29 +185,23 @@ public record EstadisticasVendedor(int pedidos, int unidadesVendidas, BigDecimal
         return List.copyOf(distribucion);
     }
 
-    private static List<EvolucionVentas> evolucionVentas(List<VentaRegistrada> ventas, LocalDate hoy) {
+    private static List<EvolucionVentas> evolucionVentas(List<VentaRegistrada> ventas, LocalDate hoy,
+            ZoneId zonaHoraria) {
         Map<LocalDate, AcumuladoDiario> acumulados = new HashMap<>();
         for (VentaRegistrada venta : ventas) {
             if (venta.fechaPedido() == null) {
                 continue;
             }
-            LocalDate fecha = venta.fechaPedido().atZone(ZoneOffset.UTC).toLocalDate();
+            LocalDate fecha = venta.fechaPedido().atZone(zonaHoraria).toLocalDate();
             acumulados.computeIfAbsent(fecha, ignorado -> new AcumuladoDiario()).agregar(venta);
         }
         return evolucionDiaria(acumulados, hoy);
     }
 
     private static List<EvolucionVentas> evolucionDiaria(Map<LocalDate, AcumuladoDiario> acumulados, LocalDate hoy) {
-        Optional<LocalDate> inicio = acumulados.keySet().stream().min(LocalDate::compareTo);
-        if (inicio.isEmpty()) {
-            return List.of();
-        }
-        LocalDate fin = acumulados.keySet().stream().max(LocalDate::compareTo).orElseThrow();
-        if (fin.isAfter(hoy)) {
-            fin = hoy;
-        }
         List<EvolucionVentas> evolucion = new ArrayList<>();
-        for (LocalDate fecha = inicio.get(); !fecha.isAfter(fin); fecha = fecha.plusDays(1)) {
+        for (int diasAtras = 6; diasAtras >= 0; diasAtras--) {
+            LocalDate fecha = hoy.minusDays(diasAtras);
             evolucion.add(aEvolucion(fecha, acumulados.getOrDefault(fecha, new AcumuladoDiario())));
         }
         return List.copyOf(evolucion);

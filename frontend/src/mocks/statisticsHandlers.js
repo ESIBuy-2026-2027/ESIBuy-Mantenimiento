@@ -55,6 +55,13 @@ const EVOLUCION_TODO_EL_PERIODO = Array.from({ length: diasHistoricos }, (_, ind
   const fecha = new Date(Date.UTC(fechaMock.getFullYear(), 0, indice + 1)).toISOString().slice(0, 10)
   return { fecha, ...(ventasPorDia.get(fecha) ?? { pedidos: 0, unidades: 0, ingresos: 0 }) }
 })
+const evolucionPorFecha = new Map(EVOLUCION_TODO_EL_PERIODO.map((punto) => [punto.fecha, punto]))
+const EVOLUCION_ULTIMOS_SIETE_DIAS = Array.from({ length: 7 }, (_, indice) => {
+  const fecha = new Date(fechaMock.getFullYear(), fechaMock.getMonth(), fechaMock.getDate() - 6 + indice)
+  const fechaISO = [fecha.getFullYear(), String(fecha.getMonth() + 1).padStart(2, '0'),
+    String(fecha.getDate()).padStart(2, '0')].join('-')
+  return evolucionPorFecha.get(fechaISO) ?? { fecha: fechaISO, pedidos: 0, unidades: 0, ingresos: 0 }
+})
 
 // Estadísticas fijas de los vendedores de ejemplo (HU17), con la forma que devuelve el backend (PR #212). Las de
 // Vera (u-2) usa productos del mock y su stock; Vicente (u-5) no tiene ventas, valoraciones ni productos.
@@ -184,7 +191,7 @@ export const statisticsHandlers = [
       ventas: {
         ...stats.ventas,
         granularidad: 'DIA',
-        evolucion: stats.ventas.evolucion,
+        evolucion: EVOLUCION_ULTIMOS_SIETE_DIAS,
       },
     })
   }),

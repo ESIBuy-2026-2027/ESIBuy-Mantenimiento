@@ -34,6 +34,7 @@ import es.uclm.esibuy.backend.estadisticas.domain.model.ValoracionProducto;
 import es.uclm.esibuy.backend.estadisticas.domain.model.ValoracionProductoVendedor;
 import es.uclm.esibuy.backend.estadisticas.domain.model.PuntuacionValoracion;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import es.uclm.esibuy.backend.shared.config.JacksonConfig;
 import es.uclm.esibuy.backend.shared.config.SecurityConfig;
 
@@ -56,7 +57,8 @@ class EstadisticasVendedorControllerTest {
     @Test
     @DisplayName("HU17-CP11: el vendedor recibe sus estadísticas de ventas, valoraciones y stock con el formato del contrato")
     void vendedorRecibeSusEstadisticas() throws Exception {
-        when(estadisticasVendedor.consultar(VENDEDOR, PeriodoEstadisticasVendedor.TODO_EL_PERIODO))
+        when(estadisticasVendedor.consultar(VENDEDOR, PeriodoEstadisticasVendedor.TODO_EL_PERIODO,
+                ZoneId.of("UTC")))
                 .thenReturn(new EstadisticasVendedor(3, 7,
                 new BigDecimal("155.50"),
                 List.of(new ProductoMasVendido("p-1", "Teclado", 5, new BigDecimal("120.00"))),
@@ -114,7 +116,8 @@ class EstadisticasVendedorControllerTest {
     @Test
     @DisplayName("HU17-CP11: sin valoraciones, la media llega vacía")
     void sinValoracionesLaMediaLlegaVacia() throws Exception {
-        when(estadisticasVendedor.consultar(VENDEDOR, PeriodoEstadisticasVendedor.TODO_EL_PERIODO))
+        when(estadisticasVendedor.consultar(VENDEDOR, PeriodoEstadisticasVendedor.TODO_EL_PERIODO,
+                ZoneId.of("UTC")))
                 .thenReturn(new EstadisticasVendedor(0, 0, BigDecimal.ZERO,
                 List.of(), List.of(), null, 0, List.of(), List.of(), List.of(),
                 0, 0, 0, 0, List.of(), List.of(),
@@ -139,7 +142,7 @@ class EstadisticasVendedorControllerTest {
         mockMvc.perform(get(URL))
                 .andExpect(status().isUnauthorized());
 
-        verify(estadisticasVendedor, never()).consultar(any(), any());
+        verify(estadisticasVendedor, never()).consultar(any(), any(), any());
     }
 
     @ParameterizedTest(name = "rol {0}")
@@ -149,13 +152,14 @@ class EstadisticasVendedorControllerTest {
         mockMvc.perform(get(URL).with(user("otro@esibuy.test").roles(rol)))
                 .andExpect(status().isForbidden());
 
-        verify(estadisticasVendedor, never()).consultar(any(), any());
+        verify(estadisticasVendedor, never()).consultar(any(), any(), any());
     }
 
     @Test
     @DisplayName("HU17-CP11: el vendedor puede solicitar todas las estadísticas históricas")
     void admiteSolicitarTodoElPeriodo() throws Exception {
-        when(estadisticasVendedor.consultar(VENDEDOR, PeriodoEstadisticasVendedor.TODO_EL_PERIODO))
+        when(estadisticasVendedor.consultar(VENDEDOR, PeriodoEstadisticasVendedor.TODO_EL_PERIODO,
+                ZoneId.of("UTC")))
                 .thenReturn(new EstadisticasVendedor(0, 0, BigDecimal.ZERO,
                         List.of(), List.of(), null, 0, List.of(), List.of(), List.of(),
                         0, 0, 0, 0, List.of(), List.of(),

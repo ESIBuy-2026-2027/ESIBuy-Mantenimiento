@@ -160,11 +160,13 @@ class EstadisticasVendedorTest {
                         producto("p-1", 10, true, null, 0), producto("p-2", 10, true, null, 0)),
                 resumen, PeriodoEstadisticasVendedor.TODO_EL_PERIODO, LocalDate.parse("2026-03-16"));
 
-        assertEquals(List.of(LocalDate.parse("2026-03-15")),
+        assertEquals(List.of(LocalDate.parse("2026-03-10"), LocalDate.parse("2026-03-11"),
+                LocalDate.parse("2026-03-12"), LocalDate.parse("2026-03-13"), LocalDate.parse("2026-03-14"),
+                LocalDate.parse("2026-03-15"), LocalDate.parse("2026-03-16")),
                 estadisticas.evolucionVentas().stream().map(EvolucionVentas::fecha).toList());
-        assertEquals(1, estadisticas.evolucionVentas().get(0).pedidos());
-        assertEquals(3, estadisticas.evolucionVentas().get(0).unidades());
-        assertEquals(new BigDecimal("30.00"), estadisticas.evolucionVentas().get(0).ingresos());
+        assertEquals(1, estadisticas.evolucionVentas().get(5).pedidos());
+        assertEquals(3, estadisticas.evolucionVentas().get(5).unidades());
+        assertEquals(new BigDecimal("30.00"), estadisticas.evolucionVentas().get(5).ingresos());
         assertEquals(List.of(0, 0, 0, 1, 1),
                 estadisticas.distribucionValoraciones().stream().map(PuntuacionValoracion::numero).toList());
         assertEquals(List.of(0.0, 0.0, 0.0, 50.0, 50.0),
@@ -184,10 +186,10 @@ class EstadisticasVendedorTest {
                 new ResumenValoracionesPeriodo(null, 0, List.of(), List.of()),
                 PeriodoEstadisticasVendedor.TODO_EL_PERIODO, LocalDate.parse("2026-03-16"));
 
-        assertEquals(60, estadisticas.evolucionVentas().size());
-        assertEquals(LocalDate.parse("2026-01-15"), estadisticas.evolucionVentas().get(0).fecha());
-        assertEquals(LocalDate.parse("2026-03-15"), estadisticas.evolucionVentas().get(59).fecha());
-        assertEquals(2, estadisticas.evolucionVentas().get(59).unidades());
+        assertEquals(7, estadisticas.evolucionVentas().size());
+        assertEquals(LocalDate.parse("2026-03-10"), estadisticas.evolucionVentas().get(0).fecha());
+        assertEquals(LocalDate.parse("2026-03-16"), estadisticas.evolucionVentas().get(6).fecha());
+        assertEquals(2, estadisticas.evolucionVentas().get(5).unidades());
         assertEquals(GranularidadVentas.DIA, estadisticas.granularidadVentas());
     }
 

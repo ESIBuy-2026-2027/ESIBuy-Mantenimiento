@@ -3,6 +3,7 @@ package es.uclm.esibuy.backend.estadisticas.application.service;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Optional;
 
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -37,15 +38,23 @@ public class EstadisticasVendedorService implements EstadisticasVendedorUseCase 
     @PreAuthorize(Permisos.SOLO_VENDEDOR_PROPIO)
     @Override
     public EstadisticasVendedor consultar(String emailVendedor, PeriodoEstadisticasVendedor periodo) {
+        return consultar(emailVendedor, periodo, clock.getZone());
+    }
+
+    @PreAuthorize(Permisos.SOLO_VENDEDOR_PROPIO)
+    @Override
+    public EstadisticasVendedor consultar(String emailVendedor, PeriodoEstadisticasVendedor periodo,
+            ZoneId zonaHoraria) {
         String vendedorId = vendedorEnSesion.idPorCorreo(emailVendedor);
-        LocalDate hoy = LocalDate.now(clock);
-        Instant hasta = hoy.plusDays(1).atStartOfDay(clock.getZone()).toInstant();
-        Optional<Instant> desde = periodo.desde(hoy, clock.getZone());
+        LocalDate hoy = LocalDate.now(clock.withZone(zonaHoraria));
+        Instant hasta = hoy.plusDays(1).atStartOfDay(zonaHoraria).toInstant();
+        Optional<Instant> desde = periodo.desde(hoy, zonaHoraria);
         return EstadisticasVendedor.calcular(
                 ventas.ventasDe(vendedorId, desde, hasta),
                 inventario.productosDe(vendedorId),
                 valoraciones.resumenDe(emailVendedor, desde, hasta),
                 periodo,
-                hoy);
+                hoy,
+                zonaHoraria);
     }
 }

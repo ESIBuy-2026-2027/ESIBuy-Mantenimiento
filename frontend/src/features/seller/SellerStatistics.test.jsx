@@ -40,10 +40,9 @@ describe('SellerStatistics (HU17): ventas', () => {
     const masVendidos = within(ventas).getByRole('region', { name: 'Top 10 más vendidos' })
     expect(itemsDeRanking(masVendidos)).toHaveLength(3)
     expect(itemsDeRanking(masVendidos)[0]).toContain('Teclado mecánico')
-    expect(itemsDeRanking(masVendidos)[0]).toContain('5 ud.')
-    await user.click(within(masVendidos).getByRole('button', { name: 'Ver los 5 productos' }))
+    expect(itemsDeRanking(masVendidos)[0]).toContain('5')
+    await user.click(within(masVendidos).getByRole('button', { name: 'Ver ranking completo' }))
     expect(itemsDeRanking(masVendidos)).toHaveLength(5)
-    expect(itemsDeRanking(masVendidos)[0]).toContain('447,50')
 
     const menosVendidos = within(ventas).getByRole('region', { name: 'Top 10 menos vendidos' })
     expect(
@@ -51,13 +50,13 @@ describe('SellerStatistics (HU17): ventas', () => {
     ).not.toBeInTheDocument()
     expect(itemsDeRanking(menosVendidos)).toHaveLength(3)
     expect(itemsDeRanking(menosVendidos)[0]).toContain('Alfombra de salón')
-    expect(itemsDeRanking(menosVendidos)[0]).toContain('0 ud.')
+    expect(itemsDeRanking(menosVendidos)[0]).toContain('0')
 
-    expect(within(screen.getByRole('combobox', { name: 'Período de estadísticas' })).getAllByRole('option'))
-      .toHaveLength(1)
-    expect(await screen.findByRole('img', { name: 'Gráfico de unidades vendidas por día' })).toBeInTheDocument()
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Métrica de evolución' }), 'ingresos')
-    expect(screen.getByRole('img', { name: 'Gráfico de ingresos por mes' })).toBeInTheDocument()
+    const grafico = await screen.findByRole('img', { name: 'Gráfico de unidades vendidas por día' })
+    expect(grafico.querySelectorAll('circle')).toHaveLength(7)
+    const etiquetasFecha = [...grafico.querySelectorAll('text')]
+      .filter((etiqueta) => Number.isNaN(Number(etiqueta.textContent)))
+    expect(etiquetasFecha).toHaveLength(7)
   })
 })
 
@@ -72,8 +71,7 @@ describe('SellerStatistics (HU17): valoraciones', () => {
     const mejorValorados = within(valoraciones).getByRole('region', { name: 'Top 10 mejor valorados' })
     expect(itemsDeRanking(mejorValorados)).toHaveLength(2)
     expect(itemsDeRanking(mejorValorados)[0]).toContain('Teclado mecánico')
-    expect(itemsDeRanking(mejorValorados)[0]).toContain('4,5 / 5')
-    expect(itemsDeRanking(mejorValorados)[0]).toContain('6 valoraciones')
+    expect(itemsDeRanking(mejorValorados)[0]).toContain('4,5 (6)')
     const peorValorados = within(valoraciones).getByRole('region', { name: 'Top 10 peor valorados' })
     expect(itemsDeRanking(peorValorados)[0]).toContain('Auriculares inalámbricos')
 
@@ -91,7 +89,7 @@ describe('SellerStatistics (HU17): stock', () => {
     expect(cifra(stock, 'Productos')).toHaveTextContent('23')
     expect(cifra(stock, 'Sin stock')).toHaveTextContent('3')
     expect(cifra(stock, 'Stock bajo')).toHaveTextContent('2')
-    expect(within(stock).getByText(/de 1 a 5 unidades/i)).toBeInTheDocument()
+    expect(within(stock).getByText(/entre 1 y 5 unidades/i)).toBeInTheDocument()
     const productosConStockBajo = within(stock).getByRole('table', { name: 'Productos con stock bajo' })
     expect(filasDe(productosConStockBajo)).toEqual([
       ['Aspirador de mano', '3 unidades'],

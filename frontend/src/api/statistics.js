@@ -115,8 +115,11 @@ function respuestaDeEstadisticasValida(data) {
 // deduce de la sesión, así que no se envía ningún identificador. Cada ranking contiene hasta 10 productos;
 // `menosVendidos` también incluye los productos sin ventas y los rankings de valoración solo los valorados.
 // `stock` incluye el detalle de los productos con stock bajo y sin stock.
-export function getSellerStatistics(periodo = 'TODO_EL_PERIODO') {
-  const query = new URLSearchParams({ periodo })
+export function getSellerStatistics(
+  periodo = 'TODO_EL_PERIODO',
+  zonaHoraria = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+) {
+  const query = new URLSearchParams({ periodo, zonaHoraria })
   return request(`/api/seller/statistics?${query}`).then((data) => {
     if (!respuestaDeEstadisticasValida(data)) {
       throw new TypeError('El endpoint de estadísticas devolvió una respuesta con un formato inválido.')

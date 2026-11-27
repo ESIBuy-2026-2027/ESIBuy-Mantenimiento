@@ -112,9 +112,10 @@ const useStyles = makeStyles({
     gap: tokens.spacingVerticalM,
     padding: tokens.spacingVerticalL,
     border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderTop: `3px solid ${ACCENT_AMBER}`,
     borderRadius: tokens.borderRadiusXLarge,
     backgroundColor: tokens.colorNeutralBackground1,
-    boxShadow: tokens.shadow4,
+    boxShadow: tokens.shadow8,
     height: '100%',
     boxSizing: 'border-box',
   },
@@ -136,9 +137,16 @@ const useStyles = makeStyles({
     minWidth: 0,
     padding: tokens.spacingVerticalL,
     border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderTop: `3px solid ${ACCENT_ORANGE}`,
     borderRadius: tokens.borderRadiusXLarge,
     backgroundColor: tokens.colorNeutralBackground1,
-    boxShadow: tokens.shadow4,
+    boxShadow: tokens.shadow8,
+    transitionProperty: 'transform, box-shadow',
+    transitionDuration: tokens.durationNormal,
+    ':hover': {
+      transform: 'translateY(-2px)',
+      boxShadow: tokens.shadow16,
+    },
   },
   kpiIcon: {
     width: '42px',
@@ -178,8 +186,8 @@ const useStyles = makeStyles({
     padding: tokens.spacingVerticalL,
     border: `1px solid ${tokens.colorNeutralStroke2}`,
     borderRadius: tokens.borderRadiusXLarge,
-    backgroundColor: tokens.colorNeutralBackground1,
-    boxShadow: tokens.shadow4,
+    backgroundImage: 'linear-gradient(145deg, #FFFFFF 72%, #FFF8F1 100%)',
+    boxShadow: tokens.shadow8,
   },
   chartHeader: {
     display: 'flex',
@@ -481,15 +489,12 @@ function SalesTrendChart({ items }) {
   const area = coords.length > 0
     ? `${linea} L ${coords.at(-1).x} ${margenSuperior + altoGrafico} L ${coords[0].x} ${margenSuperior + altoGrafico} Z`
     : ''
-  const puntosConDatos = valores.some((valor) => valor > 0)
+  const puntosConDatos = items.length > 0
   const fecha = (valor) => new Date(`${valor}T00:00:00`).toLocaleDateString('es-ES', {
     day: 'numeric',
     month: 'short',
   })
-  const indicesFecha = items.length <= 5
-    ? items.map((_, indice) => indice)
-    : [...new Set([0, Math.round((items.length - 1) / 4), Math.round((items.length - 1) / 2),
-      Math.round(((items.length - 1) * 3) / 4), items.length - 1])]
+  const indicesFecha = items.map((_, indice) => indice)
 
   return (
     <div className={styles.chartCard} role="region" aria-label="Evolución de ventas">
@@ -871,7 +876,7 @@ export default function SellerStatistics() {
   return (
     <main className={styles.page}>
       <div className={pageStyles.titleBlock}>
-        <Title1 as="h1" id={titleId} className={pageStyles.title}>Estadísticas del vendedor</Title1>
+        <Title1 as="h1" id={titleId} className={pageStyles.title}>Mis estadísticas</Title1>
         <Text className={pageStyles.subtitle}>Analiza el rendimiento de tus productos, ventas y valoraciones.</Text>
       </div>
 
@@ -890,11 +895,13 @@ export default function SellerStatistics() {
 
           {estadisticasActuales && (
             <>
-              <SummaryBlock
-                ventas={estadisticasActuales.ventas}
-                media={mediaGeneral}
-                totalValoraciones={estadisticasActuales.valoraciones.total}
-              />
+              <section role="region" aria-label="Panel de rendimiento">
+                <SummaryBlock
+                  ventas={estadisticasActuales.ventas}
+                  media={mediaGeneral}
+                  totalValoraciones={estadisticasActuales.valoraciones.total}
+                />
+              </section>
               <div className={styles.chartGrid}>
                 <SalesTrendChart
                   items={estadisticasActuales.ventas.evolucion}

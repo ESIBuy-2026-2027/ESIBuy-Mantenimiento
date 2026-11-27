@@ -1,5 +1,9 @@
 package es.uclm.esibuy.backend.estadisticas.infrastructure.adapter.in.web;
 
+import java.time.DateTimeException;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,8 +30,17 @@ public class EstadisticasVendedorController {
     // El vendedor sale de la sesión, nunca de un parámetro
     @GetMapping("/seller/statistics")
     public EstadisticasVendedorResponse consultar(Authentication autenticado,
-            @RequestParam(defaultValue = "TODO_EL_PERIODO") PeriodoEstadisticasVendedor periodo) {
+            @RequestParam(defaultValue = "TODO_EL_PERIODO") PeriodoEstadisticasVendedor periodo,
+            @RequestParam(defaultValue = "UTC") String zonaHoraria) {
         return EstadisticasVendedorResponse.desde(
-                estadisticasVendedor.consultar(autenticado.getName(), periodo), periodo);
+                estadisticasVendedor.consultar(autenticado.getName(), periodo, zonaValida(zonaHoraria)), periodo);
+    }
+
+    private static ZoneId zonaValida(String zonaHoraria) {
+        try {
+            return ZoneId.of(zonaHoraria);
+        } catch (DateTimeException excepcion) {
+            return ZoneOffset.UTC;
+        }
     }
 }
