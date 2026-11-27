@@ -1,5 +1,6 @@
 package es.uclm.esibuy.backend.pedidos.application.port.out;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,6 +21,14 @@ public interface PedidoRepositoryPort {
     Optional<Pedido> buscarPorId(String id);
 
     List<Pedido> buscarPorVendedor(String vendedorId);
+
+    default List<Pedido> buscarPorVendedor(String vendedorId, Instant desde, Instant hasta) {
+        return buscarPorVendedor(vendedorId).stream()
+                .filter(pedido -> pedido.getCreatedAt() != null
+                        && !pedido.getCreatedAt().isBefore(desde)
+                        && pedido.getCreatedAt().isBefore(hasta))
+                .toList();
+    }
 
     List<Pedido> buscarTodos();
 }

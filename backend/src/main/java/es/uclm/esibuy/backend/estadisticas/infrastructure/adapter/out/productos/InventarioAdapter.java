@@ -18,8 +18,9 @@ public class InventarioAdapter implements InventarioPort {
     @Override
     public List<ProductoInventariado> productosDe(String vendedorId) {
         return inventarioVendedor.productosDe(vendedorId).stream()
-                .map(producto -> new ProductoInventariado(producto.id(), producto.nombre(), producto.stock(),
-                        producto.disponible(), producto.valoracionMedia(), producto.numeroValoraciones()))
+                .map(producto -> new ProductoInventariado(producto.id(), producto.nombre(), producto.imagen(),
+                        producto.stock(), producto.disponible(), producto.valoracionMedia(),
+                        producto.numeroValoraciones()))
                 .toList();
     }
 }

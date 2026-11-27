@@ -1,5 +1,6 @@
 package es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.persistence;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,6 +44,14 @@ public class PedidoMongoAdapter implements PedidoRepositoryPort {
     public List<Pedido> buscarPorVendedor(String vendedorId) {
         return repository.findByVendedorIdOrderByCreatedAtDesc(vendedorId).stream()
                 .map(mapper::aDominio).toList();
+    }
+
+    @Override
+    public List<Pedido> buscarPorVendedor(String vendedorId, Instant desde, Instant hasta) {
+        return repository
+                .findByVendedorIdAndCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByCreatedAtDesc(
+                        vendedorId, desde, hasta)
+                .stream().map(mapper::aDominio).toList();
     }
 
     @Override

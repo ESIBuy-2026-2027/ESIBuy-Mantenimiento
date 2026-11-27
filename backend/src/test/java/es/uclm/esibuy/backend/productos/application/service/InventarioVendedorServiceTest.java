@@ -31,14 +31,14 @@ class InventarioVendedorServiceTest {
     @DisplayName("HU17-CP08: el inventario del vendedor da el stock, la disponibilidad y las valoraciones de cada producto")
     void elInventarioDaStockDisponibilidadYValoraciones() {
         when(productoRepository.listarTodosPorVendedor("v-1")).thenReturn(List.of(
-                producto("p-1", "Teclado", 3, true, 4.5, 2),
-                producto("p-2", "Ratón", 0, false, null, 0)));
+                producto("p-1", "Teclado", "https://esibuy.test/p-1.png", 3, true, 4.5, 2),
+                producto("p-2", "Ratón", "", 0, false, null, 0)));
 
         List<ProductoInventario> inventario = new InventarioVendedorService(productoRepository).productosDe("v-1");
 
         assertEquals(List.of(
-                new ProductoInventario("p-1", "Teclado", 3, true, 4.5, 2),
-                new ProductoInventario("p-2", "Ratón", 0, false, null, 0)), inventario);
+                new ProductoInventario("p-1", "Teclado", "https://esibuy.test/p-1.png", 3, true, 4.5, 2),
+                new ProductoInventario("p-2", "Ratón", "", 0, false, null, 0)), inventario);
     }
 
     @Test
@@ -49,8 +49,8 @@ class InventarioVendedorServiceTest {
         assertEquals(List.of(), new InventarioVendedorService(productoRepository).productosDe("v-1"));
     }
 
-    private static Producto producto(String id, String nombre, int stock, boolean disponible, Double media,
-            int numeroValoraciones) {
+    private static Producto producto(String id, String nombre, String imagen, int stock, boolean disponible,
+            Double media, int numeroValoraciones) {
         DatosProducto datos = new DatosProducto(
                 new DatosProducto.DatosBasicos(
                         "v-1",
@@ -59,7 +59,7 @@ class InventarioVendedorServiceTest {
                         new BigDecimal("10"),
                         stock,
                         "cat-1",
-                        ""),
+                        imagen),
                 new DatosProducto.Configuracion(
                         disponible,
                         Descuento.sinDescuento(),

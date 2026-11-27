@@ -1,10 +1,18 @@
 package es.uclm.esibuy.backend.estadisticas.application.port.in;
 
+import java.time.ZoneId;
+
 import es.uclm.esibuy.backend.estadisticas.domain.model.EstadisticasVendedor;
+import es.uclm.esibuy.backend.estadisticas.domain.model.PeriodoEstadisticasVendedor;
 
 /** Consulta de las estadísticas de ventas, valoraciones y stock del vendedor en sesión (HU17). */
 public interface EstadisticasVendedorUseCase {
 
     /** Las estadísticas del vendedor con ese correo, que debe ser el de la sesión. */
-    EstadisticasVendedor consultar(String emailVendedor);
+    EstadisticasVendedor consultar(String emailVendedor, PeriodoEstadisticasVendedor periodo);
+
+    default EstadisticasVendedor consultar(String emailVendedor, PeriodoEstadisticasVendedor periodo,
+            ZoneId zonaHoraria) {
+        return consultar(emailVendedor, periodo);
+    }
 }

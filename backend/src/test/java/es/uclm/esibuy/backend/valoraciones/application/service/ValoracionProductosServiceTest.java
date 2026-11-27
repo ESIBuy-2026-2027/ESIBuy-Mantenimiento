@@ -13,10 +13,12 @@ import es.uclm.esibuy.backend.valoraciones.application.port.out.ValoracionReposi
 import es.uclm.esibuy.backend.valoraciones.domain.exception.ProductoNoCompradoException;
 import es.uclm.esibuy.backend.valoraciones.domain.exception.ValoracionDuplicadaException;
 import es.uclm.esibuy.backend.valoraciones.domain.model.Valoracion;
+import es.uclm.esibuy.backend.valoraciones.domain.model.PuntuacionAgregadaProducto;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.time.Instant;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -130,6 +132,17 @@ class ValoracionProductosServiceTest {
         @Override
         public List<Valoracion> buscarPorProducto(String productoId) {
             return guardadas.stream().filter(v -> v.productoId().equals(productoId)).toList();
+        }
+
+        @Override
+        public List<PuntuacionAgregadaProducto> resumirPorProductos(List<String> productoIds, Instant desde,
+                Instant hasta) {
+            throw new UnsupportedOperationException("Crear valoraciones no consulta rankings");
+        }
+
+        @Override
+        public List<PuntuacionAgregadaProducto> resumirPorProductos(List<String> productoIds) {
+            throw new UnsupportedOperationException("Crear valoraciones no consulta rankings");
         }
 
         @Override

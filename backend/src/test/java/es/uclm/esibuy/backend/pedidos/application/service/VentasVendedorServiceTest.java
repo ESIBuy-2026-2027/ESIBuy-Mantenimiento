@@ -38,8 +38,10 @@ class VentasVendedorServiceTest {
         List<VentaProducto> ventas = servicio.ventasDe("u-2");
 
         assertEquals(List.of(
-                new VentaProducto("o-1", "p-1", "Auriculares", 2, new BigDecimal("40.00")),
-                new VentaProducto("o-1", "p-2", "Teclado", 1, new BigDecimal("89.50"))), ventas);
+                new VentaProducto("o-1", "p-1", "Auriculares", 2, new BigDecimal("40.00"),
+                        Instant.parse("2026-10-29T10:00:00Z")),
+                new VentaProducto("o-1", "p-2", "Teclado", 1, new BigDecimal("89.50"),
+                        Instant.parse("2026-10-29T10:00:00Z"))), ventas);
         assertEquals(List.of("u-2"), pedidos.consultas);
     }
 
@@ -65,7 +67,25 @@ class VentasVendedorServiceTest {
         assertEquals(List.of(), servicio.ventasDe("u-sin-pedidos"));
     }
 
+    @Test
+    @DisplayName("HU17-CP06: las ventas del período incluyen el límite inicial y excluyen el final")
+    void ventasDelPeriodoRespetanElIntervalo() {
+        Instant desde = Instant.parse("2026-10-29T10:00:00Z");
+        Instant hasta = Instant.parse("2026-10-29T10:00:01Z");
+        LineaPedido linea = new LineaPedido("p-1", "u-2", "Auriculares", 1, new BigDecimal("10.00"));
+        pedidos.delVendedor.put("u-2", List.of(
+                pedido("o-1", EstadoPedido.PAGADO, desde, linea),
+                pedido("o-2", EstadoPedido.PAGADO, hasta, linea)));
+
+        assertEquals(List.of(new VentaProducto("o-1", "p-1", "Auriculares", 1, new BigDecimal("10.00"), desde)),
+                servicio.ventasDe("u-2", desde, hasta));
+    }
+
     private static Pedido pedido(String id, EstadoPedido estado, LineaPedido... lineas) {
+        return pedido(id, estado, Instant.parse("2026-10-29T10:00:00Z"), lineas);
+    }
+
+    private static Pedido pedido(String id, EstadoPedido estado, Instant createdAt, LineaPedido... lineas) {
         DatosPedido datosPedido = new DatosPedido(
                 id,
                 new NumeroPedido("ESB-2026-000001"),
@@ -83,7 +103,7 @@ class VentasVendedorServiceTest {
                         "Ciudad Real",
                         "611222333"),
                 "mp-1",
-                Instant.parse("2026-10-29T10:00:00Z"));
+                createdAt);
 
         return new Pedido(datosPedido);
     }

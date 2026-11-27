@@ -9,12 +9,13 @@ import { abrirSesionPorApi, renderApp } from '../../test/renderApp'
 // productos; Vicente (vendedor-vacio@esibuy.test) no tiene ventas, valoraciones ni productos.
 async function abrirEstadisticas(email) {
   await abrirSesionPorApi(email)
-  renderApp('/profile')
-  return screen.findByRole('region', { name: 'Mis estadísticas' })
+  renderApp('/seller/statistics')
+  await screen.findByRole('heading', { name: 'Mis estadísticas' })
+  return screen.getByRole('main')
 }
 
 const cifra = (bloque, nombre) =>
-  within(bloque).getAllByText(nombre).find((element) => element.tagName === 'DT').closest('dl')
+  within(bloque).getAllByText(nombre, { exact: true }).find((element) => element.tagName === 'DT').parentElement
 
 const filasDe = (tabla) =>
   within(tabla)
@@ -22,45 +23,61 @@ const filasDe = (tabla) =>
     .slice(1)
     .map((fila) => within(fila).getAllByRole('cell').map((celda) => celda.textContent))
 
+const itemsDeRanking = (ranking) => within(ranking).getAllByRole('listitem').map((item) => item.textContent)
 describe('SellerStatistics (HU17): ventas', () => {
-  it('HU17-CP14: el vendedor ve sus pedidos, unidades e ingresos y los más vendidos en orden', async () => {
+  it('HU17-CP14: muestra las ventas resumidas y los rankings más y menos vendidos', async () => {
+    const user = userEvent.setup()
     await abrirEstadisticas('vendedor@esibuy.test')
 
-    const resumen = await screen.findByRole('region', { name: 'Resumen' })
+    const resumen = await screen.findByRole('region', { name: 'Panel de rendimiento' })
     expect(cifra(resumen, 'Pedidos')).toHaveTextContent('6')
     expect(cifra(resumen, 'Unidades vendidas')).toHaveTextContent('16')
     expect(cifra(resumen, 'Ingresos')).toHaveTextContent('1095,83')
+    expect(cifra(resumen, 'Valoración media')).toHaveTextContent('4,4 de 5')
 
     const ventas = await screen.findByRole('region', { name: 'Ventas' })
 
-    const masVendidos = within(ventas).getByRole('table', { name: 'Los más vendidos' })
-    const filas = filasDe(masVendidos)
-    expect(filas.map(([producto, unidades]) => [producto, unidades])).toEqual([
-      ['Teclado mecánico', '5'],
-      ['Auriculares inalámbricos', '4'],
-      ['Cargador USB-C 65 W', '3'],
-      ['Memoria USB 128 GB', '2'],
-      ['Monitor 27 pulgadas', '1'],
-    ])
-    expect(filas[0][2]).toMatch(/^447,50\s€$/)
+    const masVendidos = within(ventas).getByRole('region', { name: 'Top 10 más vendidos' })
+    expect(itemsDeRanking(masVendidos)).toHaveLength(3)
+    expect(itemsDeRanking(masVendidos)[0]).toContain('Teclado mecánico')
+    expect(itemsDeRanking(masVendidos)[0]).toContain('5')
+    await user.click(within(masVendidos).getByRole('button', { name: 'Ver ranking completo' }))
+    expect(itemsDeRanking(masVendidos)).toHaveLength(5)
+
+    const menosVendidos = within(ventas).getByRole('region', { name: 'Top 10 menos vendidos' })
+    expect(
+      within(ventas).queryByRole('region', { name: 'Gráfico de barras: Barras — Top 10 menos vendidos' }),
+    ).not.toBeInTheDocument()
+    expect(itemsDeRanking(menosVendidos)).toHaveLength(3)
+    expect(itemsDeRanking(menosVendidos)[0]).toContain('Alfombra de salón')
+    expect(itemsDeRanking(menosVendidos)[0]).toContain('0')
+
+    const grafico = await screen.findByRole('img', { name: 'Gráfico de unidades vendidas por día' })
+    expect(grafico.querySelectorAll('circle')).toHaveLength(7)
+    const etiquetasFecha = [...grafico.querySelectorAll('text')]
+      .filter((etiqueta) => Number.isNaN(Number(etiqueta.textContent)))
+    expect(etiquetasFecha).toHaveLength(7)
   })
 })
 
 describe('SellerStatistics (HU17): valoraciones', () => {
-  it('HU17-CP15: el vendedor ve la media global, el total y la valoración de cada producto, del mejor al peor', async () => {
+  it('HU17-CP15: muestra los productos valorados del mejor al peor y la media global', async () => {
     await abrirEstadisticas('vendedor@esibuy.test')
 
-    const resumen = await screen.findByRole('region', { name: 'Resumen' })
+    const resumen = await screen.findByRole('region', { name: 'Panel de rendimiento' })
     expect(cifra(resumen, 'Valoración media')).toHaveTextContent('4,4 de 5')
 
     const valoraciones = await screen.findByRole('region', { name: 'Valoraciones' })
-    expect(cifra(valoraciones, 'Valoraciones recibidas')).toHaveTextContent('8')
+    const mejorValorados = within(valoraciones).getByRole('region', { name: 'Top 10 mejor valorados' })
+    expect(itemsDeRanking(mejorValorados)).toHaveLength(2)
+    expect(itemsDeRanking(mejorValorados)[0]).toContain('Teclado mecánico')
+    expect(itemsDeRanking(mejorValorados)[0]).toContain('4,5 (6)')
+    const peorValorados = within(valoraciones).getByRole('region', { name: 'Top 10 peor valorados' })
+    expect(itemsDeRanking(peorValorados)[0]).toContain('Auriculares inalámbricos')
 
-    const porProducto = within(valoraciones).getByRole('table', { name: 'Valoración por producto' })
-    expect(filasDe(porProducto)).toEqual([
-      ['Teclado mecánico', '4,5', '6'],
-      ['Auriculares inalámbricos', '4,0', '2'],
-    ])
+    const distribucion = screen.getByRole('region', { name: 'Distribución de valoraciones' })
+    expect(within(distribucion).getAllByRole('progressbar')).toHaveLength(5)
+    expect(within(distribucion).getByText('8 valoraciones en total')).toBeInTheDocument()
   })
 })
 
@@ -72,7 +89,7 @@ describe('SellerStatistics (HU17): stock', () => {
     expect(cifra(stock, 'Productos')).toHaveTextContent('23')
     expect(cifra(stock, 'Sin stock')).toHaveTextContent('3')
     expect(cifra(stock, 'Stock bajo')).toHaveTextContent('2')
-    expect(within(stock).getByText(/de 1 a 5 unidades/i)).toBeInTheDocument()
+    expect(within(stock).getByText(/entre 1 y 5 unidades/i)).toBeInTheDocument()
     const productosConStockBajo = within(stock).getByRole('table', { name: 'Productos con stock bajo' })
     expect(filasDe(productosConStockBajo)).toEqual([
       ['Aspirador de mano', '3 unidades'],
@@ -93,18 +110,21 @@ describe('SellerStatistics (HU17): sin datos', () => {
     await abrirEstadisticas('vendedor-vacio@esibuy.test')
 
     const ventas = await screen.findByRole('region', { name: 'Ventas' })
-    expect(within(ventas).getByText(/aún no tienes ventas/i)).toBeInTheDocument()
-    expect(within(ventas).queryByRole('table')).not.toBeInTheDocument()
+    expect(within(ventas).getByText(/aún no hay productos vendidos/i)).toBeInTheDocument()
+    expect(within(ventas).getByText(/aún no hay productos en tu inventario/i)).toBeInTheDocument()
+    expect(within(ventas).queryByRole('listitem')).not.toBeInTheDocument()
 
-    const resumen = screen.getByRole('region', { name: 'Resumen' })
+    const resumen = screen.getByRole('region', { name: 'Panel de rendimiento' })
     expect(cifra(resumen, 'Pedidos')).toHaveTextContent('0')
     expect(cifra(resumen, 'Unidades vendidas')).toHaveTextContent('0')
     expect(cifra(resumen, 'Ingresos')).toHaveTextContent('0,00')
     expect(cifra(resumen, 'Valoración media')).toHaveTextContent('Sin valoraciones')
 
     const valoraciones = screen.getByRole('region', { name: 'Valoraciones' })
-    expect(within(valoraciones).getByText(/aún no tienes valoraciones/i)).toBeInTheDocument()
-    expect(within(valoraciones).queryByRole('table')).not.toBeInTheDocument()
+    expect(within(valoraciones).getAllByText(/aún no hay productos valorados/i)).toHaveLength(2)
+    expect(within(valoraciones).queryByRole('listitem')).not.toBeInTheDocument()
+    expect(within(screen.getByRole('region', { name: 'Distribución de valoraciones' }))
+      .getByText('Sin valoraciones en este período')).toBeInTheDocument()
 
     const stock = screen.getByRole('region', { name: 'Stock' })
     expect(cifra(stock, 'Productos')).toHaveTextContent('0')
@@ -123,10 +143,10 @@ describe('SellerStatistics (HU17): acceso', () => {
       }),
     )
     await abrirSesionPorApi('cliente@esibuy.test')
-    renderApp('/profile')
+    renderApp('/seller/statistics')
 
-    await screen.findByLabelText('Nombre')
-    expect(screen.queryByRole('region', { name: 'Mis estadísticas' })).not.toBeInTheDocument()
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent('/products'))
+    expect(screen.queryByRole('heading', { name: 'Mis estadísticas' })).not.toBeInTheDocument()
     expect(pedidas).toBe(false)
   })
 })
@@ -144,7 +164,7 @@ describe('SellerStatistics (HU17): errores', () => {
     const aviso = await within(seccion).findByText(/no se han podido cargar tus estadísticas/i)
     expect(aviso).toBeInTheDocument()
     expect(screen.queryByText(/mongotimeout/i)).not.toBeInTheDocument()
-    expect(screen.getByLabelText('Nombre')).toHaveValue('Vera')
+    expect(within(seccion).getByRole('heading', { name: 'Mis estadísticas' })).toBeInTheDocument()
 
     let respuestaIncompatibleRecibida = false
     server.use(
@@ -172,11 +192,11 @@ describe('SellerStatistics (HU17): errores', () => {
     await waitFor(() => {
       expect(within(seccion).getByText(/no se han podido cargar tus estadísticas/i)).toBeInTheDocument()
       expect(screen.queryByRole('heading', { name: 'Unexpected Application Error!' })).not.toBeInTheDocument()
-      expect(screen.getByLabelText('Nombre')).toHaveValue('Vera')
+      expect(within(seccion).getByRole('heading', { name: 'Mis estadísticas' })).toBeInTheDocument()
     })
 
     await user.click(within(seccion).getByRole('button', { name: /reintentar/i }))
-    const resumen = await screen.findByRole('region', { name: 'Resumen' })
+    const resumen = await screen.findByRole('region', { name: 'Panel de rendimiento' })
     expect(cifra(resumen, 'Pedidos')).toHaveTextContent('6')
     expect(within(seccion).queryByText(/no se han podido cargar/i)).not.toBeInTheDocument()
   })
@@ -192,8 +212,28 @@ describe('SellerStatistics (HU17): carga', () => {
       http.get('/api/seller/statistics', async () => {
         await respuesta
         return HttpResponse.json({
-          ventas: { pedidos: 0, unidadesVendidas: 0, ingresos: 0, masVendidos: [] },
-          valoraciones: { media: null, total: 0, porProducto: [] },
+          periodo: 'TODO_EL_PERIODO',
+          ventas: {
+            pedidos: 0,
+            unidadesVendidas: 0,
+            ingresos: 0,
+            masVendidos: [],
+            menosVendidos: [],
+            granularidad: 'DIA',
+            evolucion: [],
+          },
+          valoraciones: {
+            media: null,
+            total: 0,
+            porProducto: [],
+            mejorValorados: [],
+            peorValorados: [],
+            distribucion: [1, 2, 3, 4, 5].map((puntuacion) => ({
+              puntuacion,
+              numero: 0,
+              porcentaje: 0,
+            })),
+          },
           stock: {
             productos: 0,
             sinStock: 0,

@@ -4,7 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -32,5 +34,19 @@ class VentasAdapterTest {
 
         assertEquals(List.of(new VentaRegistrada("o-1", "p-1", "Teclado", 2, new BigDecimal("40.00"))),
                 new VentasAdapter(ventasVendedor).ventasDe("v-1"));
+    }
+
+    @Test
+    @DisplayName("HU17-CP13: el período de ventas se consulta en pedidos y conserva la fecha de cada venta")
+    void lasVentasEnPeriodoConservanLaFecha() {
+        Instant desde = Instant.parse("2026-03-01T00:00:00Z");
+        Instant hasta = Instant.parse("2026-03-17T00:00:00Z");
+        Instant fechaVenta = Instant.parse("2026-03-10T10:00:00Z");
+        when(ventasVendedor.ventasDe("v-1", desde, hasta)).thenReturn(List.of(
+                new VentaProducto("o-1", "p-1", "Teclado", 2, new BigDecimal("40.00"), fechaVenta)));
+
+        assertEquals(List.of(new VentaRegistrada("o-1", "p-1", "Teclado", 2,
+                        new BigDecimal("40.00"), fechaVenta)),
+                new VentasAdapter(ventasVendedor).ventasDe("v-1", Optional.of(desde), hasta));
     }
 }

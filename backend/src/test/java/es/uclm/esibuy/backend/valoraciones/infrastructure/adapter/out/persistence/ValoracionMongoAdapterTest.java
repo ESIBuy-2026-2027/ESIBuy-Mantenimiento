@@ -11,7 +11,10 @@ import es.uclm.esibuy.backend.MongoTestcontainersConfig;
 import es.uclm.esibuy.backend.shared.config.MongoConfig;
 import es.uclm.esibuy.backend.shared.infrastructure.config.InicializadorColecciones;
 import es.uclm.esibuy.backend.valoraciones.domain.exception.ValoracionDuplicadaException;
+import es.uclm.esibuy.backend.valoraciones.domain.model.PuntuacionAgregadaProducto;
 import es.uclm.esibuy.backend.valoraciones.domain.model.Valoracion;
+import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import org.bson.Document;
@@ -43,6 +46,10 @@ class ValoracionMongoAdapterTest {
 
     private Valoracion nueva(String productoId, String clienteId, int puntuacion, String comentario) {
         return Valoracion.nueva(productoId, clienteId, "Ana Pérez", puntuacion, comentario);
+    }
+
+    private Valoracion nueva(String productoId, String clienteId, int puntuacion, Instant fecha) {
+        return new Valoracion(null, productoId, clienteId, "Ana Pérez", puntuacion, "", fecha);
     }
 
     @Test
@@ -103,6 +110,28 @@ class ValoracionMongoAdapterTest {
         assertTrue(adapter.existePorClienteYProducto("u-1", "p-1"));
         assertFalse(adapter.existePorClienteYProducto("u-1", "p-2"));
         assertFalse(adapter.existePorClienteYProducto("u-2", "p-1"));
+    }
+
+    @Test
+    @DisplayName("HU17-CP03: resume valoraciones por producto y puntuación dentro del período")
+    void resumeValoracionesPorProductoYPeriodo() {
+        adapter.guardar(nueva("p-1", "u-1", 5, Instant.parse("2026-03-10T10:00:00Z")));
+        adapter.guardar(nueva("p-1", "u-2", 4, Instant.parse("2026-02-20T10:00:00Z")));
+        adapter.guardar(nueva("p-2", "u-3", 2, Instant.parse("2026-03-15T10:00:00Z")));
+
+        List<PuntuacionAgregadaProducto> resumen = adapter
+                .resumirPorProductos(List.of("p-1", "p-2"), Instant.parse("2026-03-01T00:00:00Z"),
+                        Instant.parse("2026-03-17T00:00:00Z"))
+                .stream()
+                .sorted(Comparator.comparing(PuntuacionAgregadaProducto::productoId)
+                        .thenComparingInt(PuntuacionAgregadaProducto::puntuacion))
+                .toList();
+
+        assertEquals(List.of(
+                new PuntuacionAgregadaProducto("p-1", 5, 1),
+                new PuntuacionAgregadaProducto("p-2", 2, 1)), resumen);
+        assertEquals(3, adapter.resumirPorProductos(List.of("p-1", "p-2")).stream()
+                .mapToInt(PuntuacionAgregadaProducto::numero).sum());
     }
 
     @Test

@@ -1,5 +1,6 @@
 package es.uclm.esibuy.backend.pedidos.application.port.in;
 
+import java.time.Instant;
 import java.util.List;
 
 /**
@@ -10,4 +11,7 @@ public interface VentasVendedorUseCase {
 
     /** Las líneas de los pedidos del vendedor que no se han cancelado. */
     List<VentaProducto> ventasDe(String vendedorId);
+
+    /** Las líneas no canceladas del vendedor en el intervalo [desde, hasta). */
+    List<VentaProducto> ventasDe(String vendedorId, Instant desde, Instant hasta);
 }
