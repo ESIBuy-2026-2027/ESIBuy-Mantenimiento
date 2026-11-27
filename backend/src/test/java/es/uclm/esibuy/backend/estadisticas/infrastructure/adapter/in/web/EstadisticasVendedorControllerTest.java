@@ -28,6 +28,7 @@ import es.uclm.esibuy.backend.estadisticas.domain.model.ProductoInventariado;
 import es.uclm.esibuy.backend.estadisticas.domain.model.ProductoMenosVendido;
 import es.uclm.esibuy.backend.estadisticas.domain.model.ProductoMasVendido;
 import es.uclm.esibuy.backend.estadisticas.domain.model.ValoracionProducto;
+import es.uclm.esibuy.backend.estadisticas.domain.model.ValoracionProductoVendedor;
 import es.uclm.esibuy.backend.shared.config.JacksonConfig;
 import es.uclm.esibuy.backend.shared.config.SecurityConfig;
 
@@ -54,9 +55,12 @@ class EstadisticasVendedorControllerTest {
                 new BigDecimal("155.50"),
                 List.of(new ProductoMasVendido("p-1", "Teclado", 5, new BigDecimal("120.00"))),
                 List.of(new ProductoMenosVendido("p-2", "Ratón", 0, BigDecimal.ZERO)),
-                4.25, 8, List.of(new ValoracionProducto("p-1", "Teclado", 4.5, 6)), 4, 1, 2, 1,
-                List.of(new ProductoInventariado("p-2", "Ratón", 3, true, null, 0)),
-                List.of(new ProductoInventariado("p-3", "Webcam", 0, false, null, 0))));
+                4.25, 8, List.of(new ValoracionProducto("p-1", "Teclado", 4.5, 6)),
+                List.of(new ValoracionProductoVendedor("p-1", "Teclado", "/api/product-images/p-1", 4.5, 6)),
+                List.of(new ValoracionProductoVendedor("p-2", "Ratón", "/api/product-images/p-2", 3.5, 2)),
+                4, 1, 2, 1,
+                List.of(new ProductoInventariado("p-2", "Ratón", "", 3, true, null, 0)),
+                List.of(new ProductoInventariado("p-3", "Webcam", "", 0, false, null, 0))));
 
         mockMvc.perform(get(URL).with(user(VENDEDOR).roles("VENDEDOR")))
                 .andExpect(status().isOk())
@@ -76,6 +80,10 @@ class EstadisticasVendedorControllerTest {
                 .andExpect(jsonPath("$.valoraciones.porProducto[0].productoId").value("p-1"))
                 .andExpect(jsonPath("$.valoraciones.porProducto[0].media").value(4.5))
                 .andExpect(jsonPath("$.valoraciones.porProducto[0].numero").value(6))
+                .andExpect(jsonPath("$.valoraciones.mejorValorados[0].imagen").value("/api/product-images/p-1"))
+                .andExpect(jsonPath("$.valoraciones.peorValorados[0].productoId").value("p-2"))
+                .andExpect(jsonPath("$.valoraciones.peorValorados[0].media").value(3.5))
+                .andExpect(jsonPath("$.valoraciones.peorValorados[0].numero").value(2))
                 .andExpect(jsonPath("$.stock.productos").value(4))
                 .andExpect(jsonPath("$.stock.sinStock").value(1))
                 .andExpect(jsonPath("$.stock.stockBajo").value(2))
@@ -92,12 +100,15 @@ class EstadisticasVendedorControllerTest {
     @DisplayName("HU17-CP11: sin valoraciones, la media llega vacía")
     void sinValoracionesLaMediaLlegaVacia() throws Exception {
         when(estadisticasVendedor.consultar(VENDEDOR)).thenReturn(new EstadisticasVendedor(0, 0, BigDecimal.ZERO,
-                List.of(), List.of(), null, 0, List.of(), 0, 0, 0, 0, List.of(), List.of()));
+                List.of(), List.of(), null, 0, List.of(), List.of(), List.of(),
+                0, 0, 0, 0, List.of(), List.of()));
 
         mockMvc.perform(get(URL).with(user(VENDEDOR).roles("VENDEDOR")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.valoraciones.media").isEmpty())
                 .andExpect(jsonPath("$.valoraciones.total").value(0))
+                .andExpect(jsonPath("$.valoraciones.mejorValorados").isEmpty())
+                .andExpect(jsonPath("$.valoraciones.peorValorados").isEmpty())
                 .andExpect(jsonPath("$.ventas.masVendidos").isEmpty())
                 .andExpect(jsonPath("$.ventas.menosVendidos").isEmpty());
     }

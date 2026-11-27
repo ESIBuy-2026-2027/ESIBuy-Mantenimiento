@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import es.uclm.esibuy.backend.estadisticas.domain.model.EstadisticasVendedor;
+import es.uclm.esibuy.backend.estadisticas.domain.model.ValoracionProducto;
+import es.uclm.esibuy.backend.estadisticas.domain.model.ValoracionProductoVendedor;
 
 /** Respuesta de GET /api/seller/statistics (HU17): las estadísticas agrupadas en ventas, valoraciones y stock. */
 public record EstadisticasVendedorResponse(Ventas ventas, Valoraciones valoraciones, Stock stock) {
@@ -19,10 +21,14 @@ public record EstadisticasVendedorResponse(Ventas ventas, Valoraciones valoracio
     }
 
     // media es null si el vendedor aún no tiene valoraciones
-    public record Valoraciones(Double media, int total, List<ValoracionDeProducto> porProducto) {
+    public record Valoraciones(Double media, int total, List<ValoracionDeProducto> porProducto,
+            List<ProductoValoradoResponse> mejorValorados, List<ProductoValoradoResponse> peorValorados) {
     }
 
     public record ValoracionDeProducto(String productoId, String nombre, double media, int numero) {
+    }
+
+    public record ProductoValoradoResponse(String productoId, String nombre, String imagen, double media, int numero) {
     }
 
     public record Stock(int productos, int sinStock, int stockBajo, int noDisponibles,
@@ -42,10 +48,9 @@ public record EstadisticasVendedorResponse(Ventas ventas, Valoraciones valoracio
                 .map(producto -> new MenosVendido(producto.productoId(), producto.nombre(), producto.unidades(),
                         producto.ingresos()))
                 .toList();
-        List<ValoracionDeProducto> porProducto = estadisticas.valoracionesPorProducto().stream()
-                .map(valoracion -> new ValoracionDeProducto(valoracion.productoId(), valoracion.nombre(),
-                        valoracion.media(), valoracion.numero()))
-                .toList();
+        List<ValoracionDeProducto> porProducto = mapearValoraciones(estadisticas.valoracionesPorProducto());
+        List<ProductoValoradoResponse> mejorValorados = mapearRankingValoraciones(estadisticas.mejorValorados());
+        List<ProductoValoradoResponse> peorValorados = mapearRankingValoraciones(estadisticas.peorValorados());
         List<ProductoEnAlertaStock> productosConStockBajo = estadisticas.productosStockBajo().stream()
                 .map(producto -> new ProductoEnAlertaStock(producto.productoId(), producto.nombre(), producto.stock()))
                 .toList();
@@ -55,8 +60,25 @@ public record EstadisticasVendedorResponse(Ventas ventas, Valoraciones valoracio
         return new EstadisticasVendedorResponse(
                 new Ventas(estadisticas.pedidos(), estadisticas.unidadesVendidas(), estadisticas.ingresos(),
                         masVendidos, menosVendidos),
-                new Valoraciones(estadisticas.valoracionMedia(), estadisticas.numeroValoraciones(), porProducto),
+                new Valoraciones(estadisticas.valoracionMedia(), estadisticas.numeroValoraciones(), porProducto,
+                        mejorValorados, peorValorados),
                 new Stock(estadisticas.productos(), estadisticas.sinStock(), estadisticas.stockBajo(),
                         estadisticas.noDisponibles(), productosConStockBajo, productosSinStock));
+    }
+
+    private static List<ValoracionDeProducto> mapearValoraciones(
+            List<ValoracionProducto> valoraciones) {
+        return valoraciones.stream()
+                .map(valoracion -> new ValoracionDeProducto(valoracion.productoId(), valoracion.nombre(),
+                        valoracion.media(), valoracion.numero()))
+                .toList();
+    }
+
+    private static List<ProductoValoradoResponse> mapearRankingValoraciones(
+            List<ValoracionProductoVendedor> valoraciones) {
+        return valoraciones.stream()
+                .map(valoracion -> new ProductoValoradoResponse(valoracion.productoId(), valoracion.nombre(),
+                        valoracion.imagen(), valoracion.media(), valoracion.numero()))
+                .toList();
     }
 }

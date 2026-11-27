@@ -159,6 +159,30 @@ class EstadisticasVendedorTest {
     }
 
     @Test
+    @DisplayName("HU17-CP04: los rankings de valoración muestran los 10 mejores y peores con imagen y solo valorados")
+    void losRankingsDeValoracionMuestranLosDiezMejoresYPeoresValorados() {
+        List<ProductoInventariado> productos = new ArrayList<>();
+        for (int i = 1; i <= 12; i++) {
+            String id = "p-%02d".formatted(i);
+            productos.add(new ProductoInventariado(id, "Producto " + id, "/api/product-images/" + id, 10, true,
+                    i / 4.0, i));
+        }
+        productos.add(producto("p-13", 10, true, null, 0));
+
+        EstadisticasVendedor estadisticas = EstadisticasVendedor.calcular(List.of(), productos);
+
+        assertEquals(List.of("p-12", "p-11", "p-10", "p-09", "p-08", "p-07", "p-06", "p-05", "p-04", "p-03"),
+                estadisticas.mejorValorados().stream().map(ValoracionProductoVendedor::productoId).toList());
+        assertEquals(List.of("p-01", "p-02", "p-03", "p-04", "p-05", "p-06", "p-07", "p-08", "p-09", "p-10"),
+                estadisticas.peorValorados().stream().map(ValoracionProductoVendedor::productoId).toList());
+        assertEquals("/api/product-images/p-12", estadisticas.mejorValorados().get(0).imagen());
+        assertEquals(3.0, estadisticas.mejorValorados().get(0).media());
+        assertEquals(12, estadisticas.mejorValorados().get(0).numero());
+        assertFalse(estadisticas.mejorValorados().stream().anyMatch(p -> p.productoId().equals("p-13")));
+        assertFalse(estadisticas.peorValorados().stream().anyMatch(p -> p.productoId().equals("p-13")));
+    }
+
+    @Test
     @DisplayName("HU17-CP05: el stock cuenta los productos, los que no tienen stock y los no disponibles")
     void elStockCuentaProductosSinStockYNoDisponibles() {
         List<ProductoInventariado> productos = List.of(
@@ -203,7 +227,7 @@ class EstadisticasVendedorTest {
 
     private static ProductoInventariado producto(String productoId, int stock, boolean disponible, Double media,
             int numeroValoraciones) {
-        return new ProductoInventariado(productoId, "Producto " + productoId, stock, disponible, media,
+        return new ProductoInventariado(productoId, "Producto " + productoId, "", stock, disponible, media,
                 numeroValoraciones);
     }
 }

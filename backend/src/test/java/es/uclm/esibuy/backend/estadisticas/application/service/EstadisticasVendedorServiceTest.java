@@ -36,9 +36,9 @@ class EstadisticasVendedorServiceTest {
         ventas.delVendedor.put("v-2", List.of(
                 new VentaRegistrada("o-9", "p-9", "Ajeno", 7, new BigDecimal("700.00"))));
         inventario.delVendedor.put("v-1", List.of(
-                new ProductoInventariado("p-1", "Teclado", 3, true, 4.0, 1)));
+                new ProductoInventariado("p-1", "Teclado", "/api/product-images/p-1", 3, true, 4.0, 1)));
         inventario.delVendedor.put("v-2", List.of(
-                new ProductoInventariado("p-9", "Producto ajeno", 0, false, 1.0, 12)));
+                new ProductoInventariado("p-9", "Producto ajeno", "/api/product-images/p-9", 0, false, 1.0, 12)));
 
         EstadisticasVendedor estadisticas = servicio.consultar(EMAIL);
 
@@ -49,6 +49,11 @@ class EstadisticasVendedorServiceTest {
         assertEquals(0, estadisticas.sinStock());
         assertEquals(0, estadisticas.noDisponibles());
         assertEquals(1, estadisticas.numeroValoraciones());
+        assertEquals(List.of("p-1"),
+                estadisticas.mejorValorados().stream().map(valoracion -> valoracion.productoId()).toList());
+        assertEquals(List.of("p-1"),
+                estadisticas.peorValorados().stream().map(valoracion -> valoracion.productoId()).toList());
+        assertEquals("/api/product-images/p-1", estadisticas.mejorValorados().get(0).imagen());
         assertEquals(List.of(), estadisticas.productosSinStock());
         assertEquals(List.of("v-1"), ventas.consultas);
         assertEquals(List.of("v-1"), inventario.consultas);

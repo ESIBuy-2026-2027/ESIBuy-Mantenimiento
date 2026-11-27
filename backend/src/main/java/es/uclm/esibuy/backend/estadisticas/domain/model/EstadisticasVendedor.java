@@ -14,7 +14,8 @@ import java.util.function.Predicate;
 public record EstadisticasVendedor(int pedidos, int unidadesVendidas, BigDecimal ingresos,
         List<ProductoMasVendido> masVendidos, List<ProductoMenosVendido> menosVendidos,
         Double valoracionMedia, int numeroValoraciones,
-        List<ValoracionProducto> valoracionesPorProducto, int productos, int sinStock, int stockBajo,
+        List<ValoracionProducto> valoracionesPorProducto, List<ValoracionProductoVendedor> mejorValorados,
+        List<ValoracionProductoVendedor> peorValorados, int productos, int sinStock, int stockBajo,
         int noDisponibles, List<ProductoInventariado> productosStockBajo,
         List<ProductoInventariado> productosSinStock) {
 
@@ -29,6 +30,7 @@ public record EstadisticasVendedor(int pedidos, int unidadesVendidas, BigDecimal
         Map<String, ProductoMasVendido> ventasPorProducto = ventasPorProducto(ventas);
         List<ProductoInventariado> valorados = productos.stream().filter(p -> p.numeroValoraciones() > 0).toList();
         int numeroValoraciones = valorados.stream().mapToInt(ProductoInventariado::numeroValoraciones).sum();
+        List<ValoracionProducto> valoracionesPorProducto = valoracionesPorProducto(valorados);
         List<ProductoInventariado> productosStockBajo = productos.stream()
                 .filter(p -> p.stock() > 0 && p.stock() <= UMBRAL_STOCK_BAJO)
                 .sorted(Comparator.comparingInt(ProductoInventariado::stock).thenComparing(ProductoInventariado::nombre))
@@ -39,7 +41,8 @@ public record EstadisticasVendedor(int pedidos, int unidadesVendidas, BigDecimal
                 .toList();
         return new EstadisticasVendedor(pedidos, unidades, ingresos, masVendidos(ventasPorProducto, productos),
                 menosVendidos(ventasPorProducto, productos),
-                mediaPonderada(valorados, numeroValoraciones), numeroValoraciones, valoracionesPorProducto(valorados),
+                mediaPonderada(valorados, numeroValoraciones), numeroValoraciones, valoracionesPorProducto,
+                mejoresValoraciones(valorados), peoresValoraciones(valorados),
                 productos.size(), contar(productos, p -> p.stock() == 0),
                 contar(productos, p -> p.stock() > 0 && p.stock() <= UMBRAL_STOCK_BAJO),
                 contar(productos, p -> !p.disponible()), productosStockBajo, productosSinStock);
@@ -66,6 +69,31 @@ public record EstadisticasVendedor(int pedidos, int unidadesVendidas, BigDecimal
                         p.numeroValoraciones()))
                 .sorted(Comparator.comparingDouble(ValoracionProducto::media).reversed())
                 .toList();
+    }
+
+    private static List<ValoracionProductoVendedor> mejoresValoraciones(List<ProductoInventariado> valorados) {
+        return valorados.stream()
+                .map(EstadisticasVendedor::crearValoracionProductoVendedor)
+                .sorted(Comparator.comparingDouble(ValoracionProductoVendedor::media).reversed()
+                        .thenComparing(ValoracionProductoVendedor::nombre, String.CASE_INSENSITIVE_ORDER)
+                        .thenComparing(ValoracionProductoVendedor::productoId))
+                .limit(MAXIMO_RANKING)
+                .toList();
+    }
+
+    private static List<ValoracionProductoVendedor> peoresValoraciones(List<ProductoInventariado> valorados) {
+        return valorados.stream()
+                .map(EstadisticasVendedor::crearValoracionProductoVendedor)
+                .sorted(Comparator.comparingDouble(ValoracionProductoVendedor::media)
+                        .thenComparing(ValoracionProductoVendedor::nombre, String.CASE_INSENSITIVE_ORDER)
+                        .thenComparing(ValoracionProductoVendedor::productoId))
+                .limit(MAXIMO_RANKING)
+                .toList();
+    }
+
+    private static ValoracionProductoVendedor crearValoracionProductoVendedor(ProductoInventariado producto) {
+        return new ValoracionProductoVendedor(producto.productoId(), producto.nombre(), producto.imagen(),
+                producto.valoracionMedia(), producto.numeroValoraciones());
     }
 
     // Los rankings parten del inventario del vendedor: las ventas de otros productos nunca se exponen.

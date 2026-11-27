@@ -27,12 +27,12 @@ class InventarioAdapterTest {
     @DisplayName("HU17-CP13: los productos del vendedor se piden al módulo de productos y llegan sin perder datos")
     void losProductosSePidenAlModuloDeProductos() {
         when(inventarioVendedor.productosDe("v-1")).thenReturn(List.of(
-                new ProductoInventario("p-1", "Teclado", 3, true, 4.5, 2),
-                new ProductoInventario("p-2", "Ratón", 0, false, null, 0)));
+                new ProductoInventario("p-1", "Teclado", "/api/product-images/p-1", 3, true, 4.5, 2),
+                new ProductoInventario("p-2", "Ratón", "", 0, false, null, 0)));
 
         assertEquals(List.of(
-                new ProductoInventariado("p-1", "Teclado", 3, true, 4.5, 2),
-                new ProductoInventariado("p-2", "Ratón", 0, false, null, 0)),
+                new ProductoInventariado("p-1", "Teclado", "/api/product-images/p-1", 3, true, 4.5, 2),
+                new ProductoInventariado("p-2", "Ratón", "", 0, false, null, 0)),
                 new InventarioAdapter(inventarioVendedor).productosDe("v-1"));
     }
 }
