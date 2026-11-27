@@ -246,9 +246,9 @@ Notas:
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU19-CP01 | El servicio delega la consulta intacta al repositorio | Unitario | 1 | ✅ Pasa |
+| HU19-CP01 | El servicio delega intactas las consultas de listado al repositorio | Unitario | 1 | ✅ Pasa |
 | HU19-CP02 | El servicio devuelve la página proporcionada por el repositorio | Unitario | 1 | ✅ Pasa |
-| HU19-CP03 | El adaptador busca por los campos visibles del usuario | Integración MongoDB | 1 | ✅ Pasa |
+| HU19-CP03 | El adaptador busca por campos visibles aunque el DNI esté vacío | Integración MongoDB | 1 | ✅ Pasa |
 | HU19-CP04 | El adaptador aplica el filtro por rol | Integración MongoDB | 1 | ✅ Pasa |
 | HU19-CP05 | El adaptador aplica el filtro por estado de bloqueo | Integración MongoDB | 1 | ✅ Pasa |
 | HU19-CP06 | El adaptador devuelve la página solicitada y el total completo | Integración MongoDB | 1 | ✅ Pasa |

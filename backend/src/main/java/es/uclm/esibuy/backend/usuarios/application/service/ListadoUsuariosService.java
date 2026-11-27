@@ -4,6 +4,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListadoUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListarUsuariosQuery;
+import es.uclm.esibuy.backend.usuarios.application.port.in.UsuarioResumenPage;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.domain.model.UsuarioPage;
 import es.uclm.esibuy.backend.shared.seguridad.Permisos;
@@ -17,6 +18,15 @@ public class ListadoUsuariosService implements ListadoUsuariosUseCase {
 
     public ListadoUsuariosService(UsuarioRepositoryPort usuarioRepository) {
         this.usuarioRepository = usuarioRepository;
+    }
+
+    @PreAuthorize(Permisos.SOLO_ADMINISTRADOR)
+    @Override
+    public UsuarioResumenPage listarResumen(ListarUsuariosQuery query) {
+        if (query == null) {
+            throw new IllegalArgumentException("La consulta es obligatoria");
+        }
+        return usuarioRepository.listarResumen(query);
     }
 
     @PreAuthorize(Permisos.SOLO_ADMINISTRADOR)
