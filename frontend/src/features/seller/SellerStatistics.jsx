@@ -106,6 +106,24 @@ const useStyles = makeStyles({
     gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
     gap: tokens.spacingHorizontalL,
   },
+  summaryGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+    gap: tokens.spacingHorizontalM,
+  },
+  summaryItem: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: tokens.spacingVerticalXS,
+    minWidth: 0,
+    padding: tokens.spacingVerticalM,
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusMedium,
+    backgroundColor: tokens.colorNeutralBackground1,
+  },
+  summaryLabel: {
+    color: tokens.colorNeutralForeground2,
+  },
   donutCard: {
     display: 'flex',
     alignItems: 'center',
@@ -242,6 +260,7 @@ function normalizeList(raw, limit = 10) {
   return raw.slice(0, limit).map((item, idx) => ({
     id: String(item.productoId ?? item.id ?? idx),
     nombre: item.nombre ?? item.productoNombre ?? 'Producto',
+    imagen: item.imagen ?? '',
     unidades: Number(item.unidades ?? item.unidadesVendidas ?? item.cantidad ?? item.ventas ?? 0),
     ingresos: Number(item.ingresos ?? item.totalIngresos ?? item.importe ?? 0),
     media: item.media !== undefined && item.media !== null ? Number(item.media) : null,
@@ -632,6 +651,112 @@ RatingRankingBlock.propTypes = {
   color: PropTypes.string.isRequired,
 }
 
+function SummaryBlock({ ventas, media, totalValoraciones }) {
+  const styles = useStyles()
+  const indicadores = [
+    ['Pedidos', ventas.pedidos],
+    ['Unidades vendidas', ventas.unidadesVendidas],
+    ['Ingresos', formatPrice(ventas.ingresos)],
+    ['Valoración media', media === null ? SIN_VALORACIONES : `${formatRating(media)} de 5`],
+    ['Valoraciones recibidas', totalValoraciones],
+  ]
+
+  return (
+    <StatsBlock title="Resumen" icon={<TopSpeed24Regular />}>
+      <div className={styles.summaryGrid}>
+        {indicadores.map(([etiqueta, valor]) => (
+          <dl key={etiqueta} className={styles.summaryItem}>
+            <dt className={styles.summaryLabel}>{etiqueta}</dt>
+            <dd className={styles.kpiValue}>{valor}</dd>
+          </dl>
+        ))}
+      </div>
+    </StatsBlock>
+  )
+}
+
+SummaryBlock.propTypes = {
+  ventas: PropTypes.shape({
+    pedidos: PropTypes.number.isRequired,
+    unidadesVendidas: PropTypes.number.isRequired,
+    ingresos: PropTypes.number.isRequired,
+  }).isRequired,
+  media: PropTypes.number,
+  totalValoraciones: PropTypes.number.isRequired,
+}
+
+function StockBlock({ stock }) {
+  const styles = useStyles()
+
+  return (
+    <StatsBlock title="Stock" icon={<ShoppingBag24Regular />}>
+      <div className={styles.summaryGrid}>
+        {[
+          ['Productos', stock.productos],
+          ['Sin stock', stock.sinStock],
+          ['Stock bajo', stock.stockBajo],
+          ['No disponibles', stock.noDisponibles],
+        ].map(([etiqueta, valor]) => (
+          <dl key={etiqueta} className={styles.summaryItem}>
+            <dt className={styles.summaryLabel}>{etiqueta}</dt>
+            <dd className={styles.kpiValue}>{valor}</dd>
+          </dl>
+        ))}
+      </div>
+      <Text size={200}>Stock bajo de 1 a 5 unidades.</Text>
+      <div className={styles.stockAlerts}>
+        <div className={`${styles.stockAlert} ${styles.lowStockAlert}`}>
+          <div className={styles.stockAlertHeading}>
+            <Subtitle1 as="h4" className={styles.heading}>Productos con stock bajo</Subtitle1>
+            <Badge>{stock.productosConStockBajo.length}</Badge>
+          </div>
+          {stock.productosConStockBajo.length > 0 ? (
+            <RankingTable
+              label="Productos con stock bajo"
+              columns={['Producto', 'Stock']}
+              rows={stock.productosConStockBajo.map((producto) => ({
+                id: producto.productoId,
+                cells: [producto.nombre, `${producto.stock} unidades`],
+              }))}
+            />
+          ) : (
+            <Text>No tienes productos con stock bajo.</Text>
+          )}
+        </div>
+        <div className={`${styles.stockAlert} ${styles.outOfStockAlert}`}>
+          <div className={styles.stockAlertHeading}>
+            <Subtitle1 as="h4" className={styles.heading}>Productos sin stock</Subtitle1>
+            <Badge>{stock.productosSinStock.length}</Badge>
+          </div>
+          {stock.productosSinStock.length > 0 ? (
+            <RankingTable
+              label="Productos sin stock"
+              columns={['Producto', 'Stock']}
+              rows={stock.productosSinStock.map((producto) => ({
+                id: producto.productoId,
+                cells: [producto.nombre, 'Sin stock'],
+              }))}
+            />
+          ) : (
+            <Text>No tienes productos sin stock.</Text>
+          )}
+        </div>
+      </div>
+    </StatsBlock>
+  )
+}
+
+StockBlock.propTypes = {
+  stock: PropTypes.shape({
+    productos: PropTypes.number.isRequired,
+    sinStock: PropTypes.number.isRequired,
+    stockBajo: PropTypes.number.isRequired,
+    noDisponibles: PropTypes.number.isRequired,
+    productosConStockBajo: PropTypes.arrayOf(PropTypes.object).isRequired,
+    productosSinStock: PropTypes.arrayOf(PropTypes.object).isRequired,
+  }).isRequired,
+}
+
 export default function SellerStatistics() {
   const pageStyles = usePageStyles()
   const styles = useStyles()
@@ -693,14 +818,19 @@ export default function SellerStatistics() {
 
           {estadisticas && (
             <>
+              <SummaryBlock
+                ventas={estadisticas.ventas}
+                media={mediaGeneral}
+                totalValoraciones={estadisticas.valoraciones.total}
+              />
               <div className={styles.overviewGrid}>
                 <AverageRatingCircleCard media={mediaGeneral} />
                 <SalesShareDonutCard items={masVendidos} />
               </div>
 
-              <div className={styles.topGrid}>
+              <div className={styles.topGrid} role="region" aria-label="Ventas">
                 <SalesRankingBlock
-                  title="Top 10 más ventas"
+                  title="Top 10 más vendidos"
                   icon={<ArrowTrending24Regular />}
                   items={masVendidos}
                   emptyTitle="Sin datos de ventas"
@@ -713,12 +843,12 @@ export default function SellerStatistics() {
                   muted
                   items={menosVendidos}
                   emptyTitle="Sin datos de ventas"
-                  emptyDescription="Aún no hay productos con ventas registradas."
+                  emptyDescription="Aún no hay productos en tu inventario."
                   color={ACCENT_AMBER}
                 />
               </div>
 
-              <div className={styles.topGrid}>
+              <div className={styles.topGrid} role="region" aria-label="Valoraciones">
                 <RatingRankingBlock
                   title="Top 10 mejor valorados"
                   icon={<Star24Filled />}
@@ -737,6 +867,7 @@ export default function SellerStatistics() {
                   color={ACCENT_AMBER}
                 />
               </div>
+              <StockBlock stock={estadisticas.stock} />
             </>
           )}
         </Card>

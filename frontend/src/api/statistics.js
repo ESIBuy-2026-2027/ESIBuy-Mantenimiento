@@ -20,6 +20,23 @@ function esProductoMejorValorado(producto) {
     && Number.isInteger(producto.numeroValoraciones)
 }
 
+function esValoracionPorProducto(producto) {
+  return esObjeto(producto)
+    && esCadena(producto.productoId)
+    && esCadena(producto.nombre)
+    && esNumero(producto.media)
+    && Number.isInteger(producto.numero)
+}
+
+function esProductoValoradoVendedor(producto) {
+  return esObjeto(producto)
+    && esCadena(producto.productoId)
+    && esCadena(producto.nombre)
+    && esCadena(producto.imagen)
+    && esNumero(producto.media)
+    && Number.isInteger(producto.numero)
+}
+
 function esVendedorMejorValorado(vendedor) {
   return esObjeto(vendedor)
     && esCadena(vendedor.vendedorId)
@@ -45,10 +62,18 @@ function respuestaDeEstadisticasValida(data) {
     && Number.isInteger(ventas.unidadesVendidas)
     && esNumero(ventas.ingresos)
     && Array.isArray(ventas.masVendidos)
+    && ventas.masVendidos.every(esProductoMasVendido)
+    && Array.isArray(ventas.menosVendidos)
+    && ventas.menosVendidos.every(esProductoMasVendido)
     && esObjeto(valoraciones)
     && (valoraciones.media === null || esNumero(valoraciones.media))
     && Number.isInteger(valoraciones.total)
     && Array.isArray(valoraciones.porProducto)
+    && valoraciones.porProducto.every(esValoracionPorProducto)
+    && Array.isArray(valoraciones.mejorValorados)
+    && valoraciones.mejorValorados.every(esProductoValoradoVendedor)
+    && Array.isArray(valoraciones.peorValorados)
+    && valoraciones.peorValorados.every(esProductoValoradoVendedor)
     && esObjeto(stock)
     && Number.isInteger(stock.productos)
     && Number.isInteger(stock.sinStock)
@@ -61,9 +86,9 @@ function respuestaDeEstadisticasValida(data) {
 }
 
 // Estadísticas del vendedor en sesión (HU17), desde siempre y sin contar los pedidos cancelados. El backend lo
-// deduce de la sesión, así que no se envía ningún identificador. Llegan agrupadas en `ventas` (con los 5 más
-// vendidos), `valoraciones` (media ponderada, `null` si no hay ninguna, y solo los productos valorados, del mejor al
-// peor) y `stock` (stock bajo es de 1 a 5 unidades, con el detalle de los productos con stock bajo y sin stock).
+// deduce de la sesión, así que no se envía ningún identificador. Cada ranking contiene hasta 10 productos;
+// `menosVendidos` también incluye los productos sin ventas y los rankings de valoración solo los valorados.
+// `stock` incluye el detalle de los productos con stock bajo y sin stock.
 export function getSellerStatistics() {
   return request('/api/seller/statistics').then((data) => {
     if (!respuestaDeEstadisticasValida(data)) {

@@ -2,8 +2,14 @@ import { http, HttpResponse } from 'msw'
 import { getUsuarioEnSesion } from './authHandlers'
 
 const SIN_ESTADISTICAS = {
-  ventas: { pedidos: 0, unidadesVendidas: 0, ingresos: 0, masVendidos: [] },
-  valoraciones: { media: null, total: 0, porProducto: [] },
+  ventas: { pedidos: 0, unidadesVendidas: 0, ingresos: 0, masVendidos: [], menosVendidos: [] },
+  valoraciones: {
+    media: null,
+    total: 0,
+    porProducto: [],
+    mejorValorados: [],
+    peorValorados: [],
+  },
   stock: {
     productos: 0,
     sinStock: 0,
@@ -15,8 +21,7 @@ const SIN_ESTADISTICAS = {
 }
 
 // Estadísticas fijas de los vendedores de ejemplo (HU17), con la forma que devuelve el backend (PR #212). Las de
-// Vera (u-2) usan sus productos del mock de productos y su stock; Vicente (u-5) no tiene ventas, valoraciones ni
-// productos. Vera ha vendido 6 productos distintos, pero el backend solo manda los 5 más vendidos.
+// Vera (u-2) usa productos del mock y su stock; Vicente (u-5) no tiene ventas, valoraciones ni productos.
 const ESTADISTICAS = {
   'u-2': {
     ventas: {
@@ -30,6 +35,11 @@ const ESTADISTICAS = {
         { productoId: 'p-16', nombre: 'Memoria USB 128 GB', unidades: 2, ingresos: 29.98 },
         { productoId: 'p-4', nombre: 'Monitor 27 pulgadas', unidades: 1, ingresos: 249 },
       ],
+      menosVendidos: [
+        { productoId: 'p-20', nombre: 'Alfombra de salón', unidades: 0, ingresos: 0 },
+        { productoId: 'p-7', nombre: 'Altavoz Bluetooth', unidades: 0, ingresos: 0 },
+        { productoId: 'p-11', nombre: 'Aspirador de mano', unidades: 0, ingresos: 0 },
+      ],
     },
     valoraciones: {
       media: 4.375,
@@ -37,6 +47,38 @@ const ESTADISTICAS = {
       porProducto: [
         { productoId: 'p-2', nombre: 'Teclado mecánico', media: 4.5, numero: 6 },
         { productoId: 'p-1', nombre: 'Auriculares inalámbricos', media: 4, numero: 2 },
+      ],
+      mejorValorados: [
+        {
+          productoId: 'p-2',
+          nombre: 'Teclado mecánico',
+          imagen: '',
+          media: 4.5,
+          numero: 6,
+        },
+        {
+          productoId: 'p-1',
+          nombre: 'Auriculares inalámbricos',
+          imagen: '',
+          media: 4,
+          numero: 2,
+        },
+      ],
+      peorValorados: [
+        {
+          productoId: 'p-1',
+          nombre: 'Auriculares inalámbricos',
+          imagen: '',
+          media: 4,
+          numero: 2,
+        },
+        {
+          productoId: 'p-2',
+          nombre: 'Teclado mecánico',
+          imagen: '',
+          media: 4.5,
+          numero: 6,
+        },
       ],
     },
     stock: {
