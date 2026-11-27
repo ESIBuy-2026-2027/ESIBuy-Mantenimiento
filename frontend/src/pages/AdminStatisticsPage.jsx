@@ -24,7 +24,6 @@ import {
   ArrowLeft20Regular,
   ArrowTrending24Regular,
   ChartMultiple24Regular,
-  DataPie24Regular,
   ShoppingBag24Regular,
   Star24Filled,
   Star24Regular,
@@ -41,7 +40,6 @@ import { PATHS } from '../routes/paths'
 
 const ACCENT_ORANGE = '#EA580C'
 const ACCENT_AMBER = '#D97706'
-const DONUT_PALETTE = ['#EA580C', '#2563EB', '#16A34A', '#9333EA', '#E11D48']
 
 const useStyles = makeStyles({
   card: {
@@ -117,23 +115,6 @@ const useStyles = makeStyles({
     alignItems: 'center',
     gap: tokens.spacingHorizontalXS,
     color: tokens.colorNeutralForeground2,
-  },
-  legendList: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: tokens.spacingVerticalXXS,
-  },
-  legendItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: tokens.spacingHorizontalXS,
-    minWidth: 0,
-  },
-  legendDot: {
-    width: '10px',
-    height: '10px',
-    borderRadius: tokens.borderRadiusCircular,
-    flexShrink: 0,
   },
   starsRow: {
     display: 'flex',
@@ -314,96 +295,6 @@ function RatingHighlightCard({ title, name, media, number, muted = false }) {
   )
 }
 
-function SalesShareDonutCard({ items }) {
-  const styles = useStyles()
-  const totalUnits = items.reduce((total, item) => total + item.unidades, 0)
-  const topItems = items.slice(0, 5)
-  const radius = 40
-  const circumference = 2 * Math.PI * radius
-  let accumulated = 0
-
-  return (
-    <div className={styles.donutCard} role="region" aria-label="Reparto de unidades del Top 10">
-      <svg width="104" height="104" viewBox="0 0 104 104" aria-hidden="true">
-        <circle
-          cx="52"
-          cy="52"
-          r={radius}
-          fill="none"
-          stroke={tokens.colorNeutralBackground4}
-          strokeWidth="12"
-        />
-        {totalUnits > 0 &&
-          topItems.map((item, index) => {
-            const fraction = item.unidades / totalUnits
-            const dashLength = fraction * circumference
-            const dashOffset = -accumulated * circumference
-            accumulated += fraction
-            return (
-              <circle
-                key={item.productoId}
-                cx="52"
-                cy="52"
-                r={radius}
-                fill="none"
-                stroke={DONUT_PALETTE[index % DONUT_PALETTE.length]}
-                strokeWidth="12"
-                strokeDasharray={`${dashLength} ${circumference}`}
-                strokeDashoffset={dashOffset}
-                transform="rotate(-90 52 52)"
-              />
-            )
-          })}
-        <text
-          x="52"
-          y="50"
-          textAnchor="middle"
-          fontSize="16"
-          fontWeight="700"
-          fill={tokens.colorNeutralForeground1}
-        >
-          {totalUnits}
-        </text>
-        <text
-          x="52"
-          y="67"
-          textAnchor="middle"
-          fontSize="11"
-          fill={tokens.colorNeutralForeground3}
-        >
-          ud. top
-        </text>
-      </svg>
-      <div className={styles.donutInfo}>
-        <div className={styles.chartTitleRow}>
-          <DataPie24Regular style={{ color: ACCENT_ORANGE }} />
-          <Text weight="semibold">Reparto de unidades (Top 10)</Text>
-        </div>
-        {topItems.length > 0 ? (
-          <div className={styles.legendList}>
-            {topItems.map((item, index) => {
-              const percentage = totalUnits > 0 ? Math.round((item.unidades / totalUnits) * 100) : 0
-              return (
-                <div key={item.productoId} className={styles.legendItem}>
-                  <span
-                    className={styles.legendDot}
-                    style={{ backgroundColor: DONUT_PALETTE[index % DONUT_PALETTE.length] }}
-                  />
-                  <Text size={200}>
-                    {item.nombre}: <strong>{percentage}%</strong> ({item.unidades} ud.)
-                  </Text>
-                </div>
-              )
-            })}
-          </div>
-        ) : (
-          <Text size={200}>Aún no hay ventas registradas.</Text>
-        )}
-      </div>
-    </div>
-  )
-}
-
 function RankingBlock({ definition, items }) {
   const styles = useStyles()
   const tableStyles = useTableStyles()
@@ -531,7 +422,6 @@ export default function AdminStatisticsPage() {
           {data && (
             <>
               <div className={styles.overviewGrid}>
-                <SalesShareDonutCard items={data.productosMasVendidos} />
                 <RatingHighlightCard
                   title="Producto mejor valorado"
                   name={topProduct?.nombre ?? null}
