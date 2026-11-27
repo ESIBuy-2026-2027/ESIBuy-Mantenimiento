@@ -3,6 +3,7 @@ package es.uclm.esibuy.backend.usuarios.application.port.out;
 import java.util.Optional;
 
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListarUsuariosQuery;
+import es.uclm.esibuy.backend.usuarios.application.port.in.UsuarioResumenPage;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import es.uclm.esibuy.backend.usuarios.domain.model.UsuarioPage;
@@ -36,6 +37,8 @@ public interface UsuarioRepositoryPort {
     long contarAdministradoresActivos();
 
     UsuarioPage listar(ListarUsuariosQuery query);
+
+    UsuarioResumenPage listarResumen(ListarUsuariosQuery query);
 
     // Elimina físicamente un usuario por su id (HU37).
     void eliminarPorId(String id);

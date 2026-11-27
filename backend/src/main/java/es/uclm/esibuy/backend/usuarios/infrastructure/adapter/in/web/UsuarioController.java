@@ -88,7 +88,7 @@ public class UsuarioController {
             throw new IllegalArgumentException("La página y el tamaño deben ser positivos");
         }
         // sort y order como en /admin/sellers (fallos de la demo del Sprint 1: la pantalla de clientes ya los enviaba)
-        return UsuarioListadoPageResponse.desde(listadoUsuarios.listar(new ListarUsuariosQuery(
+        return UsuarioListadoPageResponse.desde(listadoUsuarios.listarResumen(new ListarUsuariosQuery(
                 search, role, status, page - 1, size, orden(sort), "desc".equals(order))));
     }
 

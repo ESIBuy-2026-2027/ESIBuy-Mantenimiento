@@ -20,6 +20,8 @@ import org.springframework.data.mongodb.core.query.Query;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.categorias.application.port.in.ConsultaCategoriasUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListarUsuariosQuery;
+import es.uclm.esibuy.backend.usuarios.application.port.in.UsuarioResumen;
+import es.uclm.esibuy.backend.usuarios.application.port.in.UsuarioResumenPage;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.NombreComercialYaRegistradoException;
@@ -141,6 +143,30 @@ public class UsuarioMongoAdapter implements UsuarioRepositoryPort {
 
     @Override
     public UsuarioPage listar(ListarUsuariosQuery query) {
+        DocumentosPaginados resultado = buscarDocumentos(query);
+        List<Usuario> usuarios = resultado.documentos().stream()
+                .map(mapper::aDominio)
+                .toList();
+        return new UsuarioPage(usuarios, query.pagina(), query.tamano(), resultado.total());
+    }
+
+    @Override
+    public UsuarioResumenPage listarResumen(ListarUsuariosQuery query) {
+        DocumentosPaginados resultado = buscarDocumentos(query);
+        List<UsuarioResumen> usuarios = resultado.documentos().stream()
+                .map(documento -> new UsuarioResumen(
+                        documento.getId(),
+                        documento.getNombre(),
+                        documento.getApellidos(),
+                        documento.getEmail(),
+                        documento.getRol(),
+                        documento.getEstado() == null ? ESTADO_ACTIVO : documento.getEstado(),
+                        documento.getCreatedAt()))
+                .toList();
+        return new UsuarioResumenPage(usuarios, query.pagina(), query.tamano(), resultado.total());
+    }
+
+    private DocumentosPaginados buscarDocumentos(ListarUsuariosQuery query) {
         Criteria criterios = construirCriterios(query);
         long total = mongoTemplate.count(new Query(criterios), UsuarioDocument.class);
         List<UsuarioDocument> documentos = switch (ordenDe(query)) {
@@ -149,11 +175,10 @@ public class UsuarioMongoAdapter implements UsuarioRepositoryPort {
             case NOMBRE, FECHA_ALTA -> mongoTemplate.find(new Query(criterios).collation(ORDEN_ALFABETICO_ES)
                     .with(PageRequest.of(query.pagina(), query.tamano(), ordenSimple(query))), UsuarioDocument.class);
         };
+        return new DocumentosPaginados(documentos, total);
+    }
 
-        List<Usuario> usuarios = documentos.stream()
-                .map(mapper::aDominio)
-                .toList();
-        return new UsuarioPage(usuarios, query.pagina(), query.tamano(), total);
+    private record DocumentosPaginados(List<UsuarioDocument> documentos, long total) {
     }
 
     // Los órdenes posibles, con el de por defecto (fecha de alta) como caso propio

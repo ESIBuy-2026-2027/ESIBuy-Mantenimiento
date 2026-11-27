@@ -2,6 +2,7 @@ package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.in.web;
 
 import java.time.Instant;
 
+import es.uclm.esibuy.backend.usuarios.application.port.in.UsuarioResumen;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 
 /**
@@ -26,6 +27,18 @@ public record UsuarioListadoResponse(
                 usuario.getRol().name(),
                 usuario.getEstado(),
                 usuario.getFechaAlta()
+        );
+    }
+
+    static UsuarioListadoResponse desde(UsuarioResumen usuario) {
+        return new UsuarioListadoResponse(
+                usuario.id(),
+                usuario.nombre(),
+                usuario.apellidos(),
+                usuario.email(),
+                usuario.rol(),
+                usuario.estado(),
+                usuario.fechaAlta()
         );
     }
 }

@@ -23,6 +23,8 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Telefono;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import es.uclm.esibuy.backend.usuarios.domain.model.UsuarioPage;
+import es.uclm.esibuy.backend.usuarios.application.port.in.UsuarioResumen;
+import es.uclm.esibuy.backend.usuarios.application.port.in.UsuarioResumenPage;
 import es.uclm.esibuy.backend.usuarios.domain.exception.AutobloqueoNoPermitidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYNombreComercialYaRegistradosException;
@@ -311,23 +313,17 @@ class UsuarioControllerTest {
                                 .get("/api/admin/usuarios"))
                                 .andExpect(status().isUnauthorized());
 
-                verify(listadoUsuarios, never()).listar(any());
+                verify(listadoUsuarios, never()).listarResumen(any());
         }
 
         @Test
         @DisplayName("HU19-CP08: un administrador recibe el listado sin datos sensibles")
         @org.springframework.security.test.context.support.WithMockUser(roles = "ADMINISTRADOR")
         void administradorRecibeElListado() throws Exception {
-                Usuario usuario = new Usuario(
-                                "usr-1", new DatosPersonales("Ana", "García", null), new Email("ana@esibuy.test"),
-                                "hash-no-debe-salir", Rol.CLIENTE,
-                                new DatosCliente(TipoCliente.ESTANDAR, new Dni("12345678Z"), LocalDate.of(1996, 5, 20),
-                                                null),
-                                null);
-                usuario.restaurarFechaAlta(java.time.Instant.parse("2026-10-01T10:00:00Z"));
-                usuario.activar(); // una cuenta nueva nace PENDIENTE (T233): el test lista una cuenta ya
-                                   // verificada
-                when(listadoUsuarios.listar(any())).thenReturn(new UsuarioPage(
+                UsuarioResumen usuario = new UsuarioResumen(
+                                "usr-1", "Ana", "García", "ana@esibuy.test", "CLIENTE", "ACTIVO",
+                                java.time.Instant.parse("2026-10-01T10:00:00Z"));
+                when(listadoUsuarios.listarResumen(any())).thenReturn(new UsuarioResumenPage(
                                 java.util.List.of(usuario), 0, 10, 1));
 
                 mockMvc.perform(get("/api/admin/usuarios")
@@ -338,6 +334,7 @@ class UsuarioControllerTest {
                                 .param("status", "ACTIVO"))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.items[0].id").value("usr-1"))
+                                .andExpect(jsonPath("$.items[0].nombre").value("Ana"))
                                 .andExpect(jsonPath("$.items[0].email").value("ana@esibuy.test"))
                                 .andExpect(jsonPath("$.items[0].estado").value("ACTIVO"))
                                 .andExpect(jsonPath("$.items[0].fechaAlta").value("2026-10-01T10:00:00Z"))
@@ -345,7 +342,7 @@ class UsuarioControllerTest {
                                 .andExpect(jsonPath("$.page").value(1))
                                 .andExpect(jsonPath("$.totalPages").value(1));
 
-                verify(listadoUsuarios).listar(new ListarUsuariosQuery(
+                verify(listadoUsuarios).listarResumen(new ListarUsuariosQuery(
                                 "ana", Rol.CLIENTE, "ACTIVO", 0, 10));
         }
 
@@ -506,7 +503,7 @@ class UsuarioControllerTest {
                 mockMvc.perform(get("/api/admin/usuarios").with(user("usuario").roles(rol)))
                                 .andExpect(status().isForbidden());
 
-                verify(listadoUsuarios, never()).listar(any());
+                verify(listadoUsuarios, never()).listarResumen(any());
         }
 
         @Test
@@ -707,7 +704,8 @@ class UsuarioControllerTest {
         @WithMockUser(roles = "ADMINISTRADOR")
         void listadoDeVendedoresTraduceLaOrdenacion(String sort, String order, ListarUsuariosQuery.Orden orden,
                         boolean descendente) throws Exception {
-                when(listadoUsuarios.listar(any())).thenReturn(new UsuarioPage(java.util.List.of(), 0, 10, 0));
+                when(listadoUsuarios.listarResumen(any()))
+                                .thenReturn(new UsuarioResumenPage(java.util.List.of(), 0, 10, 0));
                 MockHttpServletRequestBuilder peticion = get("/api/admin/sellers");
                 if (sort != null) {
                         peticion.param("sort", sort);
@@ -1396,7 +1394,7 @@ class UsuarioControllerTest {
                                 .param("order", "desc"))
                                 .andExpect(status().isOk());
 
-                verify(listadoUsuarios).listar(new ListarUsuariosQuery(
+                verify(listadoUsuarios).listarResumen(new ListarUsuariosQuery(
                                 null, Rol.CLIENTE, null, 0, 10, ListarUsuariosQuery.Orden.ESTADO, true));
         }
 

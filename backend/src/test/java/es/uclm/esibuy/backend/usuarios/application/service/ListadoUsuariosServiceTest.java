@@ -12,6 +12,7 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import es.uclm.esibuy.backend.usuarios.domain.model.UsuarioPage;
+import es.uclm.esibuy.backend.usuarios.application.port.in.UsuarioResumenPage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -50,19 +51,24 @@ class ListadoUsuariosServiceTest {
     }
 
     @Test
-    @DisplayName("HU19-CP01: el servicio delega la consulta intacta al repositorio")
+    @DisplayName("HU19-CP01: el servicio delega intactas las consultas al repositorio")
     void listar_delegaLaConsultaIntactaAlRepositorio() {
         ListarUsuariosQuery query = new ListarUsuariosQuery(
                 "Ana", Rol.CLIENTE, "BLOQUEADO", 0, 10
         );
         UsuarioPage paginaEsperada = new UsuarioPage(List.of(), 0, 10, 0);
+        UsuarioResumenPage resumenEsperado = new UsuarioResumenPage(List.of(), 0, 10, 0);
 
         when(usuarioRepository.listar(query)).thenReturn(paginaEsperada);
+        when(usuarioRepository.listarResumen(query)).thenReturn(resumenEsperado);
 
         UsuarioPage resultado = listadoUsuarios.listar(query);
+        UsuarioResumenPage resumen = listadoUsuarios.listarResumen(query);
 
         verify(usuarioRepository).listar(query);
+        verify(usuarioRepository).listarResumen(query);
         assertEquals(paginaEsperada, resultado);
+        assertEquals(resumenEsperado, resumen);
     }
 
     @Test
