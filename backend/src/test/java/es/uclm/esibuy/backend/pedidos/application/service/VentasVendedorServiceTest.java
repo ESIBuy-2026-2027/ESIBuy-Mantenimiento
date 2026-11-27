@@ -118,5 +118,10 @@ class VentasVendedorServiceTest {
         public Optional<Pedido> buscarPorId(String id) {
             throw new UnsupportedOperationException("Las ventas del vendedor no consultan un pedido");
         }
+
+        @Override
+        public List<Pedido> buscarTodos() {
+            throw new UnsupportedOperationException("Las ventas del vendedor no consultan todos los pedidos");
+        }
     }
 }

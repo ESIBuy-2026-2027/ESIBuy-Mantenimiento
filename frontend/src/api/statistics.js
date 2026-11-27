@@ -2,6 +2,31 @@ import { request } from './client'
 
 const esObjeto = (valor) => valor !== null && typeof valor === 'object' && !Array.isArray(valor)
 const esNumero = Number.isFinite
+const esCadena = (valor) => typeof valor === 'string'
+
+function esProductoMasVendido(producto) {
+  return esObjeto(producto)
+    && esCadena(producto.productoId)
+    && esCadena(producto.nombre)
+    && Number.isInteger(producto.unidades)
+    && esNumero(producto.ingresos)
+}
+
+function esProductoMejorValorado(producto) {
+  return esObjeto(producto)
+    && esCadena(producto.productoId)
+    && esCadena(producto.nombre)
+    && esNumero(producto.media)
+    && Number.isInteger(producto.numeroValoraciones)
+}
+
+function esVendedorMejorValorado(vendedor) {
+  return esObjeto(vendedor)
+    && esCadena(vendedor.vendedorId)
+    && esCadena(vendedor.nombreComercial)
+    && esNumero(vendedor.media)
+    && Number.isInteger(vendedor.numeroValoraciones)
+}
 
 function esProductoEnAlertaStock(producto) {
   return esObjeto(producto)
@@ -43,6 +68,27 @@ export function getSellerStatistics() {
   return request('/api/seller/statistics').then((data) => {
     if (!respuestaDeEstadisticasValida(data)) {
       throw new TypeError('El endpoint de estadísticas devolvió una respuesta con un formato inválido.')
+    }
+    return data
+  })
+}
+
+function respuestaDeEstadisticasAdminValida(data) {
+  return esObjeto(data)
+    && Array.isArray(data.productosMasVendidos)
+    && data.productosMasVendidos.every(esProductoMasVendido)
+    && Array.isArray(data.productosMejorValorados)
+    && data.productosMejorValorados.every(esProductoMejorValorado)
+    && Array.isArray(data.vendedoresMejorValorados)
+    && data.vendedoresMejorValorados.every(esVendedorMejorValorado)
+}
+
+export function getAdminStatistics() {
+  return request('/api/admin/statistics').then((data) => {
+    if (!respuestaDeEstadisticasAdminValida(data)) {
+      throw new TypeError(
+        'El endpoint de estadísticas del administrador devolvió una respuesta con un formato inválido.',
+      )
     }
     return data
   })

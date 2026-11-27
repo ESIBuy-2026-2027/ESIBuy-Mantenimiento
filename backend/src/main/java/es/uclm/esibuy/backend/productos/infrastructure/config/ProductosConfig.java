@@ -23,6 +23,7 @@ import es.uclm.esibuy.backend.productos.application.port.in.InventarioVendedorUs
 import es.uclm.esibuy.backend.productos.application.port.in.ListadoProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.SupervisionProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.ValoracionesProductoUseCase;
+import es.uclm.esibuy.backend.productos.application.port.in.ProductosPlataformaUseCase;
 import es.uclm.esibuy.backend.productos.application.port.out.AnalisisImagenPort;
 import es.uclm.esibuy.backend.productos.application.port.out.ImagenStoragePort;
 import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
@@ -39,6 +40,7 @@ import es.uclm.esibuy.backend.productos.application.service.InventarioVendedorSe
 import es.uclm.esibuy.backend.productos.application.service.ListadoProductosService;
 import es.uclm.esibuy.backend.productos.application.service.SupervisionProductosService;
 import es.uclm.esibuy.backend.productos.application.service.ValoracionesProductoService;
+import es.uclm.esibuy.backend.productos.application.service.ProductosPlataformaService;
 import es.uclm.esibuy.backend.productos.infrastructure.adapter.out.antivirus.VirusTotalAdapter;
 import es.uclm.esibuy.backend.productos.infrastructure.adapter.out.imagen.GridFsImagenAdapter;
 import es.uclm.esibuy.backend.productos.infrastructure.adapter.out.persistence.ProductoDocumentMapper;
@@ -143,6 +145,11 @@ public class ProductosConfig {
     @Bean
     ConteoProductosUseCase conteoProductosUseCase(ProductoRepositoryPort productoRepositoryPort) {
         return new ConteoProductosService(productoRepositoryPort);
+    }
+
+    @Bean
+    ProductosPlataformaUseCase productosPlataformaUseCase(ProductoRepositoryPort productoRepositoryPort) {
+        return new ProductosPlataformaService(productoRepositoryPort);
     }
 
     // HU17: el módulo de estadísticas pide aquí los productos del vendedor

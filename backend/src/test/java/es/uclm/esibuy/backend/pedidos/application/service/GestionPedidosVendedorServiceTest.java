@@ -133,6 +133,11 @@ class GestionPedidosVendedorServiceTest {
             consultasVendedor.add(vendedorId);
             return porVendedor.getOrDefault(vendedorId, List.of());
         }
+
+        @Override
+        public List<Pedido> buscarTodos() {
+            throw new UnsupportedOperationException("La gestión del vendedor no consulta todos los pedidos");
+        }
     }
 
     private static final class ExistenciasEnMemoria implements ExistenciasPort {

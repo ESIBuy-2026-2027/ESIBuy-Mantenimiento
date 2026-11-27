@@ -20,4 +20,6 @@ public interface PedidoRepositoryPort {
     Optional<Pedido> buscarPorId(String id);
 
     List<Pedido> buscarPorVendedor(String vendedorId);
+
+    List<Pedido> buscarTodos();
 }

@@ -12,6 +12,7 @@ import AdminIncidentsPage from '../pages/AdminIncidentsPage'
 import AdminClientsPage from '../pages/AdminClientsPage'
 import AdminNewAdminPage from '../pages/AdminNewAdminPage'
 import AdminPage from '../pages/AdminPage'
+import AdminStatisticsPage from '../pages/AdminStatisticsPage'
 import AdminSellersPage from '../pages/AdminSellersPage'
 import AdminUsersPage from '../pages/AdminUsersPage'
 import AlertsPage from '../pages/AlertsPage'
@@ -84,6 +85,7 @@ export default function AppRoutes() {
           <Route path={PATHS.ADMIN_CLIENTS} element={<AdminClientsPage />} />
           <Route path={PATHS.ADMIN_CATEGORIES} element={<AdminCategoriesPage />} />
           <Route path={PATHS.ADMIN_INCIDENTS} element={<AdminIncidentsPage />} />
+          <Route path={PATHS.ADMIN_STATISTICS} element={<AdminStatisticsPage />} />
           <Route path={PATHS.ADMIN_ADMINS} element={<AdminAdminsPage />} />
           <Route path={PATHS.ADMIN_NEW_ADMIN} element={<AdminNewAdminPage />} />
         </Route>

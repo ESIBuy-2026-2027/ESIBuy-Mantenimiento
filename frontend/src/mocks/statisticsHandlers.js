@@ -57,8 +57,29 @@ const ESTADISTICAS = {
   },
 }
 
+const ESTADISTICAS_ADMINISTRADOR = {
+  productosMasVendidos: [
+    { productoId: 'p-1', nombre: 'Auriculares inalámbricos', unidades: 12, ingresos: 719.4 },
+    { productoId: 'p-2', nombre: 'Teclado mecánico', unidades: 9, ingresos: 805.5 },
+  ],
+  productosMejorValorados: [
+    { productoId: 'p-2', nombre: 'Teclado mecánico', media: 4.8, numeroValoraciones: 6 },
+    { productoId: 'p-1', nombre: 'Auriculares inalámbricos', media: 4.5, numeroValoraciones: 4 },
+  ],
+  vendedoresMejorValorados: [
+    { vendedorId: 'u-2', nombreComercial: 'TecnoVera', media: 4.6, numeroValoraciones: 10 },
+  ],
+}
+
 // Como el backend (PR #212): solo el vendedor, sacado de la sesión. Sin sesión, 401; con otro rol, 403.
 export const statisticsHandlers = [
+  http.get('/api/admin/statistics', () => {
+    const usuario = getUsuarioEnSesion()
+    if (!usuario) return new HttpResponse(null, { status: 401 })
+    if (usuario.rol !== 'ADMINISTRADOR') return new HttpResponse(null, { status: 403 })
+
+    return HttpResponse.json(ESTADISTICAS_ADMINISTRADOR)
+  }),
   http.get('/api/seller/statistics', () => {
     const usuario = getUsuarioEnSesion()
     if (!usuario) return new HttpResponse(null, { status: 401 })

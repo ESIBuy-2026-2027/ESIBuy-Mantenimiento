@@ -26,6 +26,8 @@ public interface ProductoRepositoryPort {
 
     List<Producto> listarTodosPorVendedor(String vendedorId);
 
+    List<Producto> listarTodos();
+
     // ¿Tiene ya el vendedor un producto con ese nombre? No distingue mayúsculas (HU31).
     boolean existePorVendedorYNombre(String vendedorId, String nombre);
 

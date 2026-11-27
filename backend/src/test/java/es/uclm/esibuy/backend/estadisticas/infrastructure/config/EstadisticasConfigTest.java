@@ -10,13 +10,21 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Import;
 
 import es.uclm.esibuy.backend.MongoTestcontainersConfig;
+import es.uclm.esibuy.backend.estadisticas.application.port.in.EstadisticasAdministradorUseCase;
 import es.uclm.esibuy.backend.estadisticas.application.port.in.EstadisticasVendedorUseCase;
 import es.uclm.esibuy.backend.estadisticas.application.port.out.InventarioPort;
+import es.uclm.esibuy.backend.estadisticas.application.port.out.NombreComercialVendedorPort;
+import es.uclm.esibuy.backend.estadisticas.application.port.out.ProductosPlataformaPort;
 import es.uclm.esibuy.backend.estadisticas.application.port.out.VendedorEnSesionPort;
 import es.uclm.esibuy.backend.estadisticas.application.port.out.VentasPort;
+import es.uclm.esibuy.backend.estadisticas.application.port.out.VentasPlataformaPort;
+import es.uclm.esibuy.backend.estadisticas.application.service.EstadisticasAdministradorService;
 import es.uclm.esibuy.backend.estadisticas.application.service.EstadisticasVendedorService;
+import es.uclm.esibuy.backend.estadisticas.infrastructure.adapter.out.pedidos.VentasPlataformaAdapter;
 import es.uclm.esibuy.backend.estadisticas.infrastructure.adapter.out.pedidos.VentasAdapter;
 import es.uclm.esibuy.backend.estadisticas.infrastructure.adapter.out.productos.InventarioAdapter;
+import es.uclm.esibuy.backend.estadisticas.infrastructure.adapter.out.productos.ProductosPlataformaAdapter;
+import es.uclm.esibuy.backend.estadisticas.infrastructure.adapter.out.usuarios.NombreComercialVendedorAdapter;
 import es.uclm.esibuy.backend.estadisticas.infrastructure.adapter.out.usuarios.VendedorEnSesionAdapter;
 
 // Test técnico: Spring monta las piezas de las estadísticas del vendedor al arrancar (HU17, T279).
@@ -35,5 +43,11 @@ class EstadisticasConfigTest {
         assertInstanceOf(VendedorEnSesionAdapter.class, contexto.getBean(VendedorEnSesionPort.class));
         assertInstanceOf(VentasAdapter.class, contexto.getBean(VentasPort.class));
         assertInstanceOf(InventarioAdapter.class, contexto.getBean(InventarioPort.class));
+        assertInstanceOf(EstadisticasAdministradorService.class,
+                contexto.getBean(EstadisticasAdministradorUseCase.class));
+        assertInstanceOf(VentasPlataformaAdapter.class, contexto.getBean(VentasPlataformaPort.class));
+        assertInstanceOf(ProductosPlataformaAdapter.class, contexto.getBean(ProductosPlataformaPort.class));
+        assertInstanceOf(NombreComercialVendedorAdapter.class,
+                contexto.getBean(NombreComercialVendedorPort.class));
     }
 }
