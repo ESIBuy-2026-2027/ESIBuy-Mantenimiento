@@ -1,8 +1,10 @@
 package es.uclm.esibuy.backend.valoraciones.application.port.out;
 
+import java.time.Instant;
 import java.util.List;
 
 import es.uclm.esibuy.backend.valoraciones.domain.model.Valoracion;
+import es.uclm.esibuy.backend.valoraciones.domain.model.PuntuacionAgregadaProducto;
 
 /** Persistencia de las valoraciones: una por cliente y producto. */
 public interface ValoracionRepositoryPort {
@@ -13,6 +15,10 @@ public interface ValoracionRepositoryPort {
     boolean existePorClienteYProducto(String clienteId, String productoId);
 
     List<Valoracion> buscarPorProducto(String productoId);
+
+    List<PuntuacionAgregadaProducto> resumirPorProductos(List<String> productoIds, Instant desde, Instant hasta);
+
+    List<PuntuacionAgregadaProducto> resumirPorProductos(List<String> productoIds);
 
     void eliminarPorProducto(String productoId);
 }

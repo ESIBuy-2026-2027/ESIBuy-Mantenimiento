@@ -128,6 +128,9 @@ const useStyles = makeStyles({
   compactItem: {
     [MEDIO]: { minWidth: 'auto', paddingLeft: tokens.spacingHorizontalS, paddingRight: tokens.spacingHorizontalS },
   },
+  compactSignOut: {
+    [MEDIO]: { minWidth: 'auto', paddingLeft: tokens.spacingHorizontalS, paddingRight: tokens.spacingHorizontalS },
+  },
   navAction: {
     minHeight: '40px',
     paddingLeft: tokens.spacingHorizontalM,
@@ -150,11 +153,17 @@ const useStyles = makeStyles({
   navActionActive: {
     color: '#A83F08',
     backgroundColor: '#FFF1E3',
-    borderColor: '#F4D1B3',
+    borderTopColor: '#F4D1B3',
+    borderRightColor: '#F4D1B3',
+    borderBottomColor: '#F4D1B3',
+    borderLeftColor: '#F4D1B3',
     ':hover': {
       color: '#963B08',
       backgroundColor: '#FCE4CC',
-      borderColor: '#EFAE79',
+      borderTopColor: '#EFAE79',
+      borderRightColor: '#EFAE79',
+      borderBottomColor: '#EFAE79',
+      borderLeftColor: '#EFAE79',
     },
   },
   profileTrigger: {
@@ -173,10 +182,16 @@ const useStyles = makeStyles({
   profileTriggerActive: {
     color: '#A83F08',
     backgroundColor: '#FFF1E3',
-    borderColor: '#F4D1B3',
+    borderTopColor: '#F4D1B3',
+    borderRightColor: '#F4D1B3',
+    borderBottomColor: '#F4D1B3',
+    borderLeftColor: '#F4D1B3',
     ':hover': {
       backgroundColor: '#FCE4CC',
-      borderColor: '#EFAE79',
+      borderTopColor: '#EFAE79',
+      borderRightColor: '#EFAE79',
+      borderBottomColor: '#EFAE79',
+      borderLeftColor: '#EFAE79',
     },
   },
   premiumPersonIcon: {
@@ -452,27 +467,28 @@ ClientMenu.propTypes = {
 }
 
 function UserActions({ rol, onSignOut, disabled }) {
+  const styles = useStyles()
   const esCliente = rol === ROLES.CLIENTE
-  // El cliente conserva Favoritos, Listas de deseos, Carrito y Mi perfil en la cabecera.
-  const compact = esCliente
+  // En tamaño medio todos los roles compactan los enlaces; en móvil se mantienen sus etiquetas en la barra deslizable.
+  const compact = true
 
   return (
     <>
       {rol === ROLES.ADMIN && (
-        <NavLink to={PATHS.ADMIN} icon={<Grid20Regular />}>
+        <NavLink to={PATHS.ADMIN} icon={<Grid20Regular />} compact={compact}>
           Panel de control
         </NavLink>
       )}
       {/* Fallos de la demo del Sprint 1: el vendedor no tenía acceso a sus productos desde el menú */}
       {rol === ROLES.VENDEDOR && (
         <>
-          <NavLink to={PATHS.SELLER_PRODUCTS} icon={<BoxMultiple20Regular />}>
+          <NavLink to={PATHS.SELLER_PRODUCTS} icon={<BoxMultiple20Regular />} compact={compact}>
             Mis productos
           </NavLink>
-          <NavLink to={PATHS.SELLER_ORDERS} icon={<Receipt20Regular />}>
+          <NavLink to={PATHS.SELLER_ORDERS} icon={<Receipt20Regular />} compact={compact}>
             Mis pedidos
           </NavLink>
-          <NavLink to={PATHS.SELLER_STATISTICS} icon={<ChartMultiple20Regular />}>
+          <NavLink to={PATHS.SELLER_STATISTICS} icon={<ChartMultiple20Regular />} compact={compact}>
             Mis estadísticas
           </NavLink>
         </>
@@ -504,8 +520,15 @@ function UserActions({ rol, onSignOut, disabled }) {
       {esCliente && <AlertsBell />}
       {esCliente && <ClientMenu compact={compact} onSignOut={onSignOut} disabled={disabled} />}
       {!esCliente && (
-        <Button appearance="primary" icon={<ArrowExit20Regular />} onClick={onSignOut} disabled={disabled}>
-          Cerrar sesión
+        <Button
+          appearance="primary"
+          icon={<ArrowExit20Regular />}
+          onClick={onSignOut}
+          disabled={disabled}
+          className={styles.compactSignOut}
+          title={compact ? 'Cerrar sesión' : undefined}
+        >
+          <span className={compact ? styles.compactLabel : undefined}>Cerrar sesión</span>
         </Button>
       )}
     </>

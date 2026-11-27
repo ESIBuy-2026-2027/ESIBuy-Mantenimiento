@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -140,6 +142,53 @@ class EstadisticasVendedorTest {
 
         assertNull(estadisticas.valoracionMedia());
         assertEquals(0, estadisticas.numeroValoraciones());
+    }
+
+    @Test
+    @DisplayName("HU17-CP03: el período diario calcula la distribución de valoraciones y rellena días sin ventas")
+    void calculaDistribucionYSerieDiariaParaTodoElPeriodo() {
+        List<VentaRegistrada> ventas = List.of(
+                new VentaRegistrada("o-1", "p-1", "Producto p-1", 2, new BigDecimal("20.00"),
+                        Instant.parse("2026-03-15T10:00:00Z")),
+                new VentaRegistrada("o-1", "p-2", "Producto p-2", 1, new BigDecimal("10.00"),
+                        Instant.parse("2026-03-15T10:00:00Z")));
+        ResumenValoracionesPeriodo resumen = new ResumenValoracionesPeriodo(4.5, 2,
+                List.of(new ValoracionProductoPeriodo("p-1", 4.5, 2)),
+                List.of(new PuntuacionValoracion(4, 1, 0), new PuntuacionValoracion(5, 1, 0)));
+
+        EstadisticasVendedor estadisticas = EstadisticasVendedor.calcular(ventas, List.of(
+                        producto("p-1", 10, true, null, 0), producto("p-2", 10, true, null, 0)),
+                resumen, PeriodoEstadisticasVendedor.TODO_EL_PERIODO, LocalDate.parse("2026-03-16"));
+
+        assertEquals(List.of(LocalDate.parse("2026-03-15")),
+                estadisticas.evolucionVentas().stream().map(EvolucionVentas::fecha).toList());
+        assertEquals(1, estadisticas.evolucionVentas().get(0).pedidos());
+        assertEquals(3, estadisticas.evolucionVentas().get(0).unidades());
+        assertEquals(new BigDecimal("30.00"), estadisticas.evolucionVentas().get(0).ingresos());
+        assertEquals(List.of(0, 0, 0, 1, 1),
+                estadisticas.distribucionValoraciones().stream().map(PuntuacionValoracion::numero).toList());
+        assertEquals(List.of(0.0, 0.0, 0.0, 50.0, 50.0),
+                estadisticas.distribucionValoraciones().stream().map(PuntuacionValoracion::porcentaje).toList());
+    }
+
+    @Test
+    @DisplayName("HU17-CP01: todo el período agrupa la evolución por meses e incluye meses sin ventas")
+    void todoElPeriodoAgrupaLaEvolucionPorDias() {
+        List<VentaRegistrada> ventas = List.of(
+                new VentaRegistrada("o-1", "p-1", "Producto p-1", 1, new BigDecimal("10.00"),
+                        Instant.parse("2026-01-15T10:00:00Z")),
+                new VentaRegistrada("o-2", "p-1", "Producto p-1", 2, new BigDecimal("20.00"),
+                        Instant.parse("2026-03-15T10:00:00Z")));
+
+        EstadisticasVendedor estadisticas = EstadisticasVendedor.calcular(ventas, List.of(),
+                new ResumenValoracionesPeriodo(null, 0, List.of(), List.of()),
+                PeriodoEstadisticasVendedor.TODO_EL_PERIODO, LocalDate.parse("2026-03-16"));
+
+        assertEquals(60, estadisticas.evolucionVentas().size());
+        assertEquals(LocalDate.parse("2026-01-15"), estadisticas.evolucionVentas().get(0).fecha());
+        assertEquals(LocalDate.parse("2026-03-15"), estadisticas.evolucionVentas().get(59).fecha());
+        assertEquals(2, estadisticas.evolucionVentas().get(59).unidades());
+        assertEquals(GranularidadVentas.DIA, estadisticas.granularidadVentas());
     }
 
     @Test

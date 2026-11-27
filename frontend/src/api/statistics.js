@@ -4,12 +4,30 @@ const esObjeto = (valor) => valor !== null && typeof valor === 'object' && !Arra
 const esNumero = Number.isFinite
 const esCadena = (valor) => typeof valor === 'string'
 
-function esProductoMasVendido(producto) {
+function esProductoMasVendido(producto, conImagen = false) {
   return esObjeto(producto)
     && esCadena(producto.productoId)
     && esCadena(producto.nombre)
+    && (!conImagen || esCadena(producto.imagen))
     && Number.isInteger(producto.unidades)
     && esNumero(producto.ingresos)
+}
+
+function esPuntoEvolucion(punto) {
+  return esObjeto(punto)
+    && /^\d{4}-\d{2}-\d{2}$/.test(punto.fecha)
+    && Number.isInteger(punto.pedidos)
+    && Number.isInteger(punto.unidades)
+    && esNumero(punto.ingresos)
+}
+
+function esPuntuacion(puntuacion) {
+  return esObjeto(puntuacion)
+    && Number.isInteger(puntuacion.puntuacion)
+    && puntuacion.puntuacion >= 1
+    && puntuacion.puntuacion <= 5
+    && Number.isInteger(puntuacion.numero)
+    && esNumero(puntuacion.porcentaje)
 }
 
 function esProductoMejorValorado(producto) {
@@ -57,14 +75,19 @@ function respuestaDeEstadisticasValida(data) {
   const valoraciones = data?.valoraciones
   const stock = data?.stock
 
-  return esObjeto(ventas)
+  return esObjeto(data)
+    && data.periodo === 'TODO_EL_PERIODO'
+    && esObjeto(ventas)
     && Number.isInteger(ventas.pedidos)
     && Number.isInteger(ventas.unidadesVendidas)
     && esNumero(ventas.ingresos)
+    && ventas.granularidad === 'DIA'
+    && Array.isArray(ventas.evolucion)
+    && ventas.evolucion.every(esPuntoEvolucion)
     && Array.isArray(ventas.masVendidos)
-    && ventas.masVendidos.every(esProductoMasVendido)
+    && ventas.masVendidos.every((producto) => esProductoMasVendido(producto, true))
     && Array.isArray(ventas.menosVendidos)
-    && ventas.menosVendidos.every(esProductoMasVendido)
+    && ventas.menosVendidos.every((producto) => esProductoMasVendido(producto, true))
     && esObjeto(valoraciones)
     && (valoraciones.media === null || esNumero(valoraciones.media))
     && Number.isInteger(valoraciones.total)
@@ -74,6 +97,9 @@ function respuestaDeEstadisticasValida(data) {
     && valoraciones.mejorValorados.every(esProductoValoradoVendedor)
     && Array.isArray(valoraciones.peorValorados)
     && valoraciones.peorValorados.every(esProductoValoradoVendedor)
+    && Array.isArray(valoraciones.distribucion)
+    && valoraciones.distribucion.length === 5
+    && valoraciones.distribucion.every(esPuntuacion)
     && esObjeto(stock)
     && Number.isInteger(stock.productos)
     && Number.isInteger(stock.sinStock)
@@ -85,12 +111,13 @@ function respuestaDeEstadisticasValida(data) {
     && stock.productosSinStock.every(esProductoEnAlertaStock)
 }
 
-// Estadísticas del vendedor en sesión (HU17), desde siempre y sin contar los pedidos cancelados. El backend lo
+// Estadísticas del vendedor en sesión (HU17), sin contar los pedidos cancelados. El backend lo
 // deduce de la sesión, así que no se envía ningún identificador. Cada ranking contiene hasta 10 productos;
 // `menosVendidos` también incluye los productos sin ventas y los rankings de valoración solo los valorados.
 // `stock` incluye el detalle de los productos con stock bajo y sin stock.
-export function getSellerStatistics() {
-  return request('/api/seller/statistics').then((data) => {
+export function getSellerStatistics(periodo = 'TODO_EL_PERIODO') {
+  const query = new URLSearchParams({ periodo })
+  return request(`/api/seller/statistics?${query}`).then((data) => {
     if (!respuestaDeEstadisticasValida(data)) {
       throw new TypeError('El endpoint de estadísticas devolvió una respuesta con un formato inválido.')
     }

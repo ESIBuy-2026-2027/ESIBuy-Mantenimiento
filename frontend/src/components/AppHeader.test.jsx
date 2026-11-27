@@ -184,13 +184,15 @@ describe('AppHeader', () => {
     expect(within(nav).queryByRole('button', { name: 'Cerrar sesión' })).not.toBeInTheDocument()
   })
 
-  it('appHeader_conSesionDeVendedor_susAccesosNoSeCompactan', async () => {
+  it('appHeader_conSesionDeVendedor_susAccesosSeCompactanEnTamañoMedio', async () => {
     await abrirSesionPorApi('vendedor@esibuy.test')
-    renderApp('/')
+    renderApp('/seller/products')
 
     const nav = await screen.findByRole('navigation', { name: 'Cuenta' })
-    expect(await within(nav).findByRole('link', { name: 'Mis productos' })).not.toHaveAttribute('title')
-    expect(within(nav).getByRole('button', { name: 'Cerrar sesión' })).not.toHaveAttribute('title')
+    for (const nombre of ['Mis productos', 'Mis pedidos', 'Mis estadísticas', 'Incidencias', 'Mi perfil']) {
+      expect(await within(nav).findByRole('link', { name: nombre })).toHaveAttribute('title', nombre)
+    }
+    expect(within(nav).getByRole('button', { name: 'Cerrar sesión' })).toHaveAttribute('title', 'Cerrar sesión')
   })
 
   it('appHeader_conSesionDeVendedor_noMuestraLaOpcionPanelDeControl', async () => {

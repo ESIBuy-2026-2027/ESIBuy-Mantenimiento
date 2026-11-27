@@ -24,11 +24,16 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import es.uclm.esibuy.backend.estadisticas.application.port.in.EstadisticasVendedorUseCase;
 import es.uclm.esibuy.backend.estadisticas.domain.model.EstadisticasVendedor;
+import es.uclm.esibuy.backend.estadisticas.domain.model.EvolucionVentas;
+import es.uclm.esibuy.backend.estadisticas.domain.model.GranularidadVentas;
+import es.uclm.esibuy.backend.estadisticas.domain.model.PeriodoEstadisticasVendedor;
 import es.uclm.esibuy.backend.estadisticas.domain.model.ProductoInventariado;
 import es.uclm.esibuy.backend.estadisticas.domain.model.ProductoMenosVendido;
 import es.uclm.esibuy.backend.estadisticas.domain.model.ProductoMasVendido;
 import es.uclm.esibuy.backend.estadisticas.domain.model.ValoracionProducto;
 import es.uclm.esibuy.backend.estadisticas.domain.model.ValoracionProductoVendedor;
+import es.uclm.esibuy.backend.estadisticas.domain.model.PuntuacionValoracion;
+import java.time.LocalDate;
 import es.uclm.esibuy.backend.shared.config.JacksonConfig;
 import es.uclm.esibuy.backend.shared.config.SecurityConfig;
 
@@ -51,7 +56,8 @@ class EstadisticasVendedorControllerTest {
     @Test
     @DisplayName("HU17-CP11: el vendedor recibe sus estadísticas de ventas, valoraciones y stock con el formato del contrato")
     void vendedorRecibeSusEstadisticas() throws Exception {
-        when(estadisticasVendedor.consultar(VENDEDOR)).thenReturn(new EstadisticasVendedor(3, 7,
+        when(estadisticasVendedor.consultar(VENDEDOR, PeriodoEstadisticasVendedor.TODO_EL_PERIODO))
+                .thenReturn(new EstadisticasVendedor(3, 7,
                 new BigDecimal("155.50"),
                 List.of(new ProductoMasVendido("p-1", "Teclado", 5, new BigDecimal("120.00"))),
                 List.of(new ProductoMenosVendido("p-2", "Ratón", 0, BigDecimal.ZERO)),
@@ -60,7 +66,10 @@ class EstadisticasVendedorControllerTest {
                 List.of(new ValoracionProductoVendedor("p-2", "Ratón", "/api/product-images/p-2", 3.5, 2)),
                 4, 1, 2, 1,
                 List.of(new ProductoInventariado("p-2", "Ratón", "", 3, true, null, 0)),
-                List.of(new ProductoInventariado("p-3", "Webcam", "", 0, false, null, 0))));
+                List.of(new ProductoInventariado("p-3", "Webcam", "", 0, false, null, 0)),
+                List.of(new PuntuacionValoracion(5, 8, 100.0)),
+                List.of(new EvolucionVentas(LocalDate.parse("2026-03-15"), 1, 2, new BigDecimal("40.00"))),
+                GranularidadVentas.DIA));
 
         mockMvc.perform(get(URL).with(user(VENDEDOR).roles("VENDEDOR")))
                 .andExpect(status().isOk())
@@ -69,14 +78,20 @@ class EstadisticasVendedorControllerTest {
                 .andExpect(jsonPath("$.ventas.ingresos").value(155.5))
                 .andExpect(jsonPath("$.ventas.masVendidos[0].productoId").value("p-1"))
                 .andExpect(jsonPath("$.ventas.masVendidos[0].nombre").value("Teclado"))
+                .andExpect(jsonPath("$.ventas.masVendidos[0].imagen").value(""))
                 .andExpect(jsonPath("$.ventas.masVendidos[0].unidades").value(5))
                 .andExpect(jsonPath("$.ventas.masVendidos[0].ingresos").value(120.0))
+                .andExpect(jsonPath("$.ventas.granularidad").value("DIA"))
+                .andExpect(jsonPath("$.ventas.evolucion[0].unidades").value(2))
+                .andExpect(jsonPath("$.periodo").value("TODO_EL_PERIODO"))
                 .andExpect(jsonPath("$.ventas.menosVendidos[0].productoId").value("p-2"))
                 .andExpect(jsonPath("$.ventas.menosVendidos[0].nombre").value("Ratón"))
                 .andExpect(jsonPath("$.ventas.menosVendidos[0].unidades").value(0))
                 .andExpect(jsonPath("$.ventas.menosVendidos[0].ingresos").value(0.0))
                 .andExpect(jsonPath("$.valoraciones.media").value(4.25))
                 .andExpect(jsonPath("$.valoraciones.total").value(8))
+                .andExpect(jsonPath("$.valoraciones.distribucion[0].puntuacion").value(5))
+                .andExpect(jsonPath("$.valoraciones.distribucion[0].porcentaje").value(100.0))
                 .andExpect(jsonPath("$.valoraciones.porProducto[0].productoId").value("p-1"))
                 .andExpect(jsonPath("$.valoraciones.porProducto[0].media").value(4.5))
                 .andExpect(jsonPath("$.valoraciones.porProducto[0].numero").value(6))
@@ -99,9 +114,14 @@ class EstadisticasVendedorControllerTest {
     @Test
     @DisplayName("HU17-CP11: sin valoraciones, la media llega vacía")
     void sinValoracionesLaMediaLlegaVacia() throws Exception {
-        when(estadisticasVendedor.consultar(VENDEDOR)).thenReturn(new EstadisticasVendedor(0, 0, BigDecimal.ZERO,
+        when(estadisticasVendedor.consultar(VENDEDOR, PeriodoEstadisticasVendedor.TODO_EL_PERIODO))
+                .thenReturn(new EstadisticasVendedor(0, 0, BigDecimal.ZERO,
                 List.of(), List.of(), null, 0, List.of(), List.of(), List.of(),
-                0, 0, 0, 0, List.of(), List.of()));
+                0, 0, 0, 0, List.of(), List.of(),
+                List.of(new PuntuacionValoracion(1, 0, 0), new PuntuacionValoracion(2, 0, 0),
+                        new PuntuacionValoracion(3, 0, 0), new PuntuacionValoracion(4, 0, 0),
+                        new PuntuacionValoracion(5, 0, 0)),
+                List.of(), GranularidadVentas.DIA));
 
         mockMvc.perform(get(URL).with(user(VENDEDOR).roles("VENDEDOR")))
                 .andExpect(status().isOk())
@@ -119,7 +139,7 @@ class EstadisticasVendedorControllerTest {
         mockMvc.perform(get(URL))
                 .andExpect(status().isUnauthorized());
 
-        verify(estadisticasVendedor, never()).consultar(any());
+        verify(estadisticasVendedor, never()).consultar(any(), any());
     }
 
     @ParameterizedTest(name = "rol {0}")
@@ -129,6 +149,24 @@ class EstadisticasVendedorControllerTest {
         mockMvc.perform(get(URL).with(user("otro@esibuy.test").roles(rol)))
                 .andExpect(status().isForbidden());
 
-        verify(estadisticasVendedor, never()).consultar(any());
+        verify(estadisticasVendedor, never()).consultar(any(), any());
+    }
+
+    @Test
+    @DisplayName("HU17-CP11: el vendedor puede solicitar todas las estadísticas históricas")
+    void admiteSolicitarTodoElPeriodo() throws Exception {
+        when(estadisticasVendedor.consultar(VENDEDOR, PeriodoEstadisticasVendedor.TODO_EL_PERIODO))
+                .thenReturn(new EstadisticasVendedor(0, 0, BigDecimal.ZERO,
+                        List.of(), List.of(), null, 0, List.of(), List.of(), List.of(),
+                        0, 0, 0, 0, List.of(), List.of(),
+                        List.of(new PuntuacionValoracion(1, 0, 0), new PuntuacionValoracion(2, 0, 0),
+                                new PuntuacionValoracion(3, 0, 0), new PuntuacionValoracion(4, 0, 0),
+                                new PuntuacionValoracion(5, 0, 0)),
+                        List.of(), GranularidadVentas.DIA));
+
+        mockMvc.perform(get(URL).param("periodo", "TODO_EL_PERIODO").with(user(VENDEDOR).roles("VENDEDOR")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.periodo").value("TODO_EL_PERIODO"))
+                .andExpect(jsonPath("$.ventas.granularidad").value("DIA"));
     }
 }

@@ -1,5 +1,6 @@
 package es.uclm.esibuy.backend.pedidos.application.port.in;
 
+import java.time.Instant;
 import java.math.BigDecimal;
 
 /**
@@ -7,5 +8,10 @@ import java.math.BigDecimal;
  * compra, las unidades y lo que se cobró por ellas. Así no ven el dominio de pedidos.
  */
 public record VentaProducto(String pedidoId, String productoId, String nombreProducto, int unidades,
-        BigDecimal importe) {
+        BigDecimal importe, Instant fechaPedido) {
+
+    public VentaProducto(String pedidoId, String productoId, String nombreProducto, int unidades,
+            BigDecimal importe) {
+        this(pedidoId, productoId, nombreProducto, unidades, importe, null);
+    }
 }
