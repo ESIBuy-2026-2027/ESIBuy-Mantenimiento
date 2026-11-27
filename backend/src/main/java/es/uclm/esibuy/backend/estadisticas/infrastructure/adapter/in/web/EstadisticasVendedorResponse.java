@@ -8,10 +8,14 @@ import es.uclm.esibuy.backend.estadisticas.domain.model.EstadisticasVendedor;
 /** Respuesta de GET /api/seller/statistics (HU17): las estadísticas agrupadas en ventas, valoraciones y stock. */
 public record EstadisticasVendedorResponse(Ventas ventas, Valoraciones valoraciones, Stock stock) {
 
-    public record Ventas(int pedidos, int unidadesVendidas, BigDecimal ingresos, List<MasVendido> masVendidos) {
+    public record Ventas(int pedidos, int unidadesVendidas, BigDecimal ingresos, List<MasVendido> masVendidos,
+            List<MenosVendido> menosVendidos) {
     }
 
     public record MasVendido(String productoId, String nombre, int unidades, BigDecimal ingresos) {
+    }
+
+    public record MenosVendido(String productoId, String nombre, int unidades, BigDecimal ingresos) {
     }
 
     // media es null si el vendedor aún no tiene valoraciones
@@ -34,6 +38,10 @@ public record EstadisticasVendedorResponse(Ventas ventas, Valoraciones valoracio
                 .map(producto -> new MasVendido(producto.productoId(), producto.nombre(), producto.unidades(),
                         producto.ingresos()))
                 .toList();
+        List<MenosVendido> menosVendidos = estadisticas.menosVendidos().stream()
+                .map(producto -> new MenosVendido(producto.productoId(), producto.nombre(), producto.unidades(),
+                        producto.ingresos()))
+                .toList();
         List<ValoracionDeProducto> porProducto = estadisticas.valoracionesPorProducto().stream()
                 .map(valoracion -> new ValoracionDeProducto(valoracion.productoId(), valoracion.nombre(),
                         valoracion.media(), valoracion.numero()))
@@ -46,7 +54,7 @@ public record EstadisticasVendedorResponse(Ventas ventas, Valoraciones valoracio
                 .toList();
         return new EstadisticasVendedorResponse(
                 new Ventas(estadisticas.pedidos(), estadisticas.unidadesVendidas(), estadisticas.ingresos(),
-                        masVendidos),
+                        masVendidos, menosVendidos),
                 new Valoraciones(estadisticas.valoracionMedia(), estadisticas.numeroValoraciones(), porProducto),
                 new Stock(estadisticas.productos(), estadisticas.sinStock(), estadisticas.stockBajo(),
                         estadisticas.noDisponibles(), productosConStockBajo, productosSinStock));

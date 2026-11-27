@@ -12,12 +12,13 @@ import java.util.function.Predicate;
  * ventas y de sus productos, nunca se guardan.
  */
 public record EstadisticasVendedor(int pedidos, int unidadesVendidas, BigDecimal ingresos,
-        List<ProductoMasVendido> masVendidos, Double valoracionMedia, int numeroValoraciones,
+        List<ProductoMasVendido> masVendidos, List<ProductoMenosVendido> menosVendidos,
+        Double valoracionMedia, int numeroValoraciones,
         List<ValoracionProducto> valoracionesPorProducto, int productos, int sinStock, int stockBajo,
         int noDisponibles, List<ProductoInventariado> productosStockBajo,
         List<ProductoInventariado> productosSinStock) {
 
-    private static final int MAXIMO_MAS_VENDIDOS = 5;
+    private static final int MAXIMO_RANKING = 10;
     // Decisión del equipo: un producto con entre 1 y 5 unidades tiene stock bajo; con 0, no tiene stock
     private static final int UMBRAL_STOCK_BAJO = 5;
 
@@ -25,6 +26,7 @@ public record EstadisticasVendedor(int pedidos, int unidadesVendidas, BigDecimal
         int pedidos = (int) ventas.stream().map(VentaRegistrada::pedidoId).distinct().count();
         int unidades = ventas.stream().mapToInt(VentaRegistrada::unidades).sum();
         BigDecimal ingresos = ventas.stream().map(VentaRegistrada::importe).reduce(BigDecimal.ZERO, BigDecimal::add);
+        Map<String, ProductoMasVendido> ventasPorProducto = ventasPorProducto(ventas);
         List<ProductoInventariado> valorados = productos.stream().filter(p -> p.numeroValoraciones() > 0).toList();
         int numeroValoraciones = valorados.stream().mapToInt(ProductoInventariado::numeroValoraciones).sum();
         List<ProductoInventariado> productosStockBajo = productos.stream()
@@ -35,7 +37,8 @@ public record EstadisticasVendedor(int pedidos, int unidadesVendidas, BigDecimal
                 .filter(p -> p.stock() == 0)
                 .sorted(Comparator.comparing(ProductoInventariado::nombre))
                 .toList();
-        return new EstadisticasVendedor(pedidos, unidades, ingresos, masVendidos(ventas),
+        return new EstadisticasVendedor(pedidos, unidades, ingresos, masVendidos(ventasPorProducto, productos),
+                menosVendidos(ventasPorProducto, productos),
                 mediaPonderada(valorados, numeroValoraciones), numeroValoraciones, valoracionesPorProducto(valorados),
                 productos.size(), contar(productos, p -> p.stock() == 0),
                 contar(productos, p -> p.stock() > 0 && p.stock() <= UMBRAL_STOCK_BAJO),
@@ -65,9 +68,8 @@ public record EstadisticasVendedor(int pedidos, int unidadesVendidas, BigDecimal
                 .toList();
     }
 
-    // Suma las ventas de cada producto y se queda con los que más unidades han vendido; a igualdad de unidades, el
-    // que más ha ingresado. El nombre es el de su primera venta.
-    private static List<ProductoMasVendido> masVendidos(List<VentaRegistrada> ventas) {
+    // Los rankings parten del inventario del vendedor: las ventas de otros productos nunca se exponen.
+    private static Map<String, ProductoMasVendido> ventasPorProducto(List<VentaRegistrada> ventas) {
         Map<String, ProductoMasVendido> porProducto = new LinkedHashMap<>();
         for (VentaRegistrada venta : ventas) {
             porProducto.merge(venta.productoId(),
@@ -76,11 +78,41 @@ public record EstadisticasVendedor(int pedidos, int unidadesVendidas, BigDecimal
                     (acumulado, nueva) -> new ProductoMasVendido(acumulado.productoId(), acumulado.nombre(),
                             acumulado.unidades() + nueva.unidades(), acumulado.ingresos().add(nueva.ingresos())));
         }
-        return porProducto.values().stream()
+        return porProducto;
+    }
+
+    // A igualdad de unidades, se conserva primero el producto que más ha ingresado.
+    private static List<ProductoMasVendido> masVendidos(Map<String, ProductoMasVendido> ventasPorProducto,
+            List<ProductoInventariado> productos) {
+        return productos.stream()
+                .filter(producto -> ventasPorProducto.containsKey(producto.productoId()))
+                .map(producto -> {
+                    ProductoMasVendido venta = ventasPorProducto.get(producto.productoId());
+                    return new ProductoMasVendido(producto.productoId(), producto.nombre(), venta.unidades(),
+                            venta.ingresos());
+                })
                 .sorted(Comparator.comparingInt(ProductoMasVendido::unidades)
                         .thenComparing(ProductoMasVendido::ingresos)
-                        .reversed())
-                .limit(MAXIMO_MAS_VENDIDOS)
+                        .reversed()
+                        .thenComparing(ProductoMasVendido::nombre, String.CASE_INSENSITIVE_ORDER)
+                        .thenComparing(ProductoMasVendido::productoId))
+                .limit(MAXIMO_RANKING)
+                .toList();
+    }
+
+    private static List<ProductoMenosVendido> menosVendidos(Map<String, ProductoMasVendido> ventasPorProducto,
+            List<ProductoInventariado> productos) {
+        return productos.stream()
+                .map(producto -> {
+                    ProductoMasVendido venta = ventasPorProducto.get(producto.productoId());
+                    return new ProductoMenosVendido(producto.productoId(), producto.nombre(),
+                            venta == null ? 0 : venta.unidades(),
+                            venta == null ? BigDecimal.ZERO : venta.ingresos());
+                })
+                .sorted(Comparator.comparingInt(ProductoMenosVendido::unidades)
+                        .thenComparing(ProductoMenosVendido::nombre, String.CASE_INSENSITIVE_ORDER)
+                        .thenComparing(ProductoMenosVendido::productoId))
+                .limit(MAXIMO_RANKING)
                 .toList();
     }
 }

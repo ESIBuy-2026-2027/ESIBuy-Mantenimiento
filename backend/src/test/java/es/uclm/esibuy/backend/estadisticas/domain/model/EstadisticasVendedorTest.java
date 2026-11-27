@@ -1,9 +1,11 @@
 package es.uclm.esibuy.backend.estadisticas.domain.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
@@ -38,6 +40,7 @@ class EstadisticasVendedorTest {
         assertEquals(0, estadisticas.unidadesVendidas());
         assertEquals(0, BigDecimal.ZERO.compareTo(estadisticas.ingresos()));
         assertEquals(List.of(), estadisticas.masVendidos());
+        assertEquals(List.of(), estadisticas.menosVendidos());
     }
 
     @Test
@@ -48,7 +51,8 @@ class EstadisticasVendedorTest {
                 venta("o-1", "p-2", 5, "25.00"),
                 venta("o-2", "p-1", 4, "80.00"));
 
-        EstadisticasVendedor estadisticas = EstadisticasVendedor.calcular(ventas, List.of());
+        EstadisticasVendedor estadisticas = EstadisticasVendedor.calcular(ventas, List.of(
+                producto("p-1", 10, true, null, 0), producto("p-2", 10, true, null, 0)));
 
         assertEquals(List.of(
                 new ProductoMasVendido("p-1", "Producto p-1", 6, new BigDecimal("120.00")),
@@ -63,27 +67,53 @@ class EstadisticasVendedorTest {
                 venta("o-1", "p-1", 3, "30.00"),
                 venta("o-2", "p-2", 3, "90.00"));
 
-        EstadisticasVendedor estadisticas = EstadisticasVendedor.calcular(ventas, List.of());
+        EstadisticasVendedor estadisticas = EstadisticasVendedor.calcular(ventas, List.of(
+                producto("p-1", 10, true, null, 0), producto("p-2", 10, true, null, 0)));
 
         assertEquals(List.of("p-2", "p-1"),
                 estadisticas.masVendidos().stream().map(ProductoMasVendido::productoId).toList());
     }
 
     @Test
-    @DisplayName("HU17-CP02: solo se muestran los 5 productos más vendidos")
-    void soloSeMuestranLosCincoMasVendidos() {
-        List<VentaRegistrada> ventas = List.of(
-                venta("o-1", "p-1", 6, "6.00"),
-                venta("o-1", "p-2", 5, "5.00"),
-                venta("o-1", "p-3", 4, "4.00"),
-                venta("o-1", "p-4", 3, "3.00"),
-                venta("o-1", "p-5", 2, "2.00"),
-                venta("o-1", "p-6", 1, "1.00"));
+    @DisplayName("HU17-CP02: solo se muestran los 10 productos más vendidos y en orden descendente")
+    void soloSeMuestranLosDiezMasVendidos() {
+        List<VentaRegistrada> ventas = new ArrayList<>();
+        List<ProductoInventariado> productos = new ArrayList<>();
+        for (int i = 1; i <= 12; i++) {
+            String id = "p-%02d".formatted(i);
+            ventas.add(venta("o-1", id, i, i + ".00"));
+            productos.add(producto(id, 10, true, null, 0));
+        }
 
-        EstadisticasVendedor estadisticas = EstadisticasVendedor.calcular(ventas, List.of());
+        EstadisticasVendedor estadisticas = EstadisticasVendedor.calcular(ventas, productos);
 
-        assertEquals(List.of("p-1", "p-2", "p-3", "p-4", "p-5"),
+        assertEquals(List.of("p-12", "p-11", "p-10", "p-09", "p-08", "p-07", "p-06", "p-05", "p-04", "p-03"),
                 estadisticas.masVendidos().stream().map(ProductoMasVendido::productoId).toList());
+    }
+
+    @Test
+    @DisplayName("HU17-CP02: los 10 menos vendidos van en orden ascendente e incluyen los productos sin ventas")
+    void losDiezMenosVendidosIncluyenProductosSinVentas() {
+        List<ProductoInventariado> productos = new ArrayList<>();
+        List<VentaRegistrada> ventas = new ArrayList<>();
+        for (int i = 1; i <= 12; i++) {
+            String id = "p-%02d".formatted(i);
+            productos.add(producto(id, 10, true, null, 0));
+            if (i > 2) {
+                ventas.add(venta("o-1", id, i - 2, (i - 2) + ".00"));
+            }
+        }
+        ventas.add(venta("o-1", "p-ajeno", 100, "100.00"));
+
+        EstadisticasVendedor estadisticas = EstadisticasVendedor.calcular(ventas, productos);
+
+        assertEquals(List.of("p-01", "p-02", "p-03", "p-04", "p-05", "p-06", "p-07", "p-08", "p-09", "p-10"),
+                estadisticas.menosVendidos().stream().map(ProductoMenosVendido::productoId).toList());
+        assertEquals(List.of(0, 0, 1, 2, 3, 4, 5, 6, 7, 8),
+                estadisticas.menosVendidos().stream().map(ProductoMenosVendido::unidades).toList());
+        assertEquals(10, estadisticas.menosVendidos().size());
+        assertFalse(estadisticas.menosVendidos().stream().anyMatch(p -> p.productoId().equals("p-ajeno")));
+        assertFalse(estadisticas.masVendidos().stream().anyMatch(p -> p.productoId().equals("p-ajeno")));
     }
 
     @Test
